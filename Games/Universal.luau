@@ -2485,6 +2485,269 @@ end)();
 end)();
 
 (function()
+    local CapeData = {
+        Settings = {
+            Color = Color3.fromRGB(15, 15, 15),
+            Material = "SmoothPlastic",
+            Length = 7,
+            Width = 2,
+            Transparency = 0,
+            WindStrength = 0.3,
+            PhysicsStrength = 0.5
+        },
+        Data = {
+            Segments = {},
+            Velocities = {},
+            Connection = nil
+        }
+    }
+
+    local function DestroyCape()
+        for _, Seg in next, CapeData.Data.Segments do
+            if Seg and Seg.Parent then
+                Seg:Destroy()
+            end
+        end
+        CapeData.Data.Segments = {}
+        CapeData.Data.Velocities = {}
+    end
+
+    local function MakeCape()
+        DestroyCape()
+        repeat task.wait() until Night:IsAlive(LocalPlayer)
+
+        local Character = LocalPlayer.Character
+        local Torso = Character:FindFirstChild("UpperTorso") or Character:FindFirstChild("Torso")
+        if not Torso then return end
+
+        local SegHeight = CapeData.Settings.Length / 12
+        local Segments = {}
+        local Velocities = {}
+
+        for I = 1, 12 do
+            local Part = Instance.new("Part")
+            Part.Name = "CapeSegment_" .. I
+            Part.Size = Vector3.new(CapeData.Settings.Width, SegHeight * 1.35, 0.08)
+            Part.Color = CapeData.Settings.Color
+            Part.Material = Enum.Material[CapeData.Settings.Material]
+            Part.Transparency = CapeData.Settings.Transparency
+            Part.CanCollide = false
+            Part.Anchored = true
+            Part.CastShadow = false
+            Part.Parent = Character
+
+            Segments[I] = Part
+            Velocities[I] = Vector3.zero
+        end
+
+        CapeData.Data.Segments = Segments
+        CapeData.Data.Velocities = Velocities
+    end
+
+    local function UpdateCapeVisuals()
+        for I, Seg in next, CapeData.Data.Segments do
+            if Seg and Seg.Parent then
+                Seg.Color = CapeData.Settings.Color
+                Seg.Material = Enum.Material[CapeData.Settings.Material]
+                Seg.Transparency = CapeData.Settings.Transparency
+                local SegHeight = CapeData.Settings.Length / 12
+                Seg.Size = Vector3.new(CapeData.Settings.Width, SegHeight * 1.35, 0.08)
+            end
+        end
+    end
+
+    local function SimulateCape(DT: number)
+        local Segments = CapeData.Data.Segments
+        local Velocities = CapeData.Data.Velocities
+        if #Segments == 0 then return end
+        if not Night:IsAlive(LocalPlayer) then return end
+
+        local Character = LocalPlayer.Character
+        local Torso = Character:FindFirstChild("UpperTorso") or Character:FindFirstChild("Torso")
+        if not Torso then return end
+
+        local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+        local CharVelocity = Vector3.zero
+        if HumanoidRootPart then
+            CharVelocity = HumanoidRootPart.AssemblyLinearVelocity
+        end
+
+        local TorsoCF = Torso.CFrame
+        local SegHeight = CapeData.Settings.Length / 12
+        local PhysStr = CapeData.Settings.PhysicsStrength
+        local WindStr = CapeData.Settings.WindStrength
+
+        local AttachCF = TorsoCF * CFrame.new(0, Torso.Size.Y * 0.45, Torso.Size.Z * 0.5)
+        local Gravity = Vector3.new(0, -15 * PhysStr, 0)
+
+        local T = os.clock()
+        local Wind = TorsoCF.RightVector * (math.sin(T * 2.1) * 0.15 + math.sin(T * 3.7) * 0.1) * WindStr + TorsoCF.LookVector * (math.sin(T * 1.3) * 0.3) * WindStr
+
+        local MoveForce = Vector3.zero
+        if CharVelocity.Magnitude > 1 then
+            local LocalVel = TorsoCF:VectorToObjectSpace(CharVelocity)
+            LocalVel = Vector3.new(LocalVel.X * 0.15, LocalVel.Y, LocalVel.Z)
+            MoveForce = TorsoCF:VectorToWorldSpace(LocalVel) * -0.1 * PhysStr
+        end
+
+        local Damping = math.clamp(1 - 8 * DT, 0, 1)
+        local PrevPos = AttachCF.Position
+
+        for I = 1, 12 do
+            local Seg = Segments[I]
+            if not Seg or not Seg.Parent then return end
+
+            local TargetPos = PrevPos - TorsoCF.UpVector * SegHeight
+
+            local Influence = I / 12
+            local Forces = Gravity + Wind * Influence + MoveForce * Influence
+
+            Velocities[I] = (Velocities[I] + Forces * DT) * Damping
+
+            local CurrentCenter = Seg.CFrame.Position
+            local NewPos = CurrentCenter + Velocities[I] * DT
+
+            local Offset = NewPos - PrevPos
+            local Dist = Offset.Magnitude
+            local MaxDist = SegHeight * 1.02
+            if Dist > MaxDist then
+                NewPos = PrevPos + Offset.Unit * MaxDist
+            end
+
+            local RestPos = TargetPos
+            NewPos = NewPos:Lerp(RestPos, math.clamp(5 * DT, 0, 0.4))
+
+            local LocalOffset = TorsoCF:PointToObjectSpace(NewPos)
+            LocalOffset = Vector3.new(LocalOffset.X * 0.7, LocalOffset.Y, LocalOffset.Z)
+            NewPos = TorsoCF:PointToWorldSpace(LocalOffset)
+
+            local Dir = (NewPos - PrevPos)
+            if Dir.Magnitude < 0.001 then
+                Dir = -TorsoCF.UpVector
+            end
+
+            local Center = PrevPos + Dir.Unit * (SegHeight * 0.5)
+            local CF = CFrame.lookAt(Center, Center + Dir.Unit, TorsoCF.LookVector) * CFrame.Angles(math.rad(90), 0, 0)
+
+            Seg.CFrame = CF
+            PrevPos = NewPos
+        end
+
+        CapeData.Data.Velocities = Velocities
+    end
+
+    local Cape = Tabs.Render:CreateModule({
+        Name = "Cape",
+        Flag = "UniversalCape",
+        CallingFunction = function(Self, Enabled: boolean)
+            if Enabled then
+                MakeCape()
+                Self:Connection(LocalPlayer.CharacterAdded:Connect(function()
+                    task.wait(0.5)
+                    MakeCape()
+                end))
+
+                Self:Connection(RunService.PreSimulation:Connect(function()
+                    if Night:IsAlive(LocalPlayer) and #CapeData.Data.Segments == 0 then
+                        MakeCape()
+                    end
+                end))
+
+                Self:Connection(RunService.Heartbeat:Connect(function(DT)
+                    SimulateCape(DT)
+                end))
+            else
+                DestroyCape()
+            end
+        end
+    })
+
+    Cape:Dropdown({
+        Name = "Material",
+        Flag = "UniversalCapeMaterial",
+        Default = "SmoothPlastic",
+        Options = Materials,
+        CallingFunction = function(Self, Value: string)
+            CapeData.Settings.Material = Value
+            UpdateCapeVisuals()
+        end
+    })
+
+    Cape:ColorSlider({
+        Name = "Color",
+        Flag = "UniversalCapeColor",
+        Default = Color3.fromRGB(15, 15, 15),
+        CallingFunction = function(Self, Value: Color3)
+            CapeData.Settings.Color = Value
+            UpdateCapeVisuals()
+        end
+    })
+
+    Cape:Slider({
+        Name = "Length",
+        Flag = "UniversalCapeLength",
+        Min = 2,
+        Max = 10,
+        Default = 7,
+        Increment = 0.5,
+        CallingFunction = function(Self, Value: number)
+            CapeData.Settings.Length = Value
+            UpdateCapeVisuals()
+        end
+    })
+
+    Cape:Slider({
+        Name = "Width",
+        Flag = "UniversalCapeWidth",
+        Min = 1,
+        Max = 5,
+        Default = 2,
+        Increment = 0.5,
+        CallingFunction = function(Self, Value: number)
+            CapeData.Settings.Width = Value
+            UpdateCapeVisuals()
+        end
+    })
+
+    Cape:Slider({
+        Name = "Transparency",
+        Flag = "UniversalCapeTransparency",
+        Min = 0,
+        Max = 1,
+        Default = 0,
+        Increment = 0.1,
+        CallingFunction = function(Self, Value: number)
+            CapeData.Settings.Transparency = Value
+            UpdateCapeVisuals()
+        end
+    })
+
+    Cape:Slider({
+        Name = "Physics Strength",
+        Flag = "UniversalCapePhysics",
+        Min = 0.1,
+        Max = 1,
+        Default = 0.5,
+        Increment = 0.1,
+        CallingFunction = function(Self, Value: number)
+            CapeData.Settings.PhysicsStrength = Value
+        end
+    })
+
+    Cape:Slider({
+        Name = "Wind Strength",
+        Flag = "UniversalCapeWind",
+        Min = 0,
+        Max = 1,
+        Default = 0.3,
+        Increment = 0.1,
+        CallingFunction = function(Self, Value: number)
+            CapeData.Settings.WindStrength = Value
+        end
+    })
+end)();
+
+(function()
     local InfiniteJumpData = {
         Settings = {
             Mode = "Hold",
@@ -3713,6 +3976,967 @@ end)();
                     (LocalPlayer.Character.PrimaryPart or LocalPlayer.Character:FindFirstChild("HumanoidRootPart")).Anchored = false
                 end
             end
+        end
+    })
+end)();
+
+(function()
+    local WaterPart
+
+    Tabs.Movement:CreateModule({
+        Name = "Swim",
+        Flag = "Swim",
+        CallingFunction = function(self, value: boolean)
+            if value then
+                WaterPart = Instance.new("Part")
+                WaterPart.Size = Vector3.new(12, 12, 12)
+                WaterPart.Material = Enum.Material.Water
+                WaterPart.Transparency = 1
+                WaterPart.CanCollide = false
+                WaterPart.CanQuery = false
+                WaterPart.CanTouch = true
+                WaterPart.Anchored = true
+                WaterPart.Name = "EFN"
+                WaterPart.Parent = workspace
+
+                repeat
+                    if Night:IsAlive(LocalPlayer) and WaterPart then
+                        local PrimaryPart: BasePart = LocalPlayer.Character.PrimaryPart or LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        local Humanoid: Humanoid = LocalPlayer.Character.Humanoid
+
+                        WaterPart.Size = (Humanoid.MoveDirection ~= Vector3.zero or UserInputService:IsKeyDown(Enum.KeyCode.Space)) and Vector3.new(14, 14, 14) or Vector3.new(6, 4, 6)
+                        WaterPart.CFrame = CFrame.new(PrimaryPart.Position - Vector3.new(0, 1, 0))
+
+                        if Humanoid:GetState() ~= Enum.HumanoidStateType.Swimming then
+                            Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+                        end
+                    end
+                    task.wait()
+                until not self.Enabled
+
+                if WaterPart then
+                    WaterPart:Destroy()
+                    WaterPart = nil
+                end
+            else
+                if WaterPart then
+                    WaterPart:Destroy()
+                    WaterPart = nil
+                end
+                
+                if Night:IsAlive(LocalPlayer) then
+                    LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                end
+            end
+        end
+    })
+end)();
+
+(function()
+    local Arrows
+    local ArrowsData = {
+        Settings = {
+            Color = Color3.fromRGB(255, 255, 255),
+            Size = 14,
+            Radius = 0.2,
+            TeamCheck = false
+        },
+        Data = {
+            Instances = {},
+        }
+    }
+
+    local function CreateArrow(Target: Player)
+        if ArrowsData.Data.Instances[Target] then return end
+
+        local Triangle = Drawing.new("Triangle")
+        Triangle.Visible = false
+        Triangle.Filled = true
+        Triangle.Color = ArrowsData.Settings.Color
+        Triangle.Thickness = 1
+
+        ArrowsData.Data.Instances[Target] = Triangle
+    end
+
+    local function RemoveArrow(Target: Player)
+        local Arrow = ArrowsData.Data.Instances[Target]
+        if Arrow then
+            Arrow:Destroy()
+            ArrowsData.Data.Instances[Target] = nil
+        end
+    end
+
+    local function DestroyArrows()
+        for Player, Arrow in next, ArrowsData.Data.Instances do
+            Arrow:Destroy()
+            ArrowsData.Data.Instances[Player] = nil
+        end
+        table.clear(ArrowsData.Data.Instances)
+    end
+
+    local function Loop()
+        if not Night:IsAlive(LocalPlayer) then
+            for _, Arrow in next, ArrowsData.Data.Instances do
+                Arrow.Visible = false
+            end
+            return
+        end
+
+        local Size = ArrowsData.Settings.Size
+        local ScreenSize = CurrentCamera.ViewportSize
+        local CenterScreen = Vector2.new(ScreenSize.X / 2, ScreenSize.Y / 2)
+        local Radius = math.min(ScreenSize.X, ScreenSize.Y) * ArrowsData.Settings.Radius
+
+        for Target, Arrow in next, ArrowsData.Data.Instances do
+            if not Night:IsAlive(Target) then
+                Arrow.Visible = false
+                continue
+            end
+
+            if ArrowsData.Settings.TeamCheck and Target.Team and LocalPlayer.Team and Target.Team == LocalPlayer.Team then
+                Arrow.Visible = false
+                continue
+            end
+
+            local Root = Target.Character.PrimaryPart or Target.Character:FindFirstChild("HumanoidRootPart")
+            if not Root then
+                Arrow.Visible = false
+                continue
+            end
+
+            local _, OnScreen = CurrentCamera:WorldToScreenPoint(Root.Position)
+            if OnScreen then
+                Arrow.Visible = false
+                continue
+            end
+
+            local Dir = CFrame.lookAlong(CurrentCamera.CFrame.Position, CurrentCamera.CFrame.LookVector * Vector3.new(1, 0, 1)):PointToObjectSpace(Root.Position)
+            local Angle = math.atan2(Dir.Z, Dir.X)
+
+            local ArrowPos = CenterScreen + Vector2.new(math.cos(Angle), math.sin(Angle)) * Radius
+
+            local Forward = Vector2.new(math.cos(Angle), math.sin(Angle))
+            local Right = Vector2.new(-Forward.Y, Forward.X)
+
+            local Tip = ArrowPos + Forward * Size
+            local BaseLeft = ArrowPos - Right * (Size * 0.5)
+            local BaseRight = ArrowPos + Right * (Size * 0.5)
+
+            Arrow.PointA = Tip
+            Arrow.PointB = BaseLeft
+            Arrow.PointC = BaseRight
+            Arrow.Color = ArrowsData.Settings.Color
+            Arrow.Visible = true
+        end
+    end
+
+    Arrows = Tabs.Render:CreateModule({
+        Name = "Arrows",
+        Flag = "Arrows",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                for _, Player in next, Players:GetPlayers() do
+                    if Player ~= LocalPlayer then
+                        CreateArrow(Player)
+                    end
+                end
+
+                self:Connection(Players.PlayerAdded:Connect(function(NewPlayer)
+                    if NewPlayer ~= LocalPlayer then
+                        CreateArrow(NewPlayer)
+                    end
+                end))
+
+                self:Connection(Players.PlayerRemoving:Connect(function(LeavingPlayer)
+                    RemoveArrow(LeavingPlayer)
+                end))
+
+                self:Connection(RunService.RenderStepped:Connect(Loop))
+            else
+                DestroyArrows()
+            end
+        end
+    })
+
+    Arrows:Slider({
+        Name = "Size",
+        Flag = "ArrowsSize",
+        Default = 14,
+        Min = 6,
+        Max = 30,
+        CallingFunction = function(self, value: number)
+            ArrowsData.Settings.Size = value
+        end
+    })
+
+    Arrows:Slider({
+        Name = "Radius",
+        Flag = "ArrowsRadius",
+        Default = 0.2,
+        Min = 0.1,
+        Max = 0.5,
+        Increment = 0.01,
+        CallingFunction = function(self, value: number)
+            ArrowsData.Settings.Radius = value
+        end
+    })
+
+    Arrows:ColorSlider({
+        Name = "Color",
+        Flag = "ArrowsColor",
+        Default = Color3.fromRGB(255, 255, 255),
+        CallingFunction = function(self, value: Color3)
+            ArrowsData.Settings.Color = value
+        end
+    })
+
+    Arrows:MiniToggle({
+        Name = "Team Check",
+        Flag = "ArrowsTeamCheck",
+        Default = false,
+        CallingFunction = function(self, value: boolean)
+            ArrowsData.Settings.TeamCheck = value
+        end
+    })
+end)();
+
+(function()
+    local Chams
+
+    local ChamsData = {
+        Settings = {
+            OutlineColor = Color3.fromRGB(255, 255, 255),
+            FillColor = Color3.fromRGB(255, 255, 255),
+            FillTransparency = 0.5,
+            OutlineTransparency = 0,
+            TeamCheck = false,
+        },
+        Data = {
+            Highlights = {},
+        }
+    }
+
+    local function ApplyHighlight(Highlight: Highlight)
+        Highlight.OutlineColor = ChamsData.Settings.OutlineColor
+        Highlight.FillColor = ChamsData.Settings.FillColor
+        Highlight.FillTransparency = ChamsData.Settings.FillTransparency
+        Highlight.OutlineTransparency = ChamsData.Settings.OutlineTransparency
+        Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    end
+
+    local function ShouldSkip(Player: Player): boolean
+        if ChamsData.Settings.TeamCheck and Player.Team and LocalPlayer.Team and Player.Team == LocalPlayer.Team then
+            return true
+        end
+        return false
+    end
+
+    local function AddChams(Player: Player)
+        if Player == LocalPlayer then return end
+
+        local function OnCharacterAdded(Character: Model)
+            local Existing = ChamsData.Data.Highlights[Player]
+            if Existing then
+                Existing:Destroy()
+                ChamsData.Data.Highlights[Player] = nil
+            end
+
+            local Highlight = Instance.new("Highlight")
+            Highlight.Name = "NightChams"
+            Highlight.Adornee = Character
+            Highlight.Parent = Night.cloneref(game:GetService("CoreGui"))
+            ApplyHighlight(Highlight)
+
+            ChamsData.Data.Highlights[Player] = Highlight
+        end
+
+        if Player.Character then
+            OnCharacterAdded(Player.Character)
+        end
+
+        Player.CharacterAdded:Connect(OnCharacterAdded)
+    end
+
+    local function RemoveChams(Player: Player)
+        local Highlight = ChamsData.Data.Highlights[Player]
+        if Highlight then
+            Highlight:Destroy()
+            ChamsData.Data.Highlights[Player] = nil
+        end
+    end
+
+    local function DestroyAll()
+        for Player, Highlight in next, ChamsData.Data.Highlights do
+            Highlight:Destroy()
+        end
+        table.clear(ChamsData.Data.Highlights)
+    end
+
+    local function UpdateAll()
+        for Player, Highlight in next, ChamsData.Data.Highlights do
+            if not Player or not Player.Parent or not Night:IsAlive(Player) then
+                Highlight.Enabled = false
+                continue
+            end
+
+            if ShouldSkip(Player) then
+                Highlight.Enabled = false
+                continue
+            end
+
+            Highlight.Enabled = true
+            ApplyHighlight(Highlight)
+        end
+    end
+
+    Chams = Tabs.Render:CreateModule({
+        Name = "Chams",
+        Flag = "Chams",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                for _, Player in Players:GetPlayers() do
+                    if Player ~= LocalPlayer then
+                        AddChams(Player)
+                    end
+                end
+
+                self:Connection(Players.PlayerAdded:Connect(function(NewPlayer)
+                    if NewPlayer ~= LocalPlayer then
+                        AddChams(NewPlayer)
+                    end
+                end))
+
+                self:Connection(Players.PlayerRemoving:Connect(function(LeavingPlayer)
+                    RemoveChams(LeavingPlayer)
+                end))
+
+                self:Connection(RunService.RenderStepped:Connect(UpdateAll))
+            else
+                DestroyAll()
+            end
+        end
+    })
+
+    Chams:ColorSlider({
+        Name = "Outline Color",
+        Flag = "ChamsOutlineColor",
+        Default = Color3.fromRGB(255, 255, 255),
+        CallingFunction = function(self, value: Color3)
+            ChamsData.Settings.OutlineColor = value
+            for _, Highlight in next, ChamsData.Data.Highlights do
+                Highlight.OutlineColor = value
+            end
+        end
+    })
+
+    Chams:ColorSlider({
+        Name = "Fill Color",
+        Flag = "ChamsFillColor",
+        Default = Color3.fromRGB(255, 255, 255),
+        CallingFunction = function(self, value: Color3)
+            ChamsData.Settings.FillColor = value
+            for _, Highlight in next, ChamsData.Data.Highlights do
+                Highlight.FillColor = value
+            end
+        end
+    })
+
+    Chams:Slider({
+        Name = "Fill Transparency",
+        Flag = "ChamsFillTransparency",
+        Default = 0.5,
+        Min = 0,
+        Max = 1,
+        Increment = 0.05,
+        CallingFunction = function(self, value: number)
+            ChamsData.Settings.FillTransparency = value
+            for _, Highlight in next, ChamsData.Data.Highlights do
+                Highlight.FillTransparency = value
+            end
+        end
+    })
+
+    Chams:Slider({
+        Name = "Outline Transparency",
+        Flag = "ChamsOutlineTransparency",
+        Default = 0,
+        Min = 0,
+        Max = 1,
+        Increment = 0.05,
+        CallingFunction = function(self, value: number)
+            ChamsData.Settings.OutlineTransparency = value
+            for _, Highlight in next, ChamsData.Data.Highlights do
+                Highlight.OutlineTransparency = value
+            end
+        end
+    })
+
+    Chams:MiniToggle({
+        Name = "Team Check",
+        Flag = "ChamsTeamCheck",
+        Default = false,
+        CallingFunction = function(self, value: boolean)
+            ChamsData.Settings.TeamCheck = value
+        end
+    })
+end)();
+
+(function()
+    local Size = 8
+    local ExpandedParts = {}
+
+    local function ExpandPlayer(Character)
+        local HRP = Character:FindFirstChild("HumanoidRootPart")
+        if not HRP or ExpandedParts[Character] then return end
+
+        local Box = Instance.new("Part")
+        Box.Size = Vector3.new(Size, Size, Size)
+        Box.Transparency = 1
+        Box.CanCollide = false
+        Box.CanQuery = true
+        Box.Massless = true
+        Box.Name = "HB"
+
+        local Weld = Instance.new("WeldConstraint")
+        Weld.Part0 = HRP
+        Weld.Part1 = Box
+        Weld.Parent = Box
+
+        Box.CFrame = HRP.CFrame
+        Box.Parent = Character
+        ExpandedParts[Character] = Box
+    end
+
+    local function Cleanup()
+        for _, Part in next, ExpandedParts do
+            if Part and Part.Parent then
+                Part:Destroy()
+            end
+        end
+        table.clear(ExpandedParts)
+    end
+
+    local Hitboxes = Tabs.Combat:CreateModule({
+        Name = "Hitboxes",
+        Flag = "UniversalHitboxes",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                for _, Player in Players:GetPlayers() do
+                    if Player ~= LocalPlayer and Player.Character then
+                        ExpandPlayer(Player.Character)
+                    end
+                end
+
+                self:Connection(Players.PlayerAdded:Connect(function(Player)
+                    if Player ~= LocalPlayer then
+                        self:Connection(Player.CharacterAdded:Connect(function(Char)
+                            task.wait(0.1)
+                            ExpandPlayer(Char)
+                        end))
+                    end
+                end))
+
+                for _, Player in Players:GetPlayers() do
+                    if Player ~= LocalPlayer then
+                        self:Connection(Player.CharacterAdded:Connect(function(Char)
+                            task.wait(0.1)
+                            ExpandPlayer(Char)
+                        end))
+                    end
+                end
+            else
+                Cleanup()
+            end
+        end
+    })
+
+    Hitboxes:Slider({
+        Name = "Parts Size",
+        Flag = "HitboxesPartsSize",
+        Min = 2,
+        Max = 15,
+        Default = 8,
+        CallingFunction = function(self, value: number)
+            Size = value
+        end
+    })
+end)();
+
+(function()
+    local HealthData = {
+        Settings = {
+            Position = "Bottom Center",
+            TextSize = 42,
+            ShowMaxHealth = true,
+            ShowPercentage = false,
+            GlowEnabled = true,
+            GlowIntensity = 6,
+            GlowTransparency = 0.65,
+            PulseOnLow = true,
+            PulseThreshold = 25,
+            OffsetX = 0,
+            OffsetY = -40,
+            Prefix = "",
+            Suffix = "",
+            DecimalPlaces = 0,
+            FullHealthColor = Color3.fromRGB(0, 255, 130),
+            MidHealthColor = Color3.fromRGB(255, 200, 0),
+            LowHealthColor = Color3.fromRGB(255, 50, 50),
+            CriticalHealthColor = Color3.fromRGB(200, 0, 0),
+            OutlineEnabled = true,
+            ShadowEnabled = true,
+            ShadowOffset = 2,
+            AnimateChanges = true,
+            AnimationSpeed = 8
+        },
+        Data = {
+            DisplayedHealth = 0,
+            PulsePhase = 0,
+            LastHealth = 0
+        }
+    }
+
+    local HealthText = Drawing.new("Text")
+    HealthText.Visible = false
+    HealthText.Center = true
+    HealthText.Outline = true
+    HealthText.Font = Drawing.Fonts.Plex
+    HealthText.Size = HealthData.Settings.TextSize
+
+    local GlowText1 = Drawing.new("Text")
+    GlowText1.Visible = false
+    GlowText1.Center = true
+    GlowText1.Outline = false
+    GlowText1.Font = Drawing.Fonts.Plex
+    GlowText1.Size = HealthData.Settings.TextSize
+
+    local GlowText2 = Drawing.new("Text")
+    GlowText2.Visible = false
+    GlowText2.Center = true
+    GlowText2.Outline = false
+    GlowText2.Font = Drawing.Fonts.Plex
+    GlowText2.Size = HealthData.Settings.TextSize
+
+    local GlowText3 = Drawing.new("Text")
+    GlowText3.Visible = false
+    GlowText3.Center = true
+    GlowText3.Outline = false
+    GlowText3.Font = Drawing.Fonts.Plex
+    GlowText3.Size = HealthData.Settings.TextSize
+
+    local GlowText4 = Drawing.new("Text")
+    GlowText4.Visible = false
+    GlowText4.Center = true
+    GlowText4.Outline = false
+    GlowText4.Font = Drawing.Fonts.Plex
+    GlowText4.Size = HealthData.Settings.TextSize
+
+    local ShadowText = Drawing.new("Text")
+    ShadowText.Visible = false
+    ShadowText.Center = true
+    ShadowText.Outline = false
+    ShadowText.Font = Drawing.Fonts.Plex
+    ShadowText.Size = HealthData.Settings.TextSize
+    ShadowText.Color = Color3.fromRGB(0, 0, 0)
+
+    local AllDrawings = {HealthText, GlowText1, GlowText2, GlowText3, GlowText4, ShadowText}
+
+    local function LerpColor3(a: Color3, b: Color3, t: number): Color3
+        return Color3.new(
+            a.R + (b.R - a.R) * t,
+            a.G + (b.G - a.G) * t,
+            a.B + (b.B - a.B) * t
+        )
+    end
+
+    local function GetHealthColor(percent: number): Color3
+        if percent <= 15 then
+            return HealthData.Settings.CriticalHealthColor
+        elseif percent <= 40 then
+            local t = (percent - 15) / 25
+            return LerpColor3(HealthData.Settings.LowHealthColor, HealthData.Settings.MidHealthColor, t)
+        elseif percent <= 75 then
+            local t = (percent - 40) / 35
+            return LerpColor3(HealthData.Settings.MidHealthColor, HealthData.Settings.FullHealthColor, t)
+        else
+            return HealthData.Settings.FullHealthColor
+        end
+    end
+
+    local function GetPosition(): Vector2
+        local ScreenSize = CurrentCamera.ViewportSize
+        local Pos = HealthData.Settings.Position
+        local OffX = HealthData.Settings.OffsetX
+        local OffY = HealthData.Settings.OffsetY
+
+        if Pos == "Bottom Center" then
+            return Vector2.new(ScreenSize.X / 2 + OffX, ScreenSize.Y - 80 + OffY)
+        elseif Pos == "Top Center" then
+            return Vector2.new(ScreenSize.X / 2 + OffX, 40 + OffY)
+        elseif Pos == "Center" then
+            return Vector2.new(ScreenSize.X / 2 + OffX, ScreenSize.Y / 2 + OffY)
+        elseif Pos == "Bottom Left" then
+            return Vector2.new(100 + OffX, ScreenSize.Y - 80 + OffY)
+        elseif Pos == "Bottom Right" then
+            return Vector2.new(ScreenSize.X - 100 + OffX, ScreenSize.Y - 80 + OffY)
+        elseif Pos == "Top Left" then
+            return Vector2.new(100 + OffX, 40 + OffY)
+        elseif Pos == "Top Right" then
+            return Vector2.new(ScreenSize.X - 100 + OffX, 40 + OffY)
+        end
+
+        return Vector2.new(ScreenSize.X / 2 + OffX, ScreenSize.Y - 80 + OffY)
+    end
+
+    local function FormatHealth(current: number, max: number): string
+        local fmt = "%." .. HealthData.Settings.DecimalPlaces .. "f"
+        local text = HealthData.Settings.Prefix
+
+        if HealthData.Settings.ShowPercentage then
+            local pct = max > 0 and (current / max * 100) or 0
+            text = text .. string.format(fmt, pct) .. "%"
+        elseif HealthData.Settings.ShowMaxHealth then
+            text = text .. string.format(fmt, current) .. " / " .. string.format(fmt, max)
+        else
+            text = text .. string.format(fmt, current)
+        end
+
+        text = text .. HealthData.Settings.Suffix
+        return text
+    end
+
+    local function HideAll()
+        for _, d in next, AllDrawings do
+            d.Visible = false
+        end
+    end
+
+    local function Cleanup()
+        HideAll()
+        HealthData.Data.DisplayedHealth = 0
+        HealthData.Data.PulsePhase = 0
+        HealthData.Data.LastHealth = 0
+    end
+
+    local Health = Tabs.Render:CreateModule({
+        Name = "Health",
+        Flag = "UniversalHealth",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                HealthData.Data.DisplayedHealth = 0
+                HealthData.Data.PulsePhase = 0
+
+                self:Connection(RunService.RenderStepped:Connect(function(dt: number)
+                    if not Night:IsAlive(LocalPlayer) then
+                        HideAll()
+                        return
+                    end
+
+                    local Humanoid: Humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                    if not Humanoid then
+                        HideAll()
+                        return
+                    end
+
+                    local CurrentHealth = LocalPlayer.Character:GetAttribute("Health") or Humanoid.Health
+                    local MaxHealth = LocalPlayer.Character:GetAttribute("MaxHealth") or Humanoid.MaxHealth
+
+                    if HealthData.Settings.AnimateChanges then
+                        local speed = HealthData.Settings.AnimationSpeed
+                        HealthData.Data.DisplayedHealth = HealthData.Data.DisplayedHealth + (CurrentHealth - HealthData.Data.DisplayedHealth) * math.min(dt * speed, 1)
+                    else
+                        HealthData.Data.DisplayedHealth = CurrentHealth
+                    end
+
+                    local DisplayHP = HealthData.Data.DisplayedHealth
+                    local Percent = MaxHealth > 0 and (DisplayHP / MaxHealth * 100) or 0
+                    local HealthColor = GetHealthColor(Percent)
+                    local Position = GetPosition()
+                    local Text = FormatHealth(DisplayHP, MaxHealth)
+
+                    local PulseAlpha = 1
+                    if HealthData.Settings.PulseOnLow and Percent <= HealthData.Settings.PulseThreshold then
+                        HealthData.Data.PulsePhase = HealthData.Data.PulsePhase + dt * 4
+                        PulseAlpha = 0.55 + 0.45 * math.abs(math.sin(HealthData.Data.PulsePhase))
+                    else
+                        HealthData.Data.PulsePhase = 0
+                        PulseAlpha = 1
+                    end
+
+                    local Size = HealthData.Settings.TextSize
+
+                    for _, d in next, AllDrawings do
+                        d.Size = Size
+                    end
+
+                    if HealthData.Settings.ShadowEnabled then
+                        local ShadowOff = HealthData.Settings.ShadowOffset
+                        ShadowText.Text = Text
+                        ShadowText.Position = Vector2.new(Position.X + ShadowOff, Position.Y + ShadowOff)
+                        ShadowText.Transparency = 0.4 * PulseAlpha
+                        ShadowText.Color = Color3.fromRGB(0, 0, 0)
+                        ShadowText.Visible = true
+                    else
+                        ShadowText.Visible = false
+                    end
+
+                    if HealthData.Settings.GlowEnabled then
+                        local Intensity = HealthData.Settings.GlowIntensity
+                        local GlowAlpha = HealthData.Settings.GlowTransparency * PulseAlpha
+
+                        GlowText1.Text = Text
+                        GlowText1.Position = Vector2.new(Position.X - Intensity, Position.Y)
+                        GlowText1.Color = HealthColor
+                        GlowText1.Transparency = GlowAlpha
+                        GlowText1.Visible = true
+
+                        GlowText2.Text = Text
+                        GlowText2.Position = Vector2.new(Position.X + Intensity, Position.Y)
+                        GlowText2.Color = HealthColor
+                        GlowText2.Transparency = GlowAlpha
+                        GlowText2.Visible = true
+
+                        GlowText3.Text = Text
+                        GlowText3.Position = Vector2.new(Position.X, Position.Y - Intensity)
+                        GlowText3.Color = HealthColor
+                        GlowText3.Transparency = GlowAlpha
+                        GlowText3.Visible = true
+
+                        GlowText4.Text = Text
+                        GlowText4.Position = Vector2.new(Position.X, Position.Y + Intensity)
+                        GlowText4.Color = HealthColor
+                        GlowText4.Transparency = GlowAlpha
+                        GlowText4.Visible = true
+                    else
+                        GlowText1.Visible = false
+                        GlowText2.Visible = false
+                        GlowText3.Visible = false
+                        GlowText4.Visible = false
+                    end
+
+                    HealthText.Text = Text
+                    HealthText.Position = Position
+                    HealthText.Color = HealthColor
+                    HealthText.Outline = HealthData.Settings.OutlineEnabled
+                    HealthText.Transparency = PulseAlpha
+                    HealthText.Visible = true
+
+                    HealthData.Data.LastHealth = CurrentHealth
+                end))
+            else
+                Cleanup()
+            end
+        end
+    })
+
+    Health:Dropdown({
+        Name = "Position",
+        Flag = "HealthPosition",
+        Default = "Bottom Center",
+        Options = {"Bottom Center", "Top Center", "Center", "Bottom Left", "Bottom Right", "Top Left", "Top Right"},
+        CallingFunction = function(self, value: string)
+            HealthData.Settings.Position = value
+        end
+    })
+
+    Health:Slider({
+        Name = "Text Size",
+        Flag = "HealthTextSize",
+        Min = 16,
+        Max = 80,
+        Default = 42,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.TextSize = value
+            for _, d in next, AllDrawings do
+                d.Size = value
+            end
+        end
+    })
+
+    Health:Slider({
+        Name = "Offset X",
+        Flag = "HealthOffsetX",
+        Min = -500,
+        Max = 500,
+        Default = 0,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.OffsetX = value
+        end
+    })
+
+    Health:Slider({
+        Name = "Offset Y",
+        Flag = "HealthOffsetY",
+        Min = -500,
+        Max = 500,
+        Default = -40,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.OffsetY = value
+        end
+    })
+
+    Health:MiniToggle({
+        Name = "Show Max Health",
+        Flag = "HealthShowMax",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            HealthData.Settings.ShowMaxHealth = value
+        end
+    })
+
+    Health:MiniToggle({
+        Name = "Show Percentage",
+        Flag = "HealthShowPercent",
+        Default = false,
+        CallingFunction = function(self, value: boolean)
+            HealthData.Settings.ShowPercentage = value
+        end
+    })
+
+    Health:Slider({
+        Name = "Decimal Places",
+        Flag = "HealthDecimals",
+        Min = 0,
+        Max = 2,
+        Default = 0,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.DecimalPlaces = value
+        end
+    })
+
+    Health:MiniToggle({
+        Name = "Glow Effect",
+        Flag = "HealthGlow",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            HealthData.Settings.GlowEnabled = value
+        end
+    })
+
+    Health:Slider({
+        Name = "Glow Intensity",
+        Flag = "HealthGlowIntensity",
+        Min = 1,
+        Max = 15,
+        Default = 6,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.GlowIntensity = value
+        end
+    })
+
+    Health:Slider({
+        Name = "Glow Transparency",
+        Flag = "HealthGlowTransparency",
+        Min = 10,
+        Max = 90,
+        Default = 65,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.GlowTransparency = value / 100
+        end
+    })
+
+    Health:MiniToggle({
+        Name = "Pulse On Low HP",
+        Flag = "HealthPulse",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            HealthData.Settings.PulseOnLow = value
+        end
+    })
+
+    Health:Slider({
+        Name = "Pulse Threshold %",
+        Flag = "HealthPulseThreshold",
+        Min = 5,
+        Max = 50,
+        Default = 25,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.PulseThreshold = value
+        end
+    })
+
+    Health:MiniToggle({
+        Name = "Text Outline",
+        Flag = "HealthOutline",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            HealthData.Settings.OutlineEnabled = value
+        end
+    })
+
+    Health:MiniToggle({
+        Name = "Shadow",
+        Flag = "HealthShadow",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            HealthData.Settings.ShadowEnabled = value
+        end
+    })
+
+    Health:Slider({
+        Name = "Shadow Offset",
+        Flag = "HealthShadowOffset",
+        Min = 1,
+        Max = 6,
+        Default = 2,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.ShadowOffset = value
+        end
+    })
+
+    Health:MiniToggle({
+        Name = "Animate Changes",
+        Flag = "HealthAnimate",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            HealthData.Settings.AnimateChanges = value
+        end
+    })
+
+    Health:Slider({
+        Name = "Animation Speed",
+        Flag = "HealthAnimSpeed",
+        Min = 1,
+        Max = 20,
+        Default = 8,
+        CallingFunction = function(self, value: number)
+            HealthData.Settings.AnimationSpeed = value
+        end
+    })
+
+    Health:ColorSlider({
+        Name = "Full HP Color",
+        Flag = "HealthFullColor",
+        Default = Color3.fromRGB(0, 255, 130),
+        CallingFunction = function(self, value: Color3)
+            HealthData.Settings.FullHealthColor = value
+        end
+    })
+
+    Health:ColorSlider({
+        Name = "Mid HP Color",
+        Flag = "HealthMidColor",
+        Default = Color3.fromRGB(255, 200, 0),
+        CallingFunction = function(self, value: Color3)
+            HealthData.Settings.MidHealthColor = value
+        end
+    })
+
+    Health:ColorSlider({
+        Name = "Low HP Color",
+        Flag = "HealthLowColor",
+        Default = Color3.fromRGB(255, 50, 50),
+        CallingFunction = function(self, value: Color3)
+            HealthData.Settings.LowHealthColor = value
+        end
+    })
+
+    Health:ColorSlider({
+        Name = "Critical HP Color",
+        Flag = "HealthCritColor",
+        Default = Color3.fromRGB(200, 0, 0),
+        CallingFunction = function(self, value: Color3)
+            HealthData.Settings.CriticalHealthColor = value
         end
     })
 end)();
