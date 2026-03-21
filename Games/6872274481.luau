@@ -58,6 +58,7 @@ local GameData = {
         BlockClient = require(LocalPlayer.PlayerScripts.TS.lib["block-engine"]["client-block-engine"]).ClientBlockEngine,
         QueueController = Knit.Controllers.QueueController,
         ClawHandController = Knit.Controllers.SummonerClawHandController,
+        Cannon = Knit.Controllers.CannonHandController,
         DaoController = Knit.Controllers.DaoController,
         SwordController = Knit.Controllers.SwordController,
         PlaceController = Knit.Controllers.BlockPlacementController,
@@ -65,7 +66,9 @@ local GameData = {
         AbilityController = Flamework.resolveDependency("@easy-games/game-core:client/controllers/ability/ability-controller@AbilityController"),
         UILayer = require(ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["game-core"].out).UILayers,
         MatchHistroyApp = require(LocalPlayer.PlayerScripts.TS.controllers.global["match-history"].ui["match-history-moderation-app"]).MatchHistoryModerationApp,
-        MatchHistroyController = Knit.Controllers.MatchHistoryController
+        MatchHistroyController = Knit.Controllers.MatchHistoryController,
+        CombatConstant = require(ReplicatedStorage.TS.combat['combat-constant']).CombatConstant,
+        GameSound = require(ReplicatedStorage.TS.sound['game-sound']).GameSound
     },
     Events = {
         Damage = Instance.new("BindableEvent"),
@@ -185,11 +188,15 @@ local function Separate(Input: string)
     return Table
 end
 
+local function GetIcon(Item, Inv)
+	local Meta = GameData.Utils.ItemMeta[Item.itemType]
+	return Meta and Inv and Meta.image or ''
+end
+
 local function GetInventory(Player: Player?)
     Player = Player or LocalPlayer
     return GameData.Utils.InventoryUtil.getInventory(Player)
 end
-
 
 local function GetPlayersTeam(Player: Player): string
     local PlayerTeam = GameData.Utils.TeamController:getPlayerTeam(Player)
@@ -883,14 +890,15 @@ local function Aim(Start: Vector3, LaunchVel: number, Gravity: number?, TargetPo
     return FinalPrediction
 end
 
+Windows.Combat.Modules.UniversalAimbot:Destroy()
+Windows.Combat.Modules.UniversalHitboxes:Destroy()
 Windows.Movement.Modules.UniversalSpeed:Destroy()
 Windows.Movement.Modules.UniversalFly:Destroy()
-Windows.Combat.Modules.UniversalAimbot:Destroy()
 Windows.Movement.Modules.UniversalMouseTP:Destroy()
-Windows.Render.Modules.TargetHUD:Destroy()
 Windows.Movement.Modules.UniversalWallClimb:Destroy()
-Windows.Utility.Modules.UniversalAntiAFK:Destroy()
-Windows.Movement.Modules.UniversalNoClip:Destroy();
+Windows.Movement.Modules.UniversalNoClip:Destroy()
+Windows.Render.Modules.TargetHUD:Destroy()
+Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
 (function()
     local SpeedData = {
@@ -1771,8 +1779,8 @@ end)();
         Name = "Range",
         Flag = "KillAuraRange",
         Min = 1,
-        Max = 27,
-        Default = 27,
+        Max = 22,
+        Default = 22,
         CallingFunction = function(self, value: number)
             KillAuraData.Settings.Range = value
         end
@@ -5099,7 +5107,7 @@ end)();
         CallingFunction = function(self, value: {})
             Targets = value
         end
-    })  
+    })
 
     SwitchItemToggle = AutoKit:MiniToggle({
         Name = "Switch Item",
@@ -5983,42 +5991,47 @@ end)();
 end)();
 
 (function()
-    -- uhh ignore for rn fr ill sort another time
     local Distance = 20
     Windows.Utility:CreateModule({
         Name = "Bed Protector",
         Button = true,
         Flag = "BedProtector",
         CallingFunction = function(self, enabled: boolean)
-            if enabled then
-                local Bed = GetNearestBed(true, true)
-                if Bed.Bed and Distance >= Bed.Distance then
-                    for _, v in Enum.NormalId:GetEnumItems() do
-                        if v == Enum.NormalId.Bottom then
-                            continue
-                        end
+            if not enabled then
+                return
+            end
 
-                        -- no im not cleaning this
-                        for i = 1, 2 do
-                            local Block = GetBlocks()
-                            local Pos: Vector3 = Bed.Bed.Position + (Vector3.fromNormalId(v) * (3 * i))
-                            GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type):placeBlock(GameData.Utils.BlockEngine:getBlockPosition(Pos))
-                            GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type):placeBlock(GameData.Utils.BlockEngine:getBlockPosition(Pos - (Bed.Bed.CFrame.LookVector * (3))))
+            local Bed = GetNearestBed(true, true)
+            if not Bed.Bed or Distance < Bed.Distance then
+                task.delay(0.1, Warning, "Bed protector", "No bed in range", 5)
+                return
+            end
 
-                            if i == 1 then
-                                GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type):placeBlock(GameData.Utils.BlockEngine:getBlockPosition(Pos + Vector3.new(0, 3, 0)))
-                                GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type):placeBlock(GameData.Utils.BlockEngine:getBlockPosition((Pos - (Bed.Bed.CFrame.LookVector * (3))) + Vector3.new(0, 3, 0)))
+            local BedPos = Bed.Bed.Position
+            local BackOffset = Bed.Bed.CFrame.LookVector * 3
 
-                                GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type):placeBlock(GameData.Utils.BlockEngine:getBlockPosition(Pos + Vector3.new(0, 0, 3)))
-                                GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type):placeBlock(GameData.Utils.BlockEngine:getBlockPosition((Pos - (Bed.Bed.CFrame.LookVector * (3))) + Vector3.new(0, 0, 3)))
+            local function PlaceBlock(position: Vector3)
+                local Block = GetBlocks()
+                GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type)
+                    :placeBlock(GameData.Utils.BlockEngine:getBlockPosition(position))
+            end
 
-                                GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type):placeBlock(GameData.Utils.BlockEngine:getBlockPosition(Pos - Vector3.new(0, 0, 3)))
-                                GameData.Utils.BlockPlacer.new(GameData.Utils.BlockClient, Block.Type):placeBlock(GameData.Utils.BlockEngine:getBlockPosition((Pos - (Bed.Bed.CFrame.LookVector * (3))) - Vector3.new(0, 0, 3)))
-                            end
+            for _, face in Enum.NormalId:GetEnumItems() do
+                if face == Enum.NormalId.Bottom then
+                    continue
+                end
+
+                for i = 1, 2 do
+                    local Pos = BedPos + (Vector3.fromNormalId(face) * (3 * i))
+                    PlaceBlock(Pos)
+                    PlaceBlock(Pos - BackOffset)
+
+                    if i == 1 then
+                        for _, offset in { Vector3.new(0, 3, 0), Vector3.new(0, 0, 3), Vector3.new(0, 0, -3) } do
+                            PlaceBlock(Pos + offset)
+                            PlaceBlock(Pos - BackOffset + offset)
                         end
                     end
-                else
-                    task.delay(0.1, Warning, "Bed protector", "No bed in range", 5)
                 end
             end
         end
@@ -6027,7 +6040,7 @@ end)();
 
 (function()
     Windows.Utility:CreateModule({
-        Name = "MouseTP",
+        Name = "Mouse TP",
         Flag = "MouseTP",
         Button = true,
         CallingFunction = function(self, enabled: boolean)
@@ -6050,7 +6063,7 @@ end)();
                                 LookCF.Position,
                                 PlayerPosition, LookVec,
                                 HttpService:GenerateGUID(true),
-                                {drawDurationSec = math.random(1,3), shotId = HttpService:GenerateGUID(false)},
+                                {drawDurationSec = math.random(1, 3), shotId = HttpService:GenerateGUID(false)},
                                 workspace:GetServerTimeNow()
                             )
                         else
@@ -6062,7 +6075,2052 @@ end)();
                 else
                     Warning("Mouse Teleport", "You are dead.", 5)
                 end
+                self:SetValue(false)
             end
         end
     })
-end)()
+end)();
+
+(function()
+    local index
+	for i, v in debug.getconstants(GameData.Utils.SwordController.isClickingTooFast) do
+		if v == 'lastSwing' then
+			index = i + 1
+			break
+		end
+	end
+	local old = debug.getconstant(GameData.Utils.SwordController.isClickingTooFast, index)
+
+    Windows.Combat:CreateModule({
+        Name = "No Click Delay",
+        Flag = "NoClickDelay",
+        CallingFunction = function(self, enabled: boolean)
+            debug.setconstant(GameData.Utils.SwordController.isClickingTooFast, index, self.Enabled and 0 or old)
+        end
+    })
+end)();
+
+(function()
+    local SilentAuraData = {
+        Settings = {
+            Smoothness = 15,
+            Range = 40,
+            TeamCheck = true,
+            WallCheck = true,
+            TargetPart = "HumanoidRootPart",
+            AutoClick = true,
+            ClickDelay = 0.4,
+            Targets = {
+                Players = true,
+                Npcs = true
+            }
+        },
+        Data = {
+            RayParams = RaycastParams.new(),
+            LastClick = 0,
+            CurrentTarget = nil
+        }
+    }
+
+    local SilentAura = Windows.Combat:CreateModule({
+        Name = "Silent Aura",
+        Flag = "SilentAura",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                self:Connection(RunService.PreRender:Connect(function(Delta: number)
+                    if not Night:IsAlive(LocalPlayer) then
+                        SilentAuraData.Data.CurrentTarget = nil
+                        return
+                    end
+
+                    if GameData.Utils.Store:getState().Game.matchState ~= GameData.Utils.MatchStates.RUNNING then
+                        return
+                    end
+
+                    local NearestEntity = GetEntity({
+                        TeamCheck = SilentAuraData.Settings.TeamCheck,
+                        MaxRange = SilentAuraData.Settings.Range,
+                        Mode = "Distance",
+                        Targets = SilentAuraData.Settings.Targets,
+                        Visible = SilentAuraData.Settings.WallCheck
+                    })
+
+                    if NearestEntity.Entity then
+                        local Target = NearestEntity.Entity
+                        local TargetPart = Target:FindFirstChild(SilentAuraData.Settings.TargetPart) or Target.PrimaryPart
+                        if TargetPart then
+                            SilentAuraData.Data.CurrentTarget = NearestEntity
+
+                            local TargetCF = CFrame.new(CurrentCamera.CFrame.Position, TargetPart.Position)
+                            local LerpAlpha = math.clamp(SilentAuraData.Settings.Smoothness * Delta, 0, 1)
+                            CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(TargetCF, LerpAlpha)
+
+                            if SilentAuraData.Settings.AutoClick then
+                                local Now = os.clock()
+                                if Now - SilentAuraData.Data.LastClick >= SilentAuraData.Settings.ClickDelay then
+                                    local Sword = GetSword()
+                                    if Sword.Item then
+                                        GameData.Utils.SwordController:swingSwordAtMouse()
+                                        SilentAuraData.Data.LastClick = Now
+                                    end
+                                end
+                            end
+                        end
+                    else
+                        SilentAuraData.Data.CurrentTarget = nil
+                    end
+                end))
+            else
+                SilentAuraData.Data.CurrentTarget = nil
+            end
+        end
+    })
+
+    SilentAura:Slider({
+        Name = "Aim Speed",
+        Flag = "SilentAuraSpeed",
+        Default = 15,
+        Min = 1,
+        Max = 50,
+        CallingFunction = function(self, value: number)
+            SilentAuraData.Settings.Smoothness = value
+        end
+    })
+
+    SilentAura:Slider({
+        Name = "Range",
+        Flag = "SilentAuraRange",
+        Default = 25,
+        Min = 5,
+        Max = 30,
+        CallingFunction = function(self, value: number)
+            SilentAuraData.Settings.Range = value
+        end
+    })
+
+    SilentAura:Slider({
+        Name = "Click Speed",
+        Flag = "SilentAuraClickSpeed",
+        Default = 4,
+        Min = 1,
+        Max = 10,
+        CallingFunction = function(self, value: number)
+            SilentAuraData.Settings.ClickDelay = 1 / value * math.random(2, 5)
+        end
+    })
+
+    SilentAura:Dropdown({
+        Name = "Part",
+        Flag = "SilentAuraPart",
+        Default = "HumanoidRootPart",
+        Options = AimParts,
+        CallingFunction = function(self, Value: string)
+            SilentAuraData.Settings.TargetPart = Value
+        end
+    })
+
+    SilentAura:Dropdown({
+        Name = "Targets",
+        Flag = "SilentAuraTargets",
+        Default = {"Players", "Npcs"},
+        Options = {"Players", "Npcs"},
+        MaxLimit = 2,
+        MinLimit = 0,
+        CallingFunction = function(self, value)
+            SilentAuraData.Settings.Targets = value
+        end
+    })
+
+    SilentAura:MiniToggle({
+        Name = "Auto Click",
+        Default = true,
+        Flag = "SilentAuraAutoClick",
+        CallingFunction = function(self, value: boolean)
+            SilentAuraData.Settings.AutoClick = value
+        end
+    })
+
+    SilentAura:MiniToggle({
+        Name = "Team Check",
+        Default = true,
+        Flag = "SilentAuraTeamCheck",
+        CallingFunction = function(self, value: boolean)
+            SilentAuraData.Settings.TeamCheck = value
+        end
+    })
+
+    SilentAura:MiniToggle({
+        Name = "Wall Check",
+        Default = true,
+        Flag = "SilentAuraWallCheck",
+        CallingFunction = function(self, value: boolean)
+            SilentAuraData.Settings.WallCheck = value
+        end
+    })
+end)();
+
+(function()
+    local AutoDodgeData = {
+        Settings = {
+            Range = 15,
+            Delay = 1,
+            DodgeOffset = 50
+        },
+        Data = {
+            LastDodgeTime = 0,
+            OverlapParams = OverlapParams.new()
+        }
+    }
+
+    local ArrowNames = {arrow = true, crossbow_arrow = true, headhunter_arrow = true}
+    AutoDodgeData.Data.OverlapParams.FilterType = Enum.RaycastFilterType.Exclude
+
+    local function IsEnemyArrow(part): boolean
+        local Model = part:FindFirstAncestorWhichIsA("Model")
+        if not Model or not ArrowNames[Model.Name] then return false end
+        return Model:GetAttribute("ProjectileShooter") ~= LocalPlayer.UserId
+    end
+
+    local function Dodge(Root)
+        local Pos = Root.Position
+        Root.CFrame = CFrame.new(Pos + Vector3.new(0, AutoDodgeData.Settings.DodgeOffset, 0))
+        task.wait(0.2)
+
+        local HRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if HRP then
+            HRP.CFrame = CFrame.new(Pos)
+        end
+        AutoDodgeData.Data.LastDodgeTime = os.clock()
+    end
+
+    local AutoDodge = Windows.Combat:CreateModule({
+        Name = "Auto Dodge",
+        Flag = "AutoDodge",
+        CallingFunction = function(self, enabled: boolean)
+            if not enabled then return end
+
+            AutoDodgeData.Data.OverlapParams.FilterDescendantsInstances = {LocalPlayer.Character or {}}
+
+            self:Connection(RunService.PreRender:Connect(function()
+                if not Night:IsAlive(LocalPlayer) then return end
+
+                if GameData.Utils.Store:getState().Game.matchState ~= GameData.Utils.MatchStates.RUNNING then
+                    return
+                end
+
+                local Root = LocalPlayer.Character.HumanoidRootPart
+                if not Root then return end
+                if (os.clock() - AutoDodgeData.Data.LastDodgeTime) < AutoDodgeData.Settings.Delay then return end
+
+                local nearby = workspace:GetPartBoundsInRadius(Root.Position, AutoDodgeData.Settings.Range, AutoDodgeData.Data.OverlapParams)
+                for _, part in nearby do
+                    if IsEnemyArrow(part) then
+                        Dodge(Root)
+                        break
+                    end
+                end
+            end))
+        end
+    })
+
+    AutoDodge:Slider({
+        Name = "Range",
+        Flag = "AutoDodgeRange",
+        Default = 15,
+        Min = 5,
+        Max = 30,
+        CallingFunction = function(self, value: number)
+            AutoDodgeData.Settings.Range = value
+        end
+    })
+
+    AutoDodge:Slider({
+        Name = "Delay",
+        Flag = "AutoDodgeDelay",
+        Default = 1,
+        Min = 0,
+        Max = 10,
+        CallingFunction = function(self, value: number)
+            AutoDodgeData.Settings.Delay = value
+        end
+    })
+
+    AutoDodge:Slider({
+        Name = "Dodge Offset",
+        Flag = "AutoDodgeDodgeOffset",
+        Default = 50,
+        Min = 0,
+        Max = 500,
+        CallingFunction = function(self, value: number)
+            AutoDodgeData.Settings.DodgeOffset = value
+        end
+    })
+end)();
+
+(function()
+    local TargetStrafeData = {
+        Settings = {
+            Range = 10,
+            StrafeSpeed = 1.2,
+            StrafeRadius = 8,
+            AutoJump = true,
+            JumpDelay = 0.6,
+            SmartDodge = true,
+            DodgeDistance = 6,
+            ReverseInterval = 1.5,
+            SprintMultiplier = 1.0,
+            Targets = {Players = true, Npcs = false},
+            TeamCheck = true,
+            Mode = "Distance"
+        },
+        Data = {
+            Angle = 0,
+            Direction = 1,
+            LastJumpTime = 0,
+            LastReverseTime = 0,
+            LastDodgeTime = 0,
+            RayParams = RaycastParams.new()
+        }
+    }
+
+    TargetStrafeData.Data.RayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+    local function IsTargetSwinging(target: Model): boolean
+        local Hum = target:FindFirstChildWhichIsA("Humanoid")
+        if not Hum then return false end
+        local Animator = Hum:FindFirstChildWhichIsA("Animator")
+        if not Animator then return false end
+        for _, track in Animator:GetPlayingAnimationTracks() do
+            local name = track.Animation and track.Animation.Name or ""
+            if name:lower():find("swing") or name:lower():find("slash") or name:lower():find("attack") or name:lower():find("sword") then
+                return true
+            end
+        end
+        return false
+    end
+
+    local function GetTargetVelocity(target: Model): Vector3
+        local root = target:FindFirstChild("HumanoidRootPart")
+        if root then
+            return root.AssemblyLinearVelocity
+        end
+        return Vector3.zero
+    end
+
+    local TargetStrafe = Windows.Combat:CreateModule({
+        Name = "Target Strafe",
+        Flag = "TargetStrafe",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+
+                TargetStrafeData.Data.Angle = 0
+                TargetStrafeData.Data.Direction = 1
+                TargetStrafeData.Data.LastReverseTime = os.clock()
+
+                self:Connection(RunService.PreRender:Connect(function(delta)
+                    if not Night:IsAlive(LocalPlayer) then return end
+                    if GameData.Utils.Store:getState().Game.matchState ~= GameData.Utils.MatchStates.RUNNING then return end
+
+                    local Character = LocalPlayer.Character
+                    local Root = Character:FindFirstChild("HumanoidRootPart")
+                    local Humanoid = Character:FindFirstChild("Humanoid")
+                    if not Root or not Humanoid then return end
+
+                    TargetStrafeData.Data.RayParams.FilterDescendantsInstances = {Character}
+
+                    local NearestEntity = GetEntity({
+                        TeamCheck = TargetStrafeData.Settings.TeamCheck,
+                        Mode = TargetStrafeData.Settings.Mode,
+                        MaxRange = TargetStrafeData.Settings.Range,
+                        Targets = TargetStrafeData.Settings.Targets,
+                        Visible = false
+                    })
+
+                    if not NearestEntity.Entity then return end
+
+                    local TargetRoot = NearestEntity.Data.Root
+                    if not TargetRoot then return end
+
+                    local TargetEntity = NearestEntity.Data.Entity
+                    local TargetPos = TargetRoot.Position
+                    local MyPos = Root.Position
+                    local Now = os.clock()
+
+                    if (Now - TargetStrafeData.Data.LastReverseTime) >= TargetStrafeData.Settings.ReverseInterval then
+                        TargetStrafeData.Data.Direction = -TargetStrafeData.Data.Direction
+                        TargetStrafeData.Data.LastReverseTime = Now
+                    end
+
+                    if TargetStrafeData.Settings.SmartDodge and IsTargetSwinging(TargetEntity) then
+                        if (Now - TargetStrafeData.Data.LastDodgeTime) > 0.5 then
+                            TargetStrafeData.Data.Direction = -TargetStrafeData.Data.Direction
+                            TargetStrafeData.Data.LastDodgeTime = Now
+                            TargetStrafeData.Data.LastReverseTime = Now
+
+                            if Humanoid.FloorMaterial ~= Enum.Material.Air then
+                                Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                                TargetStrafeData.Data.LastJumpTime = Now
+                            end
+                        end
+                    end
+
+                    local Speed = TargetStrafeData.Settings.StrafeSpeed * TargetStrafeData.Settings.SprintMultiplier
+                    TargetStrafeData.Data.Angle += Speed * TargetStrafeData.Data.Direction * delta
+
+                    local Radius = TargetStrafeData.Settings.StrafeRadius
+                    local StrafeX = math.cos(TargetStrafeData.Data.Angle) * Radius
+                    local StrafeZ = math.sin(TargetStrafeData.Data.Angle) * Radius
+                    local DesiredPos = Vector3.new(TargetPos.X + StrafeX, MyPos.Y, TargetPos.Z + StrafeZ)
+
+                    local TargetVel = GetTargetVelocity(TargetEntity)
+                    local PredictedCenter = TargetPos + TargetVel * 0.15
+                    DesiredPos = Vector3.new(PredictedCenter.X + StrafeX, MyPos.Y, PredictedCenter.Z + StrafeZ)
+
+                    local MoveDir = (DesiredPos - MyPos).Unit
+                    local RayResult = workspace:Raycast(MyPos, MoveDir * 3, TargetStrafeData.Data.RayParams)
+                    if RayResult then
+                        TargetStrafeData.Data.Direction = -TargetStrafeData.Data.Direction
+                        TargetStrafeData.Data.LastReverseTime = Now
+                    end
+
+                    local LerpAlpha = math.clamp(delta * 10, 0, 1)
+                    local NewPos = MyPos:Lerp(DesiredPos, LerpAlpha)
+
+                    local LookDir = (TargetPos - NewPos) * Vector3.new(1, 0, 1)
+                    if LookDir.Magnitude > 0.01 then
+                        Root.CFrame = CFrame.new(NewPos, NewPos + LookDir)
+                    end
+
+                    if TargetStrafeData.Settings.AutoJump and Humanoid.FloorMaterial ~= Enum.Material.Air then
+                        if (Now - TargetStrafeData.Data.LastJumpTime) >= TargetStrafeData.Settings.JumpDelay then
+                            Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                            TargetStrafeData.Data.LastJumpTime = Now
+                        end
+                    end
+                end))
+            end
+        end
+    })
+
+    TargetStrafe:Slider({
+        Name = "Range",
+        Flag = "TargetStrafeRange",
+        Default = 10,
+        Min = 5,
+        Max = 18,
+        CallingFunction = function(self, value: number)
+            TargetStrafeData.Settings.Range = value
+        end
+    })
+
+    TargetStrafe:Slider({
+        Name = "Strafe Speed",
+        Flag = "TargetStrafeSpeed",
+        Default = 1.2,
+        Min = 0.1,
+        Max = 5,
+        CallingFunction = function(self, value: number)
+            TargetStrafeData.Settings.StrafeSpeed = value
+        end
+    })
+
+    TargetStrafe:Slider({
+        Name = "Strafe Radius",
+        Flag = "TargetStrafeRadius",
+        Default = 8,
+        Min = 3,
+        Max = 20,
+        CallingFunction = function(self, value: number)
+            TargetStrafeData.Settings.StrafeRadius = value
+        end
+    })
+
+    TargetStrafe:Slider({
+        Name = "Jump Delay",
+        Flag = "TargetStrafeJumpDelay",
+        Default = 0.6,
+        Min = 0.1,
+        Max = 3,
+        CallingFunction = function(self, value: number)
+            TargetStrafeData.Settings.JumpDelay = value
+        end
+    })
+
+    TargetStrafe:Slider({
+        Name = "Reverse Interval",
+        Flag = "TargetStrafeReverseInterval",
+        Default = 1.5,
+        Min = 0.3,
+        Max = 5,
+        CallingFunction = function(self, value: number)
+            TargetStrafeData.Settings.ReverseInterval = value
+        end
+    })
+
+    TargetStrafe:Slider({
+        Name = "Sprint Multiplier",
+        Flag = "TargetStrafeSprintMultiplier",
+        Default = 1.0,
+        Min = 0.5,
+        Max = 3,
+        CallingFunction = function(self, value: number)
+            TargetStrafeData.Settings.SprintMultiplier = value
+        end
+    })
+
+    TargetStrafe:MiniToggle({
+        Name = "Auto Jump",
+        Flag = "TargetStrafeAutoJump",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            TargetStrafeData.Settings.AutoJump = value
+        end
+    })
+
+    TargetStrafe:MiniToggle({
+        Name = "Smart Dodge",
+        Flag = "TargetStrafeDodge",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            TargetStrafeData.Settings.SmartDodge = value
+        end
+    })
+
+    TargetStrafe:MiniToggle({
+        Name = "Team Check",
+        Flag = "TargetStrafeTeamCheck",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            TargetStrafeData.Settings.TeamCheck = value
+        end
+    })
+
+    TargetStrafe:Dropdown({
+        Name = "Mode",
+        Flag = "TargetStrafeMode",
+        Default = "Distance",
+        Options = {"Distance", "Lowest Health", "Highest Health", "Angle"},
+        CallingFunction = function(self, value: string)
+            TargetStrafeData.Settings.Mode = value
+        end
+    })
+end)();
+
+(function()
+	local OldTime = {
+		Multi = 0,
+		Fire = 0,
+		Strength = 0
+	}
+
+    Windows.Combat:CreateModule({
+        Name = "Fast Bow",
+        Flag = "FastBow",
+        CallingFunction = function(self, enabled: boolean)
+            for i, v in next, GameData.Utils.ItemMeta do 
+				if v.projectileSource then 
+					OldTime[i] = self.Enabled and {
+						Fire = v.projectileSource.fireDelaySec,
+						Multi = v.projectileSource.multiShotChargeTime,
+						Strength = v.projectileSource.maxStrengthChargeSec
+					} or OldTime[i]
+                    pcall(function()
+					    v.projectileSource.fireDelaySec = self.Enabled and 0.01 or OldTime[i].Fire
+					    v.projectileSource.multiShotChargeTime = self.Enabled and 0.01 or OldTime[i].Multi
+					    v.projectileSource.maxStrengthChargeSec = self.Enabled and 0.01 or OldTime[i].Strength
+                    end)
+                end
+			end
+        end
+    })
+end)();
+
+(function()
+    local OldGet
+    Windows.Combat:CreateModule({
+        Name = "Reach",
+        Flag = "Reach",
+        CallingFunction = function(self, enabled: boolean)
+            setmetatable(GameData.Utils.CombatConstant, {
+                __newindex = function(self, key, value)
+                    if key == "RAYCAST_SWORD_CHARACTER_DISTANCE" then
+                        rawset(self, key, enabled and 22 or 14.4)
+                    end
+                end
+            })
+
+            if enabled then
+                OldGet = GameData.Utils.Remotes.Get
+                GameData.Utils.Remotes.Get = function(self, Name: string, ...)
+                    local Get = OldGet(self, Name, ...)
+
+                    if Name == "SwordHit" then
+                        return {
+                            instance = Get.instance,
+                            SendToServer = function(self, Args)
+                                Args.validate.selfPosition.value += (math.clamp((Args.validate.targetPosition.value - Args.validate.selfPosition.value).Magnitude - 14.4, 10, 30) * (Args.validate.targetPosition.value - Args.validate.selfPosition.value).Unit)
+                                return Get:SendToServer(Args)
+                            end
+                        }
+                    end
+
+                    return Get
+                end
+            else
+                if OldGet then
+                    GameData.Utils.Remotes.Get = OldGet
+                end
+            end
+        end
+    })
+end)();
+
+(function()
+    local BeeIcon = GetIcon({itemType = "bee"}, true)
+
+    local Config = {
+        BeeColor = Color3.fromRGB(0, 0, 0),
+        HiveColor = Color3.fromRGB(0, 0, 0),
+        MaxColor = Color3.fromRGB(255, 255, 255),
+        BeeSize = 36,
+        HiveSize = 80,
+        Transparency = 0.5,
+        Corner = 6,
+        ShowBees = true,
+        ShowHives = true,
+        Notify = true,
+        NotifyMax = true
+    }
+
+    local ESPHolder: Folder = Instance.new("Folder", PlayerGui)
+    ESPHolder.Name = "[Night] Beekeeper"
+    local Tracked = {}
+    local MaxNotified = {}
+    local PendingAlerts, LastAlert = 0, 0
+
+    local function IsTamed(Obj: Instance): boolean
+        if Obj.Name:find("Tamed") then return true end
+        if Obj:FindFirstChild("TamedBee") then return true end
+        if Obj:GetAttribute("IsTamed") or Obj:GetAttribute("Tamed") then return true end
+        for _, Tag in CollectionService:GetTags(Obj) do
+            if Tag:lower():find("tamed") then return true end
+        end
+        return false
+    end
+
+    local function MakeLabel(Props): TextLabel
+        local Lbl = Instance.new("TextLabel")
+        Lbl.BackgroundTransparency = 1
+        Lbl.TextColor3 = Color3.new(1, 1, 1)
+        Lbl.Font = Enum.Font.GothamBold
+        Lbl.TextStrokeTransparency = 0.5
+        Lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+        for K, V in Props do Lbl[K] = V end
+        return Lbl
+    end
+
+    local function CreateBillboard(Adornee: Instance, Offset: number, W: number, H: number): BillboardGui
+        local Bb = Instance.new("BillboardGui", ESPHolder)
+        Bb.Adornee, Bb.AlwaysOnTop, Bb.ClipsDescendants = Adornee, true, false
+        Bb.StudsOffsetWorldSpace = Vector3.new(0, Offset, 0)
+        Bb.Size = UDim2.fromOffset(W, H)
+        return Bb
+    end
+
+    local function TrackBee(Part: BasePart)
+        if Tracked[Part] or not Config.ShowBees then return end
+        local Mdl = Part.Parent
+        if not Mdl or IsTamed(Mdl) then return end
+
+        local Bb = CreateBillboard(Part, 3, Config.BeeSize, Config.BeeSize)
+        local Img = Instance.new("ImageLabel", Bb)
+        Img.Size, Img.Position, Img.AnchorPoint = UDim2.fromScale(1, 1), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5)
+        Img.BackgroundColor3, Img.BackgroundTransparency = Config.BeeColor, Config.Transparency
+        Img.BorderSizePixel, Img.Image = 0, BeeIcon
+        Instance.new("UICorner", Img).CornerRadius = UDim.new(0, Config.Corner)
+
+        Tracked[Part] = {Billboard = Bb, Type = "bee", Frame = Img}
+
+        if Config.Notify then
+            PendingAlerts += 1
+            local Now = tick()
+            if Now - LastAlert >= 1 then
+                Warning("Beekeeper", PendingAlerts .. " bee(s) detected", 3)
+                PendingAlerts, LastAlert = 0, Now
+            else
+                task.delay(1 - (Now - LastAlert), function()
+                    if PendingAlerts > 0 then
+                        Warning("Beekeeper", PendingAlerts .. " bee(s) detected", 3)
+                        PendingAlerts, LastAlert = 0, tick()
+                    end
+                end)
+            end
+        end
+    end
+
+    local function TrackHive(Hive: Instance)
+        if Tracked[Hive] or not Config.ShowHives then return end
+        local Owner = Hive:GetAttribute("PlacedByUserId")
+        if Owner ~= LocalPlayer.UserId then return end
+
+        local Lvl = Hive:GetAttribute("Level") or 0
+        local Maxed = Lvl >= 10
+
+        local Bb = CreateBillboard(Hive, 4, Config.HiveSize, 34)
+        local Frame = Instance.new("Frame", Bb)
+        Frame.Name, Frame.Size, Frame.BorderSizePixel = "Frame", UDim2.fromScale(1, 1), 0
+        Frame.BackgroundColor3 = Maxed and Config.MaxColor or Config.HiveColor
+        Frame.BackgroundTransparency = Config.Transparency
+        Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, Config.Corner)
+
+        local Icon = Instance.new("ImageLabel", Frame)
+        Icon.Size, Icon.Position, Icon.AnchorPoint = UDim2.fromOffset(18, 18), UDim2.new(0, 6, 0.5, 0), Vector2.new(0, 0.5)
+        Icon.BackgroundTransparency, Icon.Image = 1, BeeIcon
+
+        local LvlLabel = MakeLabel({
+            Name = "Level", Text = tostring(Lvl), TextSize = 16,
+            Size = UDim2.new(0, 30, 1, 0), Position = UDim2.new(1, -34, 0, 0), Parent = Frame
+        })
+
+        local MaxLabel = nil
+        if Maxed then
+            MaxLabel = MakeLabel({
+                Name = "MaxTag", Text = "MAX", TextSize = 12,
+                TextColor3 = Config.MaxColor,
+                Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 0, -18), Parent = Bb
+            })
+        end
+
+        Tracked[Hive] = {Billboard = Bb, Type = "hive", Frame = Frame, LvlLabel = LvlLabel, MaxLabel = MaxLabel, Maxed = Maxed}
+
+        if Maxed and not MaxNotified[Hive] and Config.NotifyMax then
+            Warning("Beekeeper", "Beehive reached MAX level!", 3)
+            MaxNotified[Hive] = true
+        end
+    end
+
+    local function Untrack(Obj: Instance)
+        local Data = Tracked[Obj]
+        if not Data then return end
+        Data.Billboard:Destroy()
+        Tracked[Obj] = nil
+    end
+
+    local function RefreshHiveLevel(Hive: Instance)
+        local Data = Tracked[Hive]
+        if not Data or Data.Type ~= "hive" then return end
+        local Lvl = Hive:GetAttribute("Level") or 0
+        local Maxed = Lvl >= 10
+
+        Data.LvlLabel.Text = tostring(Lvl)
+        Data.Frame.BackgroundColor3 = Maxed and Config.MaxColor or Config.HiveColor
+        Data.Maxed = Maxed
+
+        if Maxed and not Data.MaxLabel then
+            Data.MaxLabel = MakeLabel({
+                Name = "MaxTag", Text = "MAX", TextSize = 12,
+                TextColor3 = Config.MaxColor,
+                Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 0, -18), Parent = Data.Billboard
+            })
+            if not MaxNotified[Hive] and Config.NotifyMax then
+                Warning("Beekeeper", "Beehive reached MAX level!", 3)
+                MaxNotified[Hive] = true
+            end
+        elseif not Maxed and Data.MaxLabel then
+            Data.MaxLabel:Destroy()
+            Data.MaxLabel = nil
+            MaxNotified[Hive] = nil
+        end
+    end
+
+    local function ScanDescendant(Obj: Instance)
+        if Obj:IsA("Model") and Obj:FindFirstChild("PrimaryPart") or Obj:IsA("Model") and Obj.PrimaryPart then
+            local Tags = CollectionService:GetTags(Obj)
+            if table.find(Tags, "bee") and not IsTamed(Obj) and Obj.PrimaryPart then
+                TrackBee(Obj.PrimaryPart)
+            end
+            if table.find(Tags, "beehive") then
+                TrackHive(Obj)
+            end
+        end
+        if CollectionService:HasTag(Obj, "bee") and Obj:IsA("Model") and Obj.PrimaryPart then
+            if not IsTamed(Obj) then TrackBee(Obj.PrimaryPart) end
+        end
+        if CollectionService:HasTag(Obj, "beehive") then
+            TrackHive(Obj)
+        end
+    end
+
+    local Beekeeper = Windows.Render:CreateModule({
+        Name = "Beekeeper ESP",
+        Flag = "BeekeeperESP",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                for _, Obj in workspace:GetDescendants() do
+                    task.spawn(ScanDescendant, Obj)
+                end
+
+                self:Connection(workspace.DescendantAdded:Connect(function(Obj)
+                    task.defer(ScanDescendant, Obj)
+                end))
+
+                self:Connection(workspace.DescendantRemoving:Connect(function(Obj)
+                    if Obj:IsA("Model") and Obj.PrimaryPart then Untrack(Obj.PrimaryPart) end
+                    Untrack(Obj)
+                end))
+
+                self:Connection(CollectionService:GetInstanceAddedSignal("bee"):Connect(function(Obj)
+                    if Obj:IsA("Model") and Obj.PrimaryPart and not IsTamed(Obj) then
+                        task.defer(TrackBee, Obj.PrimaryPart)
+                    end
+                end))
+
+                self:Connection(CollectionService:GetInstanceRemovedSignal("bee"):Connect(function(Obj)
+                    if Obj:IsA("Model") and Obj.PrimaryPart then Untrack(Obj.PrimaryPart) end
+                end))
+
+                self:Connection(CollectionService:GetInstanceAddedSignal("beehive"):Connect(function(Obj)
+                    task.defer(TrackHive, Obj)
+                end))
+
+                self:Connection(CollectionService:GetInstanceRemovedSignal("beehive"):Connect(function(Obj)
+                    Untrack(Obj)
+                end))
+
+                self:Connection(RunService.RenderStepped:Connect(function()
+                    for Obj, Data in Tracked do
+                        if not Obj or not Obj.Parent then
+                            Untrack(Obj)
+                        elseif Data.Type == "hive" then
+                            RefreshHiveLevel(Data.Billboard.Adornee)
+                        end
+                    end
+                end))
+            else
+                ESPHolder:ClearAllChildren()
+                table.clear(Tracked)
+                table.clear(MaxNotified)
+                PendingAlerts, LastAlert = 0, 0
+            end
+        end
+    })
+
+    Beekeeper:MiniToggle({
+        Name = "Show Bees",
+        Flag = "BeeESPShowBees",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            Config.ShowBees = value
+            if not value then
+                for Obj, Data in Tracked do
+                    if Data.Type == "bee" then Untrack(Obj) end
+                end
+            end
+        end
+    })
+
+    Beekeeper:MiniToggle({
+        Name = "Show Hives",
+        Flag = "BeeESPShowHives",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            Config.ShowHives = value
+            if not value then
+                for Obj, Data in Tracked do
+                    if Data.Type == "hive" then Untrack(Obj) end
+                end
+            end
+        end
+    })
+
+    Beekeeper:MiniToggle({
+        Name = "Notifications",
+        Flag = "BeeESPNotify",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            Config.Notify = value
+        end
+    })
+
+    Beekeeper:MiniToggle({
+        Name = "Max LVL Notify",
+        Flag = "BeeESPNotifyMax",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            Config.NotifyMax = value
+        end
+    })
+
+    Beekeeper:ColorSlider({
+        Name = "Bee Color",
+        Flag = "BeeESPBeeColor",
+        Default = Color3.fromRGB(0, 0, 0),
+        CallingFunction = function(self, value: Color3)
+            Config.BeeColor = value
+            for _, Data in Tracked do
+                if Data.Type == "bee" and Data.Frame then
+                    Data.Frame.BackgroundColor3 = value
+                end
+            end
+        end
+    })
+
+    Beekeeper:ColorSlider({
+        Name = "Hive Color",
+        Flag = "BeeESPHiveColor",
+        Default = Color3.fromRGB(0, 0, 0),
+        CallingFunction = function(self, value: Color3)
+            Config.HiveColor = value
+            for _, Data in Tracked do
+                if Data.Type == "hive" and Data.Frame and not Data.Maxed then
+                    Data.Frame.BackgroundColor3 = value
+                end
+            end
+        end
+    })
+
+    Beekeeper:ColorSlider({
+        Name = "Max LVL Color",
+        Flag = "BeeESPMaxColor",
+        Default = Color3.fromRGB(255, 255, 255),
+        CallingFunction = function(self, value: Color3)
+            Config.MaxColor = value
+            for _, Data in Tracked do
+                if Data.Type == "hive" and Data.Maxed then
+                    if Data.Frame then Data.Frame.BackgroundColor3 = value end
+                    if Data.MaxLabel then Data.MaxLabel.TextColor3 = value end
+                end
+            end
+        end
+    })
+
+    Beekeeper:Slider({
+        Name = "Transparency",
+        Flag = "BeeESPTransparency",
+        Default = 50,
+        Min = 0,
+        Max = 100,
+        CallingFunction = function(self, value: number)
+            Config.Transparency = value / 100
+            for _, Data in Tracked do
+                local Target = Data.Frame
+                if Target then Target.BackgroundTransparency = Config.Transparency end
+            end
+        end
+    })
+
+    Beekeeper:Slider({
+        Name = "Corner Radius",
+        Flag = "BeeESPCorner",
+        Default = 6,
+        Min = 0,
+        Max = 16,
+        CallingFunction = function(self, value: number)
+            Config.Corner = value
+            for _, Data in Tracked do
+                local Corner = Data.Frame and Data.Frame:FindFirstChildOfClass("UICorner")
+                if Corner then Corner.CornerRadius = UDim.new(0, value) end
+            end
+        end
+    })
+
+    Beekeeper:Slider({
+        Name = "Bee Size",
+        Flag = "BeeESPBeeSize",
+        Default = 36,
+        Min = 16,
+        Max = 64,
+        CallingFunction = function(self, value: number)
+            Config.BeeSize = value
+            for _, Data in Tracked do
+                if Data.Type == "bee" and Data.Billboard then
+                    Data.Billboard.Size = UDim2.fromOffset(value, value)
+                end
+            end
+        end
+    })
+end)();
+
+(function()
+	local Me = Players.LocalPlayer
+
+	local Skins = {
+		Nightmare = {asset = "cannon_nightmare_victorious", sfx = "CANNON_FIRE_VICTORIOUS_NIGHTMARE"},
+		Diamond = {asset = "cannon_diamond_victorious", sfx = "CANNON_FIRE_VICTORIOUS_DIAMOND"},
+		Emerald = {asset = "cannon_emerald_victorious", sfx = "CANNON_FIRE_VICTORIOUS_EMERALD"}
+	}
+
+	local ActiveSkin = "Nightmare"
+	local TAG = "DANIELWHITETHEPASTER"
+	local Binds = {}
+	local Active = false
+	local OrigFire, OrigLaunch, SfxPatched = nil, nil, false
+
+	local HandOff = CFrame.new()
+	local WorldOff = CFrame.new(0, -0.75, 0)
+
+	local function GetVisuals(Root)
+		local Parts, Decals = {}, {}
+		for _, Obj in Root:GetDescendants() do
+			if Obj:IsA("BasePart") then Parts[#Parts + 1] = Obj
+			elseif Obj:IsA("Decal") or Obj:IsA("Texture") then Decals[#Decals + 1] = Obj end
+		end
+		return Parts, Decals
+	end
+
+	local function HideOrig(Root)
+		local Parts, Decals = GetVisuals(Root)
+		for _, P in Parts do P.Transparency, P.LocalTransparencyModifier = 1, 1 end
+		for _, D in Decals do D.Transparency = 1 end
+	end
+
+	local function ShowOrig(Root)
+		local Parts, Decals = GetVisuals(Root)
+		for _, P in Parts do P.Transparency, P.LocalTransparencyModifier = 0, 0 end
+		for _, D in Decals do D.Transparency = 0 end
+	end
+
+	local function GetTemplate()
+		return ReplicatedStorage.Assets.Blocks:FindFirstChild(Skins[ActiveSkin].asset)
+	end
+
+	local function GetAnchor(Container)
+		local H = Container:FindFirstChild("Handle")
+		if H and H:IsA("BasePart") then return H end
+		for _, D in Container:GetDescendants() do
+			if D:IsA("BasePart") then return D end
+		end
+		return nil
+	end
+
+	local function WeldAll(Model)
+		local Root = Model.PrimaryPart
+		if not Root then return end
+		for _, D in Model:GetDescendants() do
+			if D:IsA("BasePart") and D ~= Root then
+				local W = Instance.new("WeldConstraint")
+				W.Part0, W.Part1 = Root, D
+				W.Parent = Root
+			end
+		end
+	end
+
+	local function NoPhysics(Model)
+		for _, D in Model:GetDescendants() do
+			if D:IsA("BasePart") then
+				D.CanCollide, D.CanTouch, D.CanQuery, D.Massless, D.Anchored = false, false, false, true, false
+			end
+		end
+	end
+
+	local function SetPrimary(Model)
+		if Model.PrimaryPart then return true end
+		for _, D in Model:GetDescendants() do
+			if D:IsA("BasePart") then
+				local Ok = pcall(function() Model.PrimaryPart = D end)
+				if Ok then return true end
+			end
+		end
+		return false
+	end
+
+	local function Apply(Target, Offset)
+		if not Target or CollectionService:HasTag(Target, TAG) then return end
+		CollectionService:AddTag(Target, TAG)
+
+		local Anchor = GetAnchor(Target)
+		if not Anchor then CollectionService:RemoveTag(Target, TAG); return end
+
+		local Tmpl = GetTemplate()
+		if not Tmpl then CollectionService:RemoveTag(Target, TAG); return end
+
+		HideOrig(Target)
+
+		local Skin = Tmpl:Clone()
+		Skin.Name = "_cskin"
+
+		if Skin:IsA("Model") then
+			if not SetPrimary(Skin) then
+				Skin:Destroy()
+				CollectionService:RemoveTag(Target, TAG)
+				return
+			end
+			NoPhysics(Skin)
+			Skin.Parent = Target
+			pcall(Skin.PivotTo, Skin, Anchor.CFrame * Offset)
+			WeldAll(Skin)
+
+			local Bridge = Instance.new("WeldConstraint")
+			Bridge.Part0, Bridge.Part1 = Anchor, Skin.PrimaryPart
+			Bridge.Parent = Skin
+		else
+			Skin.Parent = Target
+		end
+	end
+
+	local function Remove(Target)
+		if not Target then return end
+		local Sk = Target:FindFirstChild("_cskin")
+		if Sk then Sk:Destroy() end
+		ShowOrig(Target)
+		pcall(CollectionService.RemoveTag, CollectionService, Target, TAG)
+	end
+
+	local function Listen(Parent, Check, Offset, Now)
+		if Now then
+			for _, Ch in Parent:GetChildren() do
+				if Check(Ch) then Apply(Ch, Offset) end
+			end
+		end
+		local C = Parent.ChildAdded:Connect(function(Ch)
+			if not Active then return end
+			task.defer(function()
+				if Check(Ch) then Apply(Ch, Offset) end
+			end)
+		end)
+		Binds[#Binds + 1] = C
+		return C
+	end
+
+	local function IsCannon(Obj) return Obj.Name == "cannon" end
+	local function IsCannonTool(Obj) return Obj:IsA("Tool") and Obj.Name == "cannon" end
+
+	local function WatchCam()
+		local Cam = workspace.CurrentCamera
+		if not Cam then return end
+
+		local function HookVm(Vm)
+			Listen(Vm, IsCannon, HandOff, true)
+		end
+
+		local Existing = Cam:FindFirstChild("Viewmodel")
+		if Existing then HookVm(Existing) end
+
+		Binds[#Binds + 1] = Cam.ChildAdded:Connect(function(Ch)
+			if Ch.Name == "Viewmodel" then task.defer(HookVm, Ch) end
+		end)
+	end
+
+	local function WatchEquip(Char)
+		local C = Char.ChildAdded:Connect(function(Tool)
+			if not (Active and IsCannonTool(Tool)) then return end
+			task.defer(function()
+				local Handle = GetAnchor(Tool)
+				if not Handle then return end
+
+				local Old = Tool:FindFirstChild("_cskin")
+				if Old then Old:Destroy() end
+
+				local Tmpl = GetTemplate()
+				if not Tmpl then return end
+
+				local Skin = Tmpl:Clone()
+				Skin.Name = "_cskin"
+				Skin.Parent = Tool
+
+				if Skin:IsA("Model") then
+					SetPrimary(Skin)
+					NoPhysics(Skin)
+					pcall(Skin.PivotTo, Skin, Handle.CFrame * HandOff)
+					WeldAll(Skin)
+					local W = Instance.new("WeldConstraint")
+					W.Part0, W.Part1 = Handle, Skin.PrimaryPart
+					W.Parent = Skin
+				end
+
+				local Elapsed = 0
+				local Hb
+				Hb = RunService.Heartbeat:Connect(function(Dt)
+					if not Tool.Parent then Hb:Disconnect() return end
+					HideOrig(Tool)
+					if Skin and Skin.Parent and Skin:IsA("Model") and Skin.PrimaryPart then
+						pcall(Skin.PivotTo, Skin, Handle.CFrame * HandOff)
+					end
+					Elapsed += Dt
+					if Elapsed > 2 then Hb:Disconnect() end
+				end)
+				Binds[#Binds + 1] = Hb
+			end)
+		end)
+		Binds[#Binds + 1] = C
+
+		for _, Ch in Char:GetChildren() do
+			if IsCannonTool(Ch) then C:Fire(Ch) end
+		end
+
+		for _, Ch in Char:GetChildren() do
+			if IsCannonTool(Ch) then
+				task.defer(function()
+					Apply(Ch, HandOff)
+				end)
+			end
+		end
+	end
+
+	local function WatchWorld()
+		local Worlds = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Worlds")
+		if not Worlds then return end
+
+		local function HookFolder(Folder)
+			Listen(Folder, IsCannon, WorldOff, true)
+
+			local C = Folder.ChildAdded:Connect(function(Ch)
+				if not (Active and IsCannon(Ch)) then return end
+				task.defer(function()
+					task.wait()
+					local Sk = Ch:FindFirstChild("_cskin")
+					if not (Sk and Sk:IsA("Model") and Sk.PrimaryPart) then return end
+					local Anchor = GetAnchor(Ch)
+					if not Anchor then return end
+					for _, W in Sk:GetChildren() do
+						if W:IsA("WeldConstraint") and W.Part0 == Anchor then W:Destroy() end
+					end
+					Sk:PivotTo(Anchor.CFrame * WorldOff)
+					local Bridge = Instance.new("WeldConstraint")
+					Bridge.Part0, Bridge.Part1 = Anchor, Sk.PrimaryPart
+					Bridge.Parent = Sk
+				end)
+			end)
+			Binds[#Binds + 1] = C
+		end
+
+		for _, World in Worlds:GetChildren() do
+			local B = World:FindFirstChild("Blocks")
+			if B then HookFolder(B) end
+		end
+
+		Binds[#Binds + 1] = Worlds.ChildAdded:Connect(function(World)
+			task.defer(function()
+				local B = World:FindFirstChild("Blocks")
+				if B then HookFolder(B) end
+			end)
+		end)
+	end
+
+	local function PurgeSfx()
+		for _, S in workspace.SoundPool:GetChildren() do
+			if S:IsA("Sound") and S.SoundId == "rbxassetid://7121064180" then S:Destroy() end
+		end
+	end
+
+	local function PlaySfx()
+		local Data = Skins[ActiveSkin]
+		if Data then GameData.Utils.Sound:playSound(GameData.Utils.GameSound[Data.sfx]) end
+	end
+
+	local function PatchSfx()
+		if SfxPatched then return end
+		SfxPatched = true
+		local Ctrl = GameData.Utils.Cannon
+
+		OrigFire = Ctrl.fireCannon
+		OrigLaunch = Ctrl.launchSelf
+
+		Ctrl.fireCannon = function(...)
+			PurgeSfx()
+			PlaySfx()
+			return OrigFire(...)
+		end
+
+		Ctrl.launchSelf = function(...)
+			PurgeSfx()
+			PlaySfx()
+			return OrigLaunch(...)
+		end
+	end
+
+	local function UnpatchSfx()
+		if not SfxPatched then return end
+		local Ctrl = GameData.Utils.Cannon
+		Ctrl.fireCannon = OrigFire
+		Ctrl.launchSelf = OrigLaunch
+		OrigFire, OrigLaunch = nil, nil
+		SfxPatched = false
+	end
+
+	local function OnSpawn(Char)
+		task.wait(0.2)
+		if not Active then return end
+		Listen(Me.Backpack, IsCannonTool, HandOff, true)
+		Listen(Char, IsCannonTool, HandOff, true)
+		WatchEquip(Char)
+	end
+
+	local function Teardown()
+		Active = false
+		for _, C in Binds do pcall(C.Disconnect, C) end
+		table.clear(Binds)
+
+		for _, Obj in CollectionService:GetTagged(TAG) do
+			Remove(Obj)
+		end
+
+		local Worlds = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Worlds")
+		if Worlds then
+			for _, World in Worlds:GetChildren() do
+				local B = World:FindFirstChild("Blocks")
+				if B then
+					for _, Ch in B:GetChildren() do
+						if Ch.Name == "cannon" then Remove(Ch) end
+					end
+				end
+			end
+		end
+
+		UnpatchSfx()
+	end
+
+	local CannonReskin = Windows.Render:CreateModule({
+		Name = "Cannon Reskin",
+		Flag = "CannonReskin",
+		CallingFunction = function(self, enabled: boolean)
+			if enabled then
+				Active = true
+				WatchCam()
+				WatchWorld()
+				PatchSfx()
+				if Me.Character then OnSpawn(Me.Character) end
+				Binds[#Binds + 1] = Me.CharacterAdded:Connect(OnSpawn)
+			else
+				Teardown()
+			end
+		end
+	})
+
+	CannonReskin:Dropdown({
+		Name = "Skin",
+		Flag = "CannonReskinSkin",
+		Options = {"Nightmare", "Diamond", "Emerald"},
+		Default = {"Nightmare"},
+		CallingFunction = function(self, value: {})
+			ActiveSkin = value
+		end
+	})
+end)();
+
+
+(function()
+    local Sword
+    local Parts
+    local Size1 = 6.8
+    local Size2 = 8
+
+    local Old
+    local ExpandedParts = {}
+
+    local function ExpandPlayer(Character)
+        local HRP = Character:FindFirstChild("HumanoidRootPart")
+        if not HRP or ExpandedParts[Character] or not Parts then return end
+
+        local Box = Instance.new("Part")
+        Box.Size = Vector3.new(Size2, Size2, Size2)
+        Box.Transparency = 1
+        Box.CanCollide = false
+        Box.CanQuery = true
+        Box.Massless = true
+        Box.Name = "HB"
+
+        local Weld = Instance.new("WeldConstraint")
+        Weld.Part0 = HRP
+        Weld.Part1 = Box
+        Weld.Parent = Box
+
+        Box.CFrame = HRP.CFrame
+        Box.Parent = Character
+        ExpandedParts[Character] = Box
+    end
+
+    local function Cleanup()
+        for _, Part in next, ExpandedParts do
+            if Part and Part.Parent then
+                Part:Destroy()
+            end
+        end
+        table.clear(ExpandedParts)
+    end
+
+    local OldRegion = debug.getconstant(GameData.Utils.SwordController.swingSwordInRegion, 6)
+    local OldAttack = debug.getconstant(GameData.Utils.SwordController.attackEntity, 58)
+
+    local Radius
+    for i, v in debug.getconstants(GameData.Utils.SwordController.getTargetInRegion) do
+        if v == 3.8 then
+            Radius = i
+            break
+        end
+    end
+    local OldRadius = Radius and debug.getconstant(GameData.Utils.SwordController.getTargetInRegion, Radius)
+
+    local function Reach()
+        debug.setconstant(GameData.Utils.SwordController.swingSwordInRegion, 6, Size1)
+
+        if Radius then
+            debug.setconstant(GameData.Utils.SwordController.getTargetInRegion, Radius, Size1)
+        end
+
+        debug.setconstant(GameData.Utils.SwordController.attackEntity, 58, "damage")
+    end
+
+    local function Reset()
+        debug.setconstant(GameData.Utils.SwordController.swingSwordInRegion, 6, OldRegion)
+
+        if Radius then
+            debug.setconstant(GameData.Utils.SwordController.getTargetInRegion, Radius, OldRadius)
+        end
+
+        debug.setconstant(GameData.Utils.SwordController.attackEntity, 58, OldAttack)
+    end
+
+    local Applied = false
+    local Hitboxes = Windows.Combat:CreateModule({
+        Name = "Hitboxes",
+        Flag = "Hitboxes",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                Reach()
+
+                for _, Player in Players:GetPlayers() do
+                    if Player ~= LocalPlayer and Player.Character then
+                        ExpandPlayer(Player.Character)
+                    end
+                end
+
+                self:Connection(Players.PlayerAdded:Connect(function(Player)
+                    if Player ~= LocalPlayer then
+                        self:Connection(Player.CharacterAdded:Connect(function(Char)
+                            task.wait(0.1)
+                            ExpandPlayer(Char)
+                        end))
+                    end
+                end))
+
+                for _, Player in Players:GetPlayers() do
+                    if Player ~= LocalPlayer then
+                        self:Connection(Player.CharacterAdded:Connect(function(Char)
+                            task.wait(0.1)
+                            ExpandPlayer(Char)
+                        end))
+                    end
+                end
+            else
+                if Applied then
+                    Reset()
+                    Applied = false
+                end
+
+                Cleanup()
+            end
+        end
+    })
+
+    local SwordSize, PartsSize
+    Hitboxes:MiniToggle({
+        Name = "Sword",
+        Flag = "HitboxesSword",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            Sword = value
+            SwordSize:SetVisiblity(value)
+        end
+    })
+
+    SwordSize = Hitboxes:Slider({
+        Name = "Sword Size",
+        Flag = "HitboxesSwordSize",
+        Min = 3.8,
+        Max = 6.8,
+        Default = 6.8,
+        Increment = 0.1,
+        CallingFunction = function(self, value: number)
+            Size1 = value
+        end
+    })
+
+    Hitboxes:MiniToggle({
+        Name = "Parts",
+        Flag = "HitboxesParts",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            Parts = value
+            PartsSize:SetVisiblity(value)
+        end
+    })
+
+    PartsSize = Hitboxes:Slider({
+        Name = "Parts Size",
+        Flag = "HitboxesPartsSize",
+        Min = 2,
+        Max = 15,
+        Default = 8,
+        CallingFunction = function(self, value: number)
+            Size2 = value
+        end
+    })
+end)();
+
+(function()
+    Windows.Movement:CreateModule({
+        Name = "Keep Sprint",
+        Flag = "KeepSprint",
+        CallingFunction = function(self, enabled: boolean)
+            local Old; Old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+                local method = getnamecallmethod()
+                if enabled and method == "blockSprint" then
+                    setnamecallmethod("blockSprinting")
+                end
+                return Old(self, ...)
+            end))
+            GameData.Utils.Sprint.stopSprinting()
+        end
+    })
+end)();
+
+(function()
+	local Enabled
+	local Cache = {}
+	local Storage = Instance.new("Folder")
+	Storage.Parent = workspace
+
+	local function Render(Target)
+		if not Enabled or Cache[Target] then return end
+		local Group = Instance.new("Folder")
+		Cache[Target] = Group
+
+		local Parts = {}
+		for _, Object in Target:GetChildren() do
+			if Object:IsA("BasePart") and Object.Name ~= "Blanket" then
+				Parts[#Parts + 1] = Object
+			end
+		end
+
+		table.sort(Parts, function(First, Second)
+			return First.Name > Second.Name
+		end)
+
+		for Index = 1, #Parts do
+			local Part = Parts[Index]
+			local IsLeg = Part.Name == "Legs"
+			local Adornment = Instance.new("BoxHandleAdornment")
+
+            Adornment.Size = Part.Size + (IsLeg and Vector3.new(0, -1, 0) or Vector3.new(0, 0.3, 0))
+			Adornment.Color3 = IsLeg and Color3.fromRGB(100, 65, 35) or Part.Color
+			Adornment.ZIndex = IsLeg and 0 or 2
+			Adornment.Adornee = Part
+			Adornment.Visible = true
+            Adornment.AlwaysOnTop = true
+
+			if IsLeg then
+				Adornment.CFrame = CFrame.new(0, -0.5, 0)
+			end
+
+			Adornment.Parent = Group
+		end
+
+		Group.Parent = Storage
+	end
+
+	local function Clear(Target)
+		local Group = Cache[Target]
+		if not Group then return end
+		Group:Destroy()
+		Cache[Target] = nil
+	end
+
+	local function Wipe()
+		Storage:ClearAllChildren()
+		table.clear(Cache)
+	end
+
+	Windows.Render:CreateModule({
+		Name = "Bed ESP",
+		Flag = "BedESP",
+		CallingFunction = function(self, enabled: boolean)
+			Enabled = enabled
+			if not Enabled then
+				Wipe()
+				return
+			end
+
+            for _, Bed in CollectionService.GetTagged(CollectionService, "bed") do
+				Render(Bed)
+			end
+
+			self:Connection(CollectionService.GetInstanceAddedSignal(CollectionService, "bed"):Connect(function(Bed)
+				task.delay(0.5, Render, Bed)
+			end))
+
+			self:Connection(CollectionService.GetInstanceRemovedSignal(CollectionService, "bed"):Connect(function(Bed)
+				Clear(Bed)
+			end))
+		end
+	})
+end)();
+
+(function()
+    local GeneratorData = {
+        Settings = {
+            Diamonds = true,
+            Emeralds = true,
+            TeamGens = true,
+            OwnTeam = false,
+            EnemyTeams = true
+        },
+        Data = {
+            Visuals = {},
+            Container = Instance.new("Folder"),
+            UpdateClock = 0
+        }
+    }
+
+    GeneratorData.Data.Container.Name = "GeneratorESPHolder"
+    GeneratorData.Data.Container.Parent = workspace.CurrentCamera
+
+    local TeamPalette = {
+        [1] = {Label = "Blue", Hue = Color3.fromRGB(0, 145, 255)},
+        [2] = {Label = "Orange", Hue = Color3.fromRGB(255, 150, 0)},
+        [3] = {Label = "Pink", Hue = Color3.fromRGB(255, 0, 210)},
+        [4] = {Label = "Yellow", Hue = Color3.fromRGB(255, 250, 0)},
+        [5] = {Label = "Green", Hue = Color3.fromRGB(0, 255, 100)},
+        [6] = {Label = "Red", Hue = Color3.fromRGB(255, 40, 40)},
+        [7] = {Label = "Purple", Hue = Color3.fromRGB(160, 50, 255)},
+        [8] = {Label = "Cyan", Hue = Color3.fromRGB(0, 255, 255)},
+        [9] = {Label = "White", Hue = Color3.fromRGB(245, 245, 245)},
+        [10] = {Label = "Black", Hue = Color3.fromRGB(40, 40, 40)}
+    }
+
+    local GenDefinitions = {
+        diamond = {
+            Match = "diamond",
+            Icon = "diamond",
+            Tag = "Diamond",
+            Tint = Color3.fromRGB(85, 200, 255),
+        },
+        emerald = {
+            Match = "emerald",
+            Icon = "emerald",
+            Tag = "Emerald",
+            Tint = Color3.fromRGB(0, 255, 100),
+        }
+    }
+
+    local TeamLookup = {
+        {Name = "blue", Index = "0", Value = 1},
+        {Name = "orange", Index = "1", Value = 2},
+        {Name = "pink", Index = "2", Value = 3},
+        {Name = "yellow", Index = "3", Value = 4}
+    }
+
+    local function GetMyTeam(): number?
+        local TeamAttr = LocalPlayer:GetAttribute("Team")
+        if not TeamAttr then return nil end
+
+        local Mapped = tostring(TeamAttr):lower()
+        for _, Info in TeamLookup do
+            if Mapped:find(Info.Name) or Mapped == Info.Index then
+                return Info.Value
+            end
+        end
+
+        return nil
+    end
+
+    local function GetGenId(Id: string): (string?, boolean, number?)
+        if not Id then return nil, false, nil end
+
+        local Sep = Id:find("_")
+        if Sep and Id:sub(Sep + 1) == "generator" then
+            local Prefix = Id:sub(1, Sep - 1)
+            local AsNum = tonumber(Prefix)
+            if AsNum then return "teamgen", true, AsNum end
+        end
+
+        local Lower = Id:lower()
+        for Key, Def in GenDefinitions do
+            if Lower:find(Def.Match) then
+                return Key, false, nil
+            end
+        end
+
+        return nil, false, nil
+    end
+
+    local function CanShow(GenType: string, TeamId: number?): boolean
+        if GenType == "diamond" then return GeneratorData.Settings.Diamonds end
+        if GenType == "emerald" then return GeneratorData.Settings.Emeralds end
+
+        if GenType == "teamgen" then
+            if not GeneratorData.Settings.TeamGens then return false end
+
+            local MyTeam = GetMyTeam()
+            if not MyTeam or not TeamId then return true end
+
+            return TeamId == MyTeam and GeneratorData.Settings.OwnTeam or TeamId ~= MyTeam and GeneratorData.Settings.EnemyTeams
+        end
+
+        return false
+    end
+
+    local function GetItemIcon(ItemType: string): string?
+        local Result = GetIcon({itemType = ItemType}, true)
+        return (Result and Result ~= "") and Result or nil
+    end
+
+    local function GetTimer(Adornee: Instance): number
+        local Tree = Adornee:FindFirstChild("RoactTree")
+        if not Tree then return 0 end
+
+        local App = Tree:FindFirstChild("TeamOreGeneratorApp")
+        if not App then return 0 end
+
+        local Global = App:FindFirstChild("GlobalOreGenerator")
+        if not Global then return 0 end
+
+        local CountdownNode = Global:FindFirstChild("Countdown")
+        if not CountdownNode then return 0 end
+
+        local Label = CountdownNode:FindFirstChild("Text") or (CountdownNode:IsA("TextLabel") and CountdownNode)
+        if not Label or not Label:IsA("TextLabel") then return 0 end
+
+        local Raw = Label.Text
+        local Extracted = nil
+        local Open = Raw:find("%[")
+        if Open then
+            local Close = Raw:find("%]", Open + 1)
+            if Close then Extracted = Raw:sub(Open + 1, Close - 1) end
+        end
+
+        if not Extracted then
+            local S, E = Raw:find("%d+")
+            if S then Extracted = Raw:sub(S, E) end
+        end
+
+        return tonumber(Extracted) or 0
+    end
+
+    local RomanMap = {[0] = "0", [1] = "I", [2] = "II", [3] = "III", [4] = "IV"}
+
+    local function GetTier(Adornee: Instance): string
+        local Tree = Adornee:FindFirstChild("RoactTree")
+        local App = Tree and Tree:FindFirstChild("TeamOreGeneratorApp")
+        if not App then return "0" end
+
+        local Paths = {
+            {"GlobalOreGenerator", "Countdown"},
+            {"GlobalOreGenerator"},
+            {"TeamGenMain"}
+        }
+
+        for _, Path in Paths do
+            local Current = App
+            for _, Step in Path do
+                Current = Current:FindFirstChild(Step)
+                if not Current then break end
+            end
+
+            if not Current then continue end
+            for _, Child in Current:GetChildren() do
+                if not Child:IsA("TextLabel") then continue end
+
+                local Txt = Child.Text
+                local TierPos = Txt:find("Tier")
+
+                if TierPos then
+                    local After = Txt:sub(TierPos + 4):gsub("^%s+", "")
+                    local Val = tonumber(After:match("%d+"))
+                    if Val then return RomanMap[Val] or tostring(Val) end
+                end
+
+                local IsRoman = #Txt > 0 and not Txt:find("[^IVX]")
+                if IsRoman then return Txt end
+            end
+        end
+        return "0"
+    end
+
+    local function GetDropCount(Origin: Vector3, ResourceName: string): number
+        local Total = 0
+
+        for _, Drop in CollectionService:GetTagged("ItemDrop") do
+            local Handle = Drop:FindFirstChild("Handle")
+            if Handle and Drop.Name:lower():find(ResourceName) and (Handle.Position - Origin).Magnitude <= 10 then
+                Total += Drop:GetAttribute("Amount") or 1
+            end
+        end
+
+        return Total
+    end
+
+    local function GetTimerTint(Seconds: number, BaseColor: Color3): Color3
+        if Seconds <= 5 then return Color3.fromRGB(255, 0, 0) end
+        if Seconds <= 10 then return Color3.fromRGB(255, 145, 0) end
+        return BaseColor
+    end
+
+    local function MakeCorner(Parent: Instance, Radius: number)
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, Radius)
+        Corner.Parent = Parent
+        return Corner
+    end
+
+    local function MakeStroke(Parent: Instance, Col: Color3, Thick: number)
+        local Stroke = Instance.new("UIStroke")
+        Stroke.Color = Col
+        Stroke.Thickness = Thick
+        Stroke.Transparency = 0.5
+        Stroke.Parent = Parent
+        return Stroke
+    end
+
+    local function MakeLabel(Props: {[string]: any}): TextLabel
+        local Lbl = Instance.new("TextLabel")
+        Lbl.BackgroundTransparency = 1
+        Lbl.Font = Enum.Font.GothamBold
+        Lbl.TextStrokeTransparency = 0.5
+        Lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+        for Key, Val in Props do
+            (Lbl :: any)[Key] = Val
+        end
+        return Lbl
+    end
+
+    local function CreateBoard(Adornee: Instance, GenType: string, Pos: Vector3, TeamId: number?, IsTeam: boolean)
+        if GeneratorData.Data.Visuals[Adornee] then return end
+
+        local DisplayTint = IsTeam and (TeamId and TeamPalette[TeamId] and TeamPalette[TeamId].Hue or Color3.fromRGB(200, 200, 200)) or GenDefinitions[GenType].Tint
+
+        local Board = Instance.new("BillboardGui")
+        Board.Name = "GenESP_" .. GenType
+        Board.Adornee = Adornee
+        Board.AlwaysOnTop = true
+        Board.ClipsDescendants = false
+        Board.StudsOffsetWorldSpace = Vector3.new(0, 4, 0)
+        Board.Size = IsTeam and UDim2.fromOffset(175, 34) or UDim2.fromOffset(88, 30)
+        Board.Parent = GeneratorData.Data.Container
+
+        local Backdrop = Instance.new("Frame")
+        Backdrop.Size = UDim2.fromScale(1, 1)
+        Backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Backdrop.BackgroundTransparency = 0.5
+        Backdrop.BorderSizePixel = 0
+        Backdrop.Parent = Board
+        MakeCorner(Backdrop, 6)
+        MakeStroke(Backdrop, DisplayTint, 1)
+
+        local Gradient = Instance.new("UIGradient")
+        Gradient.Color = ColorSequence.new(Color3.fromRGB(69, 69, 78), Color3.fromRGB(0, 0, 0))
+        Gradient.Rotation = 90
+        Gradient.Parent = Backdrop
+
+        local Entry: {[string]: any} = {
+            Board = Board,
+            GenType = GenType,
+            Pos = Pos,
+            TeamId = TeamId,
+            IsTeam = IsTeam
+        }
+
+        if IsTeam then
+            Entry.TierLabel = MakeLabel({
+                Name = "Tier", Parent = Backdrop,
+                Size = UDim2.new(0, 22, 1, 0),
+                Position = UDim2.new(0, 4, 0, 0),
+                Text = "0", TextColor3 = Color3.fromRGB(255, 255, 100),
+                TextSize = 14
+            })
+
+            local Resources = {
+                {Key = "Iron", IconId = "iron", Tint = Color3.fromRGB(255, 255, 255), X = 30},
+                {Key = "Diamond", IconId = "diamond", Tint = Color3.fromRGB(0, 225, 255), X = 80},
+                {Key = "Emerald", IconId = "emerald", Tint = Color3.fromRGB(0, 255, 80), X = 130}
+            }
+
+            for _, Res in Resources do
+                local Img = GetItemIcon(Res.IconId)
+                if Img then
+                    local Icon = Instance.new("ImageLabel")
+                    Icon.Size = UDim2.fromOffset(16, 16)
+                    Icon.Position = UDim2.new(0, Res.X, 0.5, -8)
+                    Icon.BackgroundTransparency = 1
+                    Icon.Image = Img
+                    Icon.Parent = Backdrop
+                end
+
+                Entry[Res.Key .. "Label"] = MakeLabel({
+                    Name = Res.Key, Parent = Backdrop,
+                    Size = UDim2.new(0, 24, 1, 0),
+                    Position = UDim2.new(0, Res.X + 18, 0, 0),
+                    Text = "0", TextColor3 = Res.Tint,
+                    TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left
+                })
+            end
+        else
+            local Img = GetItemIcon(GenDefinitions[GenType].Icon)
+            if Img then
+                local Icon = Instance.new("ImageLabel")
+                Icon.Size = UDim2.fromOffset(18, 18)
+                Icon.Position = UDim2.new(0, 5, 0.5, -9)
+                Icon.BackgroundTransparency = 1
+                Icon.Image = Img
+                Icon.Parent = Backdrop
+            end
+
+            Entry.TimerLabel = MakeLabel({
+                Name = "Timer", Parent = Backdrop,
+                Size = UDim2.new(0, 30, 1, 0),
+                Position = UDim2.new(0.5, -2, 0, 0),
+                AnchorPoint = Vector2.new(0.5, 0),
+                Text = "00", TextColor3 = DisplayTint,
+                TextSize = 16
+            })
+
+            Entry.AmountLabel = MakeLabel({
+                Name = "Amount", Parent = Backdrop,
+                Size = UDim2.new(0, 20, 1, 0),
+                Position = UDim2.new(1, -22, 0, 0),
+                Text = "0", TextColor3 = Color3.fromRGB(255, 255, 255),
+                TextSize = 13
+            })
+        end
+
+        GeneratorData.Data.Visuals[Adornee] = Entry
+    end
+
+    local function UpdateOne(Adornee: Instance)
+        local Ref = GeneratorData.Data.Visuals[Adornee]
+        if not Ref then return end
+
+        if Ref.IsTeam then
+            Ref.TierLabel.Text = GetTier(Adornee)
+            Ref.IronLabel.Text = tostring(GetDropCount(Ref.Pos, "iron"))
+            Ref.DiamondLabel.Text = tostring(GetDropCount(Ref.Pos, "diamond"))
+            Ref.EmeraldLabel.Text = tostring(GetDropCount(Ref.Pos, "emerald"))
+        else
+            local Seconds = GetTimer(Adornee)
+            Ref.TimerLabel.Text = string.format("%02d", Seconds)
+            Ref.TimerLabel.TextColor3 = GetTimerTint(Seconds, GenDefinitions[Ref.GenType].Tint)
+            Ref.AmountLabel.Text = tostring(GetDropCount(Ref.Pos, Ref.GenType))
+        end
+    end
+
+    local function ClearAll()
+        GeneratorData.Data.Container:ClearAllChildren()
+        table.clear(GeneratorData.Data.Visuals)
+    end
+
+    local function FindGens()
+        for _, Obj in workspace:GetDescendants() do
+            if Obj.Name == "GeneratorAdornee" then
+                local Id = Obj:GetAttribute("Id")
+                if not Id then continue end
+                local GenType, IsTeam, TeamId = GetGenId(Id)
+                if GenType and CanShow(GenType, TeamId) then
+                    CreateBoard(Obj, GenType, Obj:GetPivot().Position, TeamId, IsTeam)
+                end
+            end
+        end
+    end
+
+    local function FullRefresh()
+        ClearAll()
+        FindGens()
+    end
+
+    local GeneratorESP = Windows.Render:CreateModule({
+        Name = "Generator ESP",
+        Flag = "GeneratorESP",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                FindGens()
+
+                self:Connection(workspace.DescendantAdded:Connect(function(Obj)
+                    if Obj.Name ~= "GeneratorAdornee" then return end
+
+                    task.wait(0.2)
+                    local Id = Obj:GetAttribute("Id")
+                    if not Id then return end
+
+                    local GenType, IsTeam, TeamId = GetGenId(Id)
+                    if GenType and CanShow(GenType, TeamId) then
+                        CreateBoard(Obj, GenType, Obj:GetPivot().Position, TeamId, IsTeam)
+                    end
+                end))
+
+                self:Connection(workspace.DescendantRemoving:Connect(function(Obj)
+                    local Ref = GeneratorData.Data.Visuals[Obj]
+                    if Ref then
+                        Ref.Board:Destroy()
+                        GeneratorData.Data.Visuals[Obj] = nil
+                    end
+                end))
+
+                self:Connection(RunService.Heartbeat:Connect(function(Delta)
+                    GeneratorData.Data.UpdateClock += Delta
+                    if GeneratorData.Data.UpdateClock < 0.2 then return end
+                    GeneratorData.Data.UpdateClock = 0
+
+                    for Adornee, Ref in GeneratorData.Data.Visuals do
+                        if Adornee and Adornee.Parent then
+                            UpdateOne(Adornee)
+                        else
+                            Ref.Board:Destroy()
+                            GeneratorData.Data.Visuals[Adornee] = nil
+                        end
+                    end
+                end))
+            else
+                ClearAll()
+            end
+        end
+    })
+
+    GeneratorESP:MiniToggle({
+        Name = "Diamonds",
+        Flag = "GeneratorESPDiamonds",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            GeneratorData.Settings.Diamonds = value
+            FullRefresh()
+        end
+    })
+
+    GeneratorESP:MiniToggle({
+        Name = "Emeralds",
+        Flag = "GeneratorESPEmeralds",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            GeneratorData.Settings.Emeralds = value
+            FullRefresh()
+        end
+    })
+
+    GeneratorESP:MiniToggle({
+        Name = "Team Generators",
+        Flag = "GeneratorESPTeamGens",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            GeneratorData.Settings.TeamGens = value
+            FullRefresh()
+        end
+    })
+
+    GeneratorESP:MiniToggle({
+        Name = "Own Team",
+        Flag = "GeneratorESPOwnTeam",
+        Default = false,
+        CallingFunction = function(self, value: boolean)
+            GeneratorData.Settings.OwnTeam = value
+            FullRefresh()
+        end
+    })
+
+    GeneratorESP:MiniToggle({
+        Name = "Enemy Teams",
+        Flag = "GeneratorESPEnemyTeams",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            GeneratorData.Settings.EnemyTeams = value
+            FullRefresh()
+        end
+    })
+end)();
