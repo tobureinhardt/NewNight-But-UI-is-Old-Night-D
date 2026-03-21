@@ -438,6 +438,8 @@ do
     Assets.Config = {}
     Assets.ArrayList = {}
     function Assets.Config:Save(Data: {}, Path: string, Directories: {}?): boolean
+        if not Night.Load.Loaded then return end
+        
         local Suc, NewData = pcall(HttpService.JSONEncode, HttpService, Data)
         if not isfolder("NewNight/Configs") then
             makefolder("NewNight/Configs")
@@ -631,7 +633,9 @@ do
         if Night.Premium and Game ~= "Universal" then
             local suc2: boolean, err2: string? = pcall(function()
                 if Night.Dev and isfile and isfile(PremiumPath) and readfile then
+                    print("load prem")
                     loadstring(readfile(PremiumPath))()
+                    print("done")
                 else
                     local Success: boolean, Req: string? = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Premium/Games/"..Game..".luau")
                     if Success and typeof(Req) == "string" and Req ~= "404: Not Found" then
