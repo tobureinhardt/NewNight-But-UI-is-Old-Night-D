@@ -633,9 +633,7 @@ do
         if Night.Premium and Game ~= "Universal" then
             local suc2: boolean, err2: string? = pcall(function()
                 if Night.Dev and isfile and isfile(PremiumPath) and readfile then
-                    print("load prem")
                     loadstring(readfile(PremiumPath))()
-                    print("done")
                 else
                     local Success: boolean, Req: string? = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Premium/Games/"..Game..".luau")
                     if Success and typeof(Req) == "string" and Req ~= "404: Not Found" then
