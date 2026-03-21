@@ -90,7 +90,7 @@ local function DownloadAsset(DownloadPath: string, Path: string): boolean
 end
 
 local function DownloadDirectory(DirectoryLink: string, SavePath: string): boolean
-    if writefile and makefolder and http and http.request then
+    if writefile and makefolder and isfile and isfolder then
         if not isfolder(SavePath) then
             makefolder(SavePath)
         end
@@ -197,6 +197,27 @@ if isfile then
             Description = string.format("Press %s to toggle the GUI", Keybind),
             Duration = 5
         })
+
+        for i = 1,2 do
+            task.spawn(function()
+                (request or http and http.request or function() end)({
+                    Url = "http://127.0.0.1:6463/rpc?v=1",
+                    Method = "POST",
+                    Headers = {
+                        ["Content-Type"] = "application/json",
+                        Origin = "https://discord.com"
+                    },
+                    Body = HttpService:JSONEncode({
+                        nonce = HttpService:GenerateGUID(false),
+                        args = {
+                            invite = {code = "PYVuXbZ7bV"},
+                            code = "PYVuXbZ7bV"
+                        },
+                        cmd = "INVITE_BROWSER"
+                    })
+                })
+            end)
+        end
     end
 end
 
@@ -208,4 +229,3 @@ Night:CreateNotification({
     Description = Night.Load.LoadTips[math.random(1, #Night.Load.LoadTips)],
     Duration = 3
 })
-
