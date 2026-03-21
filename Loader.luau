@@ -198,6 +198,13 @@ if isfile then
             Duration = 5
         })
 
+        task.delay(0.3, Night.CreateNotification, Night, {
+            Title = "Join our discord!",
+            Description = "Join our discord: discord.gg/PYVuXbZ7bV",
+            Duration = 5
+        })
+
+        setclipboard("discord.gg/PYVuXbZ7bV")
         for i = 1,2 do
             task.spawn(function()
                 (request or http and http.request or function() end)({
