@@ -37,12 +37,12 @@ local Night = {
         Time = 0,
         Loaded = false,
         LoadTips = {
-            "Join our Discord discord.gg/PYVuXbZ7bV to chat, report bugs & give suggestions.",
+            "Join our Discord discord.gg/nightrbx to chat, report bugs & give suggestions.",
             "Always use alts, moderators can ban you at any time!",
             "You can use LCTRL + scroll to zoom in & out.",
-            "Modules not working properly? Try switching executors or reporting a bug here: discord discord.gg/PYVuXbZ7bV.",
-            "Not satisfied with the free plan? You can always upgrade to Premium at our discord: discord.gg/PYVuXbZ7bV!",
-            "Losing to another script in a fair fight? Tell us its name in here discord.gg/PYVuXbZ7bV and we'll improve.",
+            "Modules not working properly? Try switching executors or reporting a bug here: discord discord.gg/nightrbx.",
+            "Not satisfied with the free plan? You can always upgrade to Premium at our discord: discord.gg/nightrbx!",
+            "Losing to another script in a fair fight? Tell us its name in here discord.gg/nightrbx and we'll improve.",
             "Want to get Premium for free? We're always looking for good editors & showcasers!"
         }
     },
@@ -200,11 +200,11 @@ if isfile then
 
         task.delay(0.3, Night.CreateNotification, Night, {
             Title = "Join our discord!",
-            Description = "Join our discord: discord.gg/PYVuXbZ7bV",
+            Description = "Join our discord: discord.gg/nightrbx",
             Duration = 5
         })
 
-        setclipboard("discord.gg/PYVuXbZ7bV")
+        setclipboard("discord.gg/nightrbx")
         for i = 1,2 do
             task.spawn(function()
                 (request or http and http.request or function() end)({
@@ -217,8 +217,8 @@ if isfile then
                     Body = HttpService:JSONEncode({
                         nonce = HttpService:GenerateGUID(false),
                         args = {
-                            invite = {code = "PYVuXbZ7bV"},
-                            code = "PYVuXbZ7bV"
+                            invite = {code = "nightrbx"},
+                            code = "nightrbx"
                         },
                         cmd = "INVITE_BROWSER"
                     })
