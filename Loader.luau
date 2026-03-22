@@ -58,7 +58,9 @@ local Night = {
 getgenv().Night = Night
 table.insert(Night.Directories, "NewNight/Configs/"..tostring(Night.Game))
 for i,v: string in Night.Directories do
-    makefolder(v)
+    if not isfolder(v) then
+        makefolder(v)
+    end
 end
 
 for i,v in NightInit do
