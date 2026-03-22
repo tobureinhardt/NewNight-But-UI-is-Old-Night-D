@@ -1688,6 +1688,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 ModuleHolder.ScrollBarThickness = 0
                 ModuleHolder.CanvasSize = UDim2.fromOffset(0, 0)
                 ModuleHolder.ClipsDescendants = true
+                ModuleHolder.ScrollBarImageTransparency = 1
                 Instance.new("UICorner", ModuleHolder).CornerRadius = UDim.new(0, 15)
 
                 local ModuleHolderLayout: UIListLayout = Instance.new("UIListLayout", ModuleHolder)
@@ -1789,6 +1790,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
             SettingsHolder.AutomaticCanvasSize = Enum.AutomaticSize.Y
             SettingsHolder.Visible = false
             SettingsHolder.ZIndex = 95
+            SettingsHolder.ScrollBarImageTransparency = 1
             Instance.new("UICorner", SettingsHolder).CornerRadius = UDim.new(0, 14)
             
             local SettingsLayout: UIListLayout = Instance.new("UIListLayout", SettingsHolder)
@@ -2668,6 +2670,8 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 OptionsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
                 OptionsFrame.ClipsDescendants = true
                 OptionsFrame.ScrollBarThickness = 0
+                OptionsFrame.ScrollBarImageTransparency = 1
+
                 Instance.new("UICorner", OptionsFrame).CornerRadius = UDim.new(0, 7)
 
                 local OptionsLayout: UIListLayout = Instance.new("UIListLayout", OptionsFrame)
@@ -3676,6 +3680,7 @@ ConfigList.ScrollBarThickness = 0
 ConfigList.CanvasSize = UDim2.fromScale(0, 0)
 ConfigList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 ConfigList.ZIndex = 90
+ConfigList.ScrollBarImageTransparency = 1
 
 local ConfigLayout: UIGridLayout = Instance.new("UIGridLayout", ConfigList)
 ConfigLayout.CellPadding = UDim2.fromOffset(20, 21)
