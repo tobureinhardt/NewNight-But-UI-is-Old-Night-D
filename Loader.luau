@@ -96,16 +96,19 @@ local function DownloadDirectory(DirectoryLink: string, SavePath: string): boole
         end
 
         local Suc: boolean, DirData: string = pcall(game.HttpGet, DirectoryLink)
+		print(Suc, DirData)
         if Suc and DirData and typeof(DirData) == "string" then
             local Suc2: boolean, Body = pcall(HttpService.JSONDecode, HttpService, DirData)
             if Suc2 and typeof(Body) == "table" then
                 for i,v in Body do
                     if v.type == "dir" then
                         if (isfolder and not isfolder(`{SavePath}/{v.name}`)) or not isfolder then
+							print("downloading folder")
                             DownloadDirectory(`{DirectoryLink}/{v.name}`, `{SavePath}/{v.name}`)
                         end
                     elseif v.type == "file" and v.download_url then
                         if not isfile(`{SavePath}/{v.name}`) then
+							print("downloading asset")
                             DownloadAsset(v.download_url, `{SavePath}/{v.name}`)
                         end
                     end
