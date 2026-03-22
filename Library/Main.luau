@@ -636,7 +636,6 @@ do
                     loadstring(readfile(PremiumPath))()
                 else
                     local Success: boolean, Req: string? = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Premium/Games/"..Game..".luau")
-                    print(Success, Req)
                     if Success and typeof(Req) == "string" and Req ~= "404: Not Found" then
                         loadstring(Req)()
                     end
