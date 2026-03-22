@@ -96,7 +96,7 @@ local function DownloadDirectory(DirectoryLink: string, SavePath: string): boole
         end
 
         local Suc: boolean, DirData: string = pcall(game.HttpGet, game, DirectoryLink)
-		print(Suc, DirData)
+		print(Suc, DirData, "assets")
         if Suc and DirData and typeof(DirData) == "string" then
             local Suc2: boolean, Body = pcall(HttpService.JSONDecode, HttpService, DirData)
             if Suc2 and typeof(Body) == "table" then
