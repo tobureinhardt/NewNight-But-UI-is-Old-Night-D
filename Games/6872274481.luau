@@ -1479,6 +1479,17 @@ end)();
         }
     }
 
+    local function CalcPrediction(Player: Vector3, Target: Vector3, Range: number): Vector3
+        local Dir: Vector3 = Target - Player
+        local Dist: number = Dir.Magnitude
+
+        if Dist <= 11.5 or Range <= 11.5 then
+            return Player
+        end
+
+        return Player + Dir.Unit * (Dist - 14)
+    end
+
     local KillAura = Windows.Combat:CreateModule({
         Name = "Kill Aura",
         Flag = "KillAura",
@@ -1646,14 +1657,14 @@ end)();
                             end
 
                             if KillAuraData.Settings.Range >= NearestEntity.Distance then
-                                local HitPos: Vector3 = (math.clamp(NearestEntity.Distance - 14.4, 10, 30) * (NearestEntity.Entity.PrimaryPart.Position - LocalPlayer.Character.PrimaryPart.Position).Unit) + LocalPlayer.Character.PrimaryPart.Position
+                                local HitPos: Vector3 = CalcPrediction(LocalPlayer.Character.PrimaryPart.Position, NearestEntity.Entity.PrimaryPart.Position, KillAuraData.Settings.Range)--(math.clamp(NearestEntity.Distance - 14.4, 10, 30) * (NearestEntity.Entity.PrimaryPart.Position - LocalPlayer.Character.PrimaryPart.Position).Unit) + LocalPlayer.Character.PrimaryPart.Position
                                 GameData.Utils.Remotes:Get("SwordHit"):SendToServer({
                                     entityInstance = NearestEntity.Entity,
                                     chargedAttack = {chargeRatio = 0},
                                     validate = {
                                         targetPosition = {value = NearestEntity.Data.Root.Position},
                                         raycast = {
-                                            cursorDirection = {value = CFrame.lookAlong(HitPos, NearestEntity.Data.Root.Position).LookVector},
+                                            cursorDirection = {value = CFrame.lookAt(NearestEntity.Data.Root.Position, CurrentCamera.CFrame.Position)},
                                             cameraPosition = {value = HitPos}
                                         },
                                         selfPosition = {value = HitPos}
@@ -5646,7 +5657,7 @@ end)();
                 return
             end
 
-            for _, v in Billboard.Frame:GetChildren() do
+            for _, v in Frame:GetChildren() do
                 if v:IsA("ImageLabel") then
                     v:Destroy()
                 end
@@ -5665,7 +5676,7 @@ end)();
                 
                 if not Found[Name] and (Match or table.find(ChestESPData.Settings.Items, Name)) then
                     Found[Name], Billboard.Enabled = true, true
-                    local Image = Instance.new("ImageLabel", Billboard.Frame)
+                    local Image = Instance.new("ImageLabel", Frame)
                     Image.Size, Image.BackgroundTransparency, Image.Image = UDim2.fromOffset(27, 27), 1, GameData.Utils.ItemMeta[Name].image
                 end
             end
