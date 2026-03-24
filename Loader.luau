@@ -37,14 +37,14 @@ local Night = {
         Time = 0,
         Loaded = false,
         LoadTips = {
-            -- "Join our Discord discord.gg/nightrbx to chat, report bugs & give suggestions.",
-            -- "Always use alts, moderators can ban you at any time!",
-            -- "You can use LCTRL + scroll to zoom in & out.",
-            -- "Modules not working properly? Try switching executors or reporting a bug here: discord discord.gg/nightrbx.",
-            -- "Not satisfied with the free plan? You can always upgrade to Premium at our discord: discord.gg/nightrbx!",
-            -- "Losing to another script in a fair fight? Tell us its name in here discord.gg/nightrbx and we'll improve.",
-            -- "Want to get Premium for free? We're always looking for good editors & showcasers!"
-            "Premium is currently free for the next 4 hour, join discord.gg/nightrbx to use!"
+            "Join our Discord discord.gg/nightrbx to chat, report bugs & give suggestions.",
+            "Always use alts, moderators can ban you at any time!",
+            "You can use LCTRL + scroll to zoom in & out.",
+            "Modules not working properly? Try switching executors or reporting a bug here: discord discord.gg/nightrbx.",
+            "Not satisfied with the free plan? You can always upgrade to Premium at our discord: discord.gg/nightrbx!",
+            "Losing to another script in a fair fight? Tell us its name in here discord.gg/nightrbx and we'll improve.",
+            "Want to get Premium for free? We're always looking for good editors & showcasers!",
+            "Check out premium at discord.gg/nightrbx"
         }
     },
     Directories = {
