@@ -20,7 +20,7 @@ local Camera: Camera = workspace.CurrentCamera
 local BaseGit: string = "https://github.com/null-wtf/NewNight"
 local NightInit: {[any]: any} = getgenv().NightInit or {}
 local Night = {
-    Version = "3.09",
+    Version = "3.10",
     BaseGit = BaseGit,
     Scale = 0.9,
     Keybind = Enum.KeyCode.RightShift,
@@ -37,14 +37,15 @@ local Night = {
         Time = 0,
         Loaded = false,
         LoadTips = {
-            "Join our Discord discord.gg/nightrbx to chat, report bugs & give suggestions.",
-            "Always use alts, moderators can ban you at any time!",
-            "You can use LCTRL + scroll to zoom in & out.",
-            "Modules not working properly? Try switching executors or reporting a bug here: discord discord.gg/nightrbx.",
-            "Not satisfied with the free plan? You can always upgrade to Premium at our discord: discord.gg/nightrbx!",
-            "Losing to another script in a fair fight? Tell us its name in here discord.gg/nightrbx and we'll improve.",
-            "Want to get Premium for free? We're always looking for good editors & showcasers!",
-            "Check out premium at discord.gg/nightrbx"
+            -- "Join our Discord discord.gg/nightrbx to chat, report bugs & give suggestions.",
+            -- "Always use alts, moderators can ban you at any time!",
+            -- "You can use LCTRL + scroll to zoom in & out.",
+            -- "Modules not working properly? Try switching executors or reporting a bug here: discord discord.gg/nightrbx.",
+            -- "Not satisfied with the free plan? You can always upgrade to Premium at our discord: discord.gg/nightrbx!",
+            -- "Losing to another script in a fair fight? Tell us its name in here discord.gg/nightrbx and we'll improve.",
+            -- "Want to get Premium for free? We're always looking for good editors & showcasers!",
+            -- "Check out premium at discord.gg/nightrbx",
+            ("What happened here???"):reverse()
         }
     },
     Directories = {
