@@ -783,7 +783,7 @@ function Assets.ArrayList:Push(Name: string)
     local MainText: TextLabel = Instance.new("TextLabel", MainFrame)
     MainText.BackgroundTransparency = 1
     MainText.FontFace = Assets.ArrayList.Font
-    MainText.Text = Name:reverse()
+    MainText.Text = Name
     MainText.TextColor3 = Assets.ArrayList.Color
     MainText.TextSize = Assets.ArrayList.TextSize
     MainText.TextXAlignment = Enum.TextXAlignment.Left
@@ -881,7 +881,7 @@ function Assets.Functions:CreateMobileButton(Data: {Name: string, Flag: string, 
     ButtonText.Size = UDim2.fromOffset(54, 27)
     ButtonText.ZIndex = 2
     ButtonText.Font = Enum.Font.BuilderSansBold
-    ButtonText.Text = Data.Name:reverse()
+    ButtonText.Text = Data.Name
     ButtonText.TextColor3 = Color3.fromRGB(210, 219, 219)
     ButtonText.TextScaled = true
     ButtonText.TextWrapped = true
@@ -1054,7 +1054,7 @@ function Assets.Functions:CreateNotification(Data: {Title: string, Description: 
     Title.Size = UDim2.fromOffset(Bounds, 19)
     Title.ZIndex = 1000
     Title.FontFace = Font
-    Title.Text = Data.Title:reverse()
+    Title.Text = Data.Title
     Title.TextColor3 = Color3.fromRGB(220, 220, 220)
     Title.TextSize = 18
     Title.TextWrapped = true
@@ -1068,7 +1068,7 @@ function Assets.Functions:CreateNotification(Data: {Title: string, Description: 
     Description.BorderSizePixel = 0
     Description.ZIndex = 1000
     Description.FontFace = Font
-    Description.Text = Data.Description:reverse()
+    Description.Text = Data.Description
     Description.TextColor3 = Color3.fromRGB(68, 78, 100)
     Description.TextSize = 15
     Description.TextWrapped = true
@@ -1220,7 +1220,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
     TopText.BorderSizePixel = 0
     TopText.Position = TextPos
     TopText.Size = TextSize
-    TopText.Text = Data.Name:reverse()
+    TopText.Text = Data.Name
     TopText.TextColor3 = Color3.fromRGB(210, 219, 229)
     TopText.TextScaled = true
     TopText.TextStrokeTransparency = 1
@@ -1453,7 +1453,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
             Text.TextScaled = true
             Text.TextWrapped = true
             Text.TextXAlignment = Enum.TextXAlignment.Left
-            Text.Text = Data.Text.Text:reverse()
+            Text.Text = Data.Text.Text
             Text.TextStrokeTransparency = 1
 
             if not Data.Top then
@@ -1737,7 +1737,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
             ModuleNameTextLabel.Size = UDim2.fromOffset(138, 18)
             ModuleNameTextLabel.ZIndex = 91
             ModuleNameTextLabel.Font = Enum.Font.BuilderSansBold
-            ModuleNameTextLabel.Text = ModuleData.Name:reverse()
+            ModuleNameTextLabel.Text = ModuleData.Name
             ModuleNameTextLabel.TextColor3 = Color3.fromRGB(46, 54, 76)
             ModuleNameTextLabel.TextScaled = true
             ModuleNameTextLabel.TextWrapped = true
@@ -1771,12 +1771,12 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
 
             local EnabledGradient: UIGradient = Instance.new("UIGradient", ModuleFrame)
             EnabledGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color[1]), ColorSequenceKeypoint.new(1, Color[2])})
-            EnabledGradient.Enabled = true
+            EnabledGradient.Enabled = false
             table.insert(UIData.CustomizableItems.Modules, {Main = true, Gradient = EnabledGradient})
 
             local DropShadowEnabledGradient: UIGradient = Instance.new("UIGradient", DropShadow)
             DropShadowEnabledGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(table.unpack(Gradients[1]))), ColorSequenceKeypoint.new(1, Color3.fromRGB(table.unpack(Gradients[2])))})
-            DropShadowEnabledGradient.Enabled = true
+            DropShadowEnabledGradient.Enabled = false
             table.insert(UIData.CustomizableItems.Modules, {Main = false, Gradient = DropShadowEnabledGradient})
             table.clear(Gradients)
             
@@ -1909,14 +1909,9 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                     end
 
                     RealModuleData.MData.Tweening = true
-                    if not Toggled then
-                        if RealModuleData.ConnectionsToDisconnectOnDisable then
-                            table.clear(RealModuleData.ConnectionsToDisconnectOnDisable)
-                        end
-
+                    if Toggled then
                         EnabledGradient.Enabled = true
                         DropShadowEnabledGradient.Enabled = true
-
                         TweenService:Create(ModuleFrame, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                         TweenService:Create(DropShadow, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                         TweenService:Create(ModuleNameTextLabel, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(210, 219, 229)}):Play()
@@ -1926,19 +1921,19 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                             RealModuleData.MData.Tweening = false
                         end)
                     else
-                        -- if RealModuleData.ConnectionsToDisconnectOnDisable then
-                        --     table.clear(RealModuleData.ConnectionsToDisconnectOnDisable)
-                        -- end
+                        if RealModuleData.ConnectionsToDisconnectOnDisable then
+                            table.clear(RealModuleData.ConnectionsToDisconnectOnDisable)
+                        end
 
                         TweenService:Create(SettingsButton, TweenInfo.new(0.15), {ImageColor3 = Color3.fromRGB(46, 54, 76)}):Play()
                         TweenService:Create(ModuleNameTextLabel, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(46, 54, 76)}):Play()
                         TweenService:Create(DropShadow, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(11, 14, 18)}):Play()
                         local End = TweenService:Create(ModuleFrame, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(14, 16, 23)})
                         task.delay(0.1, function()
-                            -- if not RealModuleData.Enabled then
+                            if not RealModuleData.Enabled then
                                 DropShadowEnabledGradient.Enabled = false
                                 EnabledGradient.Enabled = false
-                            -- end
+                            end
                         end)
 
                         End:Play()
@@ -2036,7 +2031,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 MiniToggleText.BorderSizePixel = 0
                 MiniToggleText.Position = UDim2.fromScale(0.07, 0.233)
                 MiniToggleText.Size = UDim2.fromOffset(86, 16)
-                MiniToggleText.Text = MiniToggleData.Name:reverse()
+                MiniToggleText.Text = MiniToggleData.Name
                 MiniToggleText.TextColor3 = Color3.fromRGB(68, 78, 112)
                 MiniToggleText.TextScaled = true
                 MiniToggleText.TextStrokeTransparency = 1
@@ -2083,7 +2078,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                     end
 
                     coroutine.wrap(function()
-                        if not Toggled then
+                        if Toggled then
                             TweenService:Create(MainMiniToggleFrame, TweenInfo.new(0.15), {BackgroundColor3 = UIData.Theme.Other}):Play()
                             TweenService:Create(MiniToggleCircle, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(255, 255, 255), Position = UDim2.fromScale(0.61, 0.25)}):Play()
                         else
@@ -2139,7 +2134,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 NameText.Position = UDim2.fromScale(0.07, 0.1)
                 NameText.Size = UDim2.fromOffset(86, 16)
                 NameText.FontFace = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
-                NameText.Text = SData.Name:reverse()
+                NameText.Text = SData.Name
                 NameText.TextColor3 = Color3.fromRGB(68, 78, 112)
                 NameText.TextScaled = true
                 NameText.TextWrapped = true
@@ -2157,7 +2152,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 ValueText.TextScaled = true
                 ValueText.TextWrapped = true
                 ValueText.TextXAlignment = Enum.TextXAlignment.Right
-                ValueText.Text = (tostring(SData.Default) or ""):reverse()
+                ValueText.Text = tostring(SData.Default) or ""
 
                 local SliderBackground: Frame = Instance.new("Frame", SliderBase)
                 SliderBackground.BackgroundColor3 = Color3.fromRGB(14, 16, 23)
@@ -2207,7 +2202,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                     end
 
                     coroutine.wrap(function()
-                        ValueText.Text = tostring(Value):reverse()
+                        ValueText.Text = tostring(Value)
                         TweenService:Create(SliderFilled, TweenInfo.new(0.25), {Size = UDim2.fromScale(math.clamp((Value-SliderData.Data.Min)/(SliderData.Data.Max-SliderData.Data.Min) - SliderFilled.Position.X.Scale, 0, 1), 1)}):Play()
                     end)()
                 end
@@ -2226,7 +2221,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                         return SliderData.Functions:SetValue(Value)
                     end
 
-                    ValueText.Text = tostring(SliderData.Value):reverse()
+                    ValueText.Text = tostring(SliderData.Value)
                     return
                 end), {SliderData.Connections, RealModuleData.Connections, WindowData.Connections})
 
@@ -2284,7 +2279,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 NameText.Position = UDim2.fromScale(0.08, 0.1)
                 NameText.Size = UDim2.fromOffset(140, 16)
                 NameText.FontFace = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
-                NameText.Text = TBData.Name:reverse()
+                NameText.Text = TBData.Name
                 NameText.TextColor3 = Color3.fromRGB(68, 78, 112)
                 NameText.TextScaled = true
                 NameText.TextStrokeTransparency = 1
@@ -2305,7 +2300,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 MainTextBox.Size = UDim2.fromOffset(175, 12)
                 MainTextBox.ClearTextOnFocus = false
                 MainTextBox.PlaceholderColor3 = Color3.fromRGB(46, 54, 76)
-                MainTextBox.PlaceholderText = ("Insert"):reverse()
+                MainTextBox.PlaceholderText = "Insert"
                 MainTextBox.TextScaled = true
                 MainTextBox.TextColor3 = UIData.Theme.Other
                 MainTextBox.ZIndex = 95
@@ -2322,7 +2317,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 function RealTextBoxData.Functions:SetValue(Value: string, SaveConfig: boolean, Load: boolean?)
                     RealTextBoxData.Data.CallingFunction(RealTextBoxData, Value)
                     RealTextBoxData.Value = Value
-                    MainTextBox.Text = Value:reverse()
+                    MainTextBox.Text = Value
 
                     if SaveConfig == nil then
                         SaveConfig = true
@@ -2346,7 +2341,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                     if EnterPressed then
                         RealTextBoxData.Functions:SetValue(MainTextBox.Text)
                     else
-                        MainTextBox.Text = RealTextBoxData.Value:reverse()
+                        MainTextBox.Text = RealTextBoxData.Value
                     end
                 end))
 
@@ -2383,7 +2378,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 MainText.Size = UDim2.fromOffset(120, 16)
                 MainText.ZIndex = 95
                 MainText.FontFace = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
-                MainText.Text = CSData.Name:reverse()
+                MainText.Text = CSData.Name
                 MainText.TextColor3 = Color3.fromRGB(68, 78, 112)
                 MainText.TextScaled = true
                 MainText.TextStrokeTransparency = 1
@@ -2405,7 +2400,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 MainTextBox.Size = UDim2.fromOffset(80, 13)
                 MainTextBox.ZIndex = 95
                 MainTextBox.PlaceholderColor3 = Color3.fromRGB(46, 54, 76)
-                MainTextBox.PlaceholderText = ("RGB"):reverse()
+                MainTextBox.PlaceholderText = "RGB"
                 MainTextBox.Text = ""
                 MainTextBox.TextScaled = true
                 MainTextBox.TextWrapped = true
@@ -2473,7 +2468,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                     local RGBValue: Color3 = Color3.fromRGB(RGB.R, RGB.G, RGB.B)
                     RealColorSliderData.Data.CallingFunction(RealColorSliderData, RGBValue, RGB)
 
-                    MainTextBox.Text = RealColorSliderData.Value:reverse()
+                    MainTextBox.Text = RealColorSliderData.Value
                     MainTextBox.TextColor3 = RGBValue
 
                     if SaveConfig == nil then
@@ -2572,7 +2567,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                         end
                     end
 
-                    MainTextBox.Text = RealColorSliderData.Value:reverse()
+                    MainTextBox.Text = RealColorSliderData.Value
                     return false
                 end), {RealColorSliderData.Connections, RealModuleData.Connections, WindowData.Connections})
 
@@ -2615,7 +2610,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 NameText.Size = UDim2.fromOffset(171, 16)
                 NameText.FontFace = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
                 NameText.BorderSizePixel = 0
-                NameText.Text = DropDownData.Name:reverse()
+                NameText.Text = DropDownData.Name
                 NameText.TextColor3 = Color3.fromRGB(68, 78, 112)
                 NameText.TextScaled = true
                 NameText.TextWrapped = true
@@ -2646,7 +2641,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 DropSelectedText.BorderSizePixel = 0
                 DropSelectedText.Position = UDim2.fromScale(0.055, 0.208)
                 DropSelectedText.Size = UDim2.fromOffset(135, 13)
-                DropSelectedText.Text = ("None Selected"):reverse()
+                DropSelectedText.Text = "None Selected"
                 DropSelectedText.TextColor3 = Color3.fromRGB(46, 54, 76)
                 DropSelectedText.TextScaled = true
                 DropSelectedText.TextWrapped = true
@@ -2705,7 +2700,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                     OptionText.Size = UDim2.fromOffset(114, 12)
                     OptionText.ZIndex = 96
                     OptionText.FontFace = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
-                    OptionText.Text = v:reverse()
+                    OptionText.Text = v
                     OptionText.TextScaled = true
                     OptionText.TextWrapped = true
                     OptionText.TextStrokeTransparency = 1
@@ -2801,7 +2796,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                                         NewText = "None Selected"
                                     end
 
-                                    DropSelectedText.Text = NewText:reverse()
+                                    DropSelectedText.Text = NewText
                                 end
                             end
                         end
@@ -2892,7 +2887,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 Text.Position = UDim2.fromScale(0.07, 0.25)
                 Text.Size = UDim2.fromOffset(80, 16)
                 Text.FontFace = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
-                Text.Text = KBData.Name:reverse()
+                Text.Text = KBData.Name
                 Text.TextColor3 = Color3.fromRGB(68, 78, 112)
                 Text.TextScaled = true
                 Text.TextWrapped = true
@@ -2915,7 +2910,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 CurrentBindText.Size = UDim2.fromOffset(70, 13)
                 CurrentBindText.ZIndex = 95
                 CurrentBindText.TextColor3 = Color3.fromRGB(46, 54, 76)
-                CurrentBindText.Text = ("Bind"):reverse()
+                CurrentBindText.Text = "Bind"
                 CurrentBindText.TextScaled = true
                 CurrentBindText.TextWrapped = true
                 CurrentBindText.TextStrokeTransparency = 1
@@ -2976,7 +2971,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                             if CanBeReset then
                                 RealKeybindData.Bind = nil 
                                 CurrentBindText.TextColor3 = Color3.fromRGB(46, 54, 76)    
-                                CurrentBindText.Text = ("Bind"):reverse()
+                                CurrentBindText.Text = "Bind" 
 
                                 if RealKeybindData.MobileButton then
                                     RealKeybindData.MobileButton:Destroy()
@@ -2985,7 +2980,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                             end
                         else
                             if RealKeybind then
-                                CurrentBindText.Text = ("Unbind"):reverse()
+                                CurrentBindText.Text = "Unbind"
                                 RealKeybindData.Bind = "Button"
                                 CurrentBindText.TextColor3 = UIData.Theme.Other
 
@@ -3019,17 +3014,17 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                             if RealKeybind == RealKeybindData.Bind and CanBeReset then
                                 RealKeybindData.Bind = nil 
                                 CurrentBindText.TextColor3 = Color3.fromRGB(46, 54, 76)    
-                                CurrentBindText.Text = ("Bind"):reverse()
+                                CurrentBindText.Text = "Bind" 
                             else
                                 RealKeybindData.Bind = RealKeybind
                                 CurrentBindText.TextColor3 = UIData.Theme.Other
-                                CurrentBindText.Text = (RealKeybind.Name):reverse()                             
+                                CurrentBindText.Text = RealKeybind.Name                              
                             end
                         else
                             if Load then
                                 RealKeybindData.Bind = nil 
                                 CurrentBindText.TextColor3 = Color3.fromRGB(46, 54, 76)    
-                                CurrentBindText.Text = ("Bind"):reverse()
+                                CurrentBindText.Text = "Bind" 
                             end
                         end
                     end   
@@ -3062,7 +3057,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 Assets.Connections:Add(KeybindBox.MouseButton1Click:Connect(function()
                     if not Night.Mobile then
                         RealKeybindData.Binding = true
-                        CurrentBindText.Text = ("Binding"):reverse()
+                        CurrentBindText.Text = "Binding"
                     else
                         RealKeybindData.Functions:SetValue("Mobile", true, false, true)
                     end
@@ -3130,7 +3125,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 Text.Size = UDim2.fromOffset(86, 16)
                 Text.ZIndex = 95
                 Text.FontFace = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
-                Text.Text = ButtonData.Name:reverse()
+                Text.Text = ButtonData.Name
                 Text.TextColor3 = Color3.fromRGB(68, 78, 112)
                 Text.TextScaled = true
                 Text.TextStrokeTransparency = 1
@@ -3153,7 +3148,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 ClickText.Size = UDim2.fromOffset(39, 13)
                 ClickText.ZIndex = 95
                 ClickText.TextColor3 = Color3.fromRGB(46, 54, 76)
-                ClickText.Text = ("Click"):reverse()
+                ClickText.Text = "Click"
                 ClickText.TextScaled = true
                 ClickText.TextWrapped = true
                 ClickText.TextStrokeTransparency = 1 
@@ -3315,7 +3310,7 @@ function Assets.Functions:Countdown(Time: number, Unit: string)
     TimeLeftText.Position = UDim2.fromScale(0.5, 0.6)
     TimeLeftText.Size = UDim2.fromOffset(99, 15)
     TimeLeftText.Font = Enum.Font.BuilderSans
-    TimeLeftText.Text = (tostring(Time)..(Unit or "s")):reverse()
+    TimeLeftText.Text = tostring(Time)..(Unit or "s")
     TimeLeftText.TextColor3 = Color3.fromRGB(69, 79, 113)
     TimeLeftText.TextScaled = true
     TimeLeftText.TextWrapped = true
@@ -3335,7 +3330,7 @@ function Assets.Functions:Countdown(Time: number, Unit: string)
     end
 
     function CountDownData.Functions:Update(NewTime: number, Unit: string)
-        TimeLeftText.Text = (tostring(NewTime)..(Unit or "s")):reverse()
+        TimeLeftText.Text = tostring(NewTime)..(Unit or "s")
         TweenService:Create(BarFill, TweenInfo.new(0.15), {Size = UDim2.fromScale(math.clamp(tonumber(NewTime) / Time, 0, 1), 1)}):Play()
     end
 
@@ -3418,7 +3413,7 @@ function Assets.Functions:CreateTargetHud(Data: {Player: Player?, UserData: {Nam
     DisplayNameText.Position = UDim2.fromScale(0.349, 0.28)
     DisplayNameText.Size = UDim2.fromOffset(137, 20)
     DisplayNameText.Font = Enum.Font.BuilderSansBold
-    DisplayNameText.Text = TargetHudData.Data.UserData.DisplayName:reverse()
+    DisplayNameText.Text = TargetHudData.Data.UserData.DisplayName
     DisplayNameText.TextColor3 = Color3.fromRGB(101, 116, 166)
     DisplayNameText.TextScaled = true
     DisplayNameText.TextWrapped = true
@@ -3432,7 +3427,7 @@ function Assets.Functions:CreateTargetHud(Data: {Player: Player?, UserData: {Nam
     UserNameText.Position = UDim2.fromScale(0.349, 0.44)
     UserNameText.Size = UDim2.fromOffset(137, 17)
     UserNameText.FontFace = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
-    UserNameText.Text = ("@"..TargetHudData.Data.UserData.Name):reverse()
+    UserNameText.Text = "@"..TargetHudData.Data.UserData.Name
     UserNameText.TextColor3 = Color3.fromRGB(69, 79, 113)
     UserNameText.TextScaled = true
     UserNameText.TextWrapped = true
@@ -3480,7 +3475,7 @@ function Assets.Functions:CreateTargetHud(Data: {Player: Player?, UserData: {Nam
     HealthText.Position = UDim2.fromScale(0.369, 0.75)
     HealthText.Size = UDim2.fromOffset(99, 15)
     HealthText.Font = Enum.Font.BuilderSans
-    HealthText.Text = (tostring(TargetHudData.Data.Health.Current).."/"..tostring(TargetHudData.Data.Health.Max)):reverse()
+    HealthText.Text = tostring(TargetHudData.Data.Health.Current).."/"..tostring(TargetHudData.Data.Health.Max)
     HealthText.TextColor3 = Color3.fromRGB(69, 79, 113)
     HealthText.TextScaled = true
     HealthText.TextWrapped = true
@@ -3536,8 +3531,8 @@ function Assets.Functions:CreateTargetHud(Data: {Player: Player?, UserData: {Nam
 
         if not TargetHudData.Data then return end
 
-        DisplayNameText.Text = TargetHudData.Data.UserData.DisplayName:reverse()
-        UserNameText.Text = ("@"..TargetHudData.Data.UserData.Name):reverse()
+        DisplayNameText.Text = TargetHudData.Data.UserData.DisplayName
+        UserNameText.Text = "@"..TargetHudData.Data.UserData.Name
         ActualPFPIcon.Image = TargetHudData.Data.UserData.ProfilePic
 
         if not NewData.Health then
@@ -3551,7 +3546,7 @@ function Assets.Functions:CreateTargetHud(Data: {Player: Player?, UserData: {Nam
 
 
         TweenService:Create(HealthBarFill, TweenInfo.new(0.15), {Size = UDim2.fromScale(math.clamp(TargetHudData.Data.Health.Current / TargetHudData.Data.Health.Max, 0, 1), 1)}):Play()
-        HealthText.Text = (tostring(TargetHudData.Data.Health.Current).."/"..tostring(TargetHudData.Data.Health.Max)):reverse()
+        HealthText.Text = tostring(TargetHudData.Data.Health.Current).."/"..tostring(TargetHudData.Data.Health.Max)
 
         if NewData.Visible == nil then
             NewData.Visible = MainFrame.Visible
@@ -3736,8 +3731,8 @@ function Assets.Functions:CreateConfigOption(Data: {Name: string, New: boolean?,
     Title.Position = UDim2.fromScale(0.065, 0.68)
     Title.Size = UDim2.fromOffset(142, 19)
     Title.Font = Enum.Font.BuilderSansBold
-    Title.Text = Data.Name:reverse()
-    Title.PlaceholderText = ("Enter Name"):reverse()
+    Title.Text = Data.Name
+    Title.PlaceholderText = "Enter Name"
     Title.PlaceholderColor3 = Color3.fromRGB(101, 116, 166)
     Title.TextColor3 = Color3.fromRGB(101, 116, 166)
     Title.TextScaled = true
@@ -3752,7 +3747,7 @@ function Assets.Functions:CreateConfigOption(Data: {Name: string, New: boolean?,
     Description.Position = UDim2.fromScale(0.065, 0.807)
     Description.Size = UDim2.fromOffset(120, 15)
     Description.Font = Enum.Font.BuilderSansMedium
-    Description.Text = DescriptionText:reverse()
+    Description.Text = DescriptionText
     Description.TextColor3 = Color3.fromRGB(60, 69, 99)
     Description.TextScaled = true
     Description.TextStrokeTransparency = 1
@@ -3915,7 +3910,7 @@ function Assets.Functions:CreateConfigOption(Data: {Name: string, New: boolean?,
                 end
             end
 
-            Title.Text = RealData.CurrentConfigName:reverse()
+            Title.Text = RealData.CurrentConfigName
         end), {RealData.Connections})
 
         Assets.Connections:Add(MainFrame.MouseButton1Click:Connect(function()
