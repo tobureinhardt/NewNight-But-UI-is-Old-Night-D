@@ -776,6 +776,9 @@ end)();
             if enabled then
                 OldTime = Lighting.ClockTime
                 Lighting.ClockTime = 0
+                self:Connection(Lighting:GetPropertyChangedSignal("ClockTime"):Connect(function()
+                    Lighting.ClockTime = 0
+                end))
             else
                 Lighting.ClockTime = OldTime
             end
@@ -2526,7 +2529,6 @@ end)();
 
         for I = 1, 12 do
             local Part = Instance.new("Part")
-            Part.Name = "CapeSegment_" .. I
             Part.Size = Vector3.new(CapeData.Settings.Width, SegHeight * 1.35, 0.08)
             Part.Color = CapeData.Settings.Color
             Part.Material = Enum.Material[CapeData.Settings.Material]
@@ -3646,6 +3648,51 @@ end)();
             Settings.SkyboxUp = value
         end
     }))
+end)();
+
+(function()
+    local Hook = nil
+
+    local function Buffer(mode)
+        if mode == "max_u32" then
+            local Floor = math.floor((2 ^ 16) * (2 ^ 16))
+            local Abs = math.abs(math.cos(math.pi))
+            return Floor - Abs
+        elseif mode == "packet_id" then
+            local Offset = math.floor(math.sqrt(9))
+            return (math.sqrt(9)) * (2 ^ 3) + Offset
+        end
+        return 0
+    end
+
+    Tabs.Movement:CreateModule({
+        Name = "Desync",
+        Flag = "UniversalDesync",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                Hook = function(packet)
+                    if type(packet) ~= "table" and type(packet) ~= "userdata" then return end
+                    if not packet.AsArray or packet.AsArray[1] ~= Buffer("packet_id") then
+                        return
+                    end
+
+                    local data = packet.AsBuffer
+                    if not data then return end
+
+                    buffer.writeu32(data, 1, Buffer("max_u32"))
+
+                    packet:SetData(data)
+                end
+
+                raknet.add_send_hook(Hook)
+            elseif Hook then
+                pcall(function()
+                    raknet.remove_send_hook(Hook)
+                end)
+                Hook = nil
+            end
+        end
+    })
 end)();
 
 (function()
