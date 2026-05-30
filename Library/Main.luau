@@ -1426,7 +1426,7 @@ local function CreateWindow(Data: {Name: string, Flag: string, Size: UDim2, Posi
                 CornerFix.BackgroundColor3 = UIData.Theme.Other
                 CornerFix.BackgroundTransparency = 1
                 CornerFix.Position = UDim2.fromScale(0, -0.013)
-                CornerFix.Size = UDim2.fromOffset(221, 8)
+                CornerFix.Size = UDim2.fromOffset(221, 10)
                 CornerFix.BorderSizePixel = 0
                 table.insert(UIData.CustomizableItems.Other, {
                     CanChange = true,
