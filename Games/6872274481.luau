@@ -772,7 +772,7 @@ local function FindWeakestSide(Bed: Part)
     return ActualSide, Side, Health
 end
 
-local function GetNearestBed(IgnoreTeam: boolean?, IgnoreCanBreak: boolean?): { Bed: Part, Distance: any }
+local function GetNearestBed(IgnoreTeam: boolean?, IgnoreCanBreak: boolean?, CheckBed: boolean?): { Bed: Part, Distance: any }
     local PlayerTeamId: number = GetPlayersTeam(LocalPlayer)
     local Data = {
         Bed = nil,
@@ -782,17 +782,22 @@ local function GetNearestBed(IgnoreTeam: boolean?, IgnoreCanBreak: boolean?): { 
     for i,v: Part in CollectionService:GetTagged("bed") do
         local TeamId = v:GetAttribute("TeamId")
         if (TeamId and TeamId ~= PlayerTeamId or not TeamId or IgnoreTeam) and (not v:GetAttribute("Team"..tostring(PlayerTeamId).."NoBreak") or IgnoreCanBreak) and Night:IsAlive(LocalPlayer) then
-            local Distance = Night:GetDistanceFrom(LocalPlayer.Character.PrimaryPart.Position, v.Position)
-            if Data.Distance > Distance then
-                Data = {
-                    Bed = v,
-                    Distance = Distance
-                }
+            if not CheckBed then
+                local Distance = Night:GetDistanceFrom(LocalPlayer.Character.PrimaryPart.Position, v.Position)
+                if Data.Distance > Distance then
+                    Data = {
+                        Bed = v,
+                        Distance = Distance
+                    }
+                end
+                return Data
+            else
+                return true
             end
         end
     end
 
-    return Data
+    return false
 end
 
 local function GetNearestChest(Ignore: {Instance})
@@ -892,6 +897,7 @@ end
 
 Windows.Combat.Modules.UniversalAimbot:Destroy()
 Windows.Combat.Modules.UniversalHitboxes:Destroy()
+Windows.Movement.Modules.UniversalDesync:Destroy()
 Windows.Movement.Modules.UniversalSpeed:Destroy()
 Windows.Movement.Modules.UniversalFly:Destroy()
 Windows.Movement.Modules.UniversalMouseTP:Destroy()
@@ -1220,7 +1226,7 @@ end)();
                                 local Ray: RaycastResult = workspace:Raycast(Root.Position, Vector3.new(0, -1000, 0), FlyData.Data.Params)
                                 if Ray then
                                     local OldCFrame: CFrame = Root.CFrame
-                                    Root.CFrame = CFrame.new(Ray.Position + Vector3.new(0,2,0))
+                                    Root.CFrame = CFrame.new(Ray.Position + Vector3.new(0, 2, 0))
                                     task.delay(0.1, function()
                                         Root.CFrame = OldCFrame
                                     end)
@@ -1235,7 +1241,7 @@ end)();
                                     self:SetValue(false)
                                     break
                                 end
-                            end
+                            end 
                             
                             if FlyData.Data.FlyBar then
                                 FlyData.Data.FlyBar:Update(string.format("%.1f", (FlyData.Data.LastOnGround + 2.5) - os.clock()))
@@ -1611,7 +1617,7 @@ end)();
                             end
 
                             if KillAuraData.Settings.AutoSwitch and (not HandItem or HandItem and (not HandItem.tool or HandItem.tool ~= Sword.Item)) then
-                                SwitchItem(Sword.Item, true)
+                                SwitchItem(Sword.Item)
                             end
 
                             local Box: Part
@@ -2420,12 +2426,12 @@ end)();
 
                             local BestTool = GetBestItemToBreakBlock(ItemName)
                             if BestTool.Item then
-                                SwitchItem(BestTool.Item, not AutoSwitch)
+                                SwitchItem(BestTool.Item)
                             else
                                 if AutoSwitch then
                                     BestTool = GetBestItemToBreakBlock("stone")
                                     if BestTool.Item then
-                                        SwitchItem(BestTool.Item, false)
+                                        SwitchItem(BestTool.Item)
                                     end
                                 end
                             end
@@ -2725,60 +2731,6 @@ end
         Default = 5,
         CallingFunction = function(self, value: number)
             ScaffoldData.Settings.Boost = value
-        end
-    })
-end)();
-
-(function()
-    local FallRay: RaycastParams, Power: number = RaycastParams.new(), 0
-    local function Physics(Delta: number)
-        local Root: BasePart = LocalPlayer.Character.PrimaryPart
-        local Velocity: Vector3 = Root.AssemblyLinearVelocity
-
-        Root.AssemblyLinearVelocity = Vector3.new(Velocity.X, -85, Velocity.Z)
-        Root.CFrame += Vector3.new(0, Delta * Power, 0)
-
-        Power -= Delta * workspace.Gravity
-    end
-
-    local function MakeRay(Char: Model)
-        repeat task.wait() until Night:IsAlive(LocalPlayer)
-
-        FallRay.FilterType = Enum.RaycastFilterType.Exclude
-        FallRay.CollisionGroup = Char.PrimaryPart.CollisionGroup
-        FallRay.FilterDescendantsInstances = {Char, CurrentCamera}
-    end
-
-    Windows.Utility:CreateModule({
-        Name = "No Fall",
-        Flag = "NoFall",
-        CallingFunction = function(self, enabled: boolean) 
-            if enabled then
-                self:Connection(LocalPlayer.CharacterAdded:Connect(MakeRay))
-                if Night:IsAlive(LocalPlayer) then
-                    MakeRay(LocalPlayer.Character)
-                end
-
-                self:Connection(RunService.PreSimulation:Connect(function(Delta)
-                    if not Night:IsAlive(LocalPlayer) then return end
-
-                    local Char: Model = LocalPlayer.Character
-                    local Root: BasePart = Char.PrimaryPart
-                    
-                    if Root.AssemblyLinearVelocity.Y >= -80 then
-                        Power = 0
-                        return
-                    end
-
-                    local _, Size: Vector3 = Char:GetBoundingBox()
-                    local Raycast: RaycastResult = workspace:Raycast(Root.Position, Vector3.new(0, -(Size.Y / 2), 0), FallRay)
-                    if not Raycast then
-                        Physics(Delta)
-                    else
-                        Power = 0
-                    end
-                end))
-            end
         end
     })
 end)();
@@ -3419,7 +3371,7 @@ end)();
                                                 continue
                                             end
 
-                                            SwitchItem(Obj.Item.tool, true)
+                                            SwitchItem(Obj.Item.tool)
                                             coroutine.wrap(function()
                                                 local LookVec = (CFrame.new(Pos, AimPos)).LookVector * LaunchVel
 
@@ -3572,13 +3524,10 @@ end)();
 end)();
 
 (function()
-    local Mode: string = "Hybrid"
-    local Speed: number = 180
-    local VeloSpeed: number = 60
+    local Speed: number = 120
     local Time: number = 1.5
     local StartTime: number = 0
     local Height: number = 5
-    local VeloHeight: number = 8
     local UseBoost: boolean = false
     local UseTimeUI: boolean = false
     local CombatCheck: boolean = false
@@ -3621,7 +3570,7 @@ end)();
                         end
                     end))
 
-                    SwitchItem(FireBall.tool, true)
+                    SwitchItem(FireBall.tool)
                     GameData.Utils.Remotes:Get("ProjectileFire"):CallServerAsync(
                         FireBall.tool, FireBall.itemType, FireBall.itemType,
                         PrimaryPart.Position, PrimaryPart.Position, vector.create(0, -30, 0),
@@ -3650,69 +3599,32 @@ end)();
                 repeat task.wait() until CanLongJump
 
                 local Boosted: boolean = false
-                if Mode == "Boost" then
-                    self:Connection(RunService.PreRender:Connect(function(delta: number)
-                        if not Boosted then
-                            local RealSpeed: number = Speed
-                            if UseBoost then
-                                local Multiplier: number = GetSpeedMultiplier()
-                                if Multiplier ~= 0 then
-                                    RealSpeed += (Multiplier - 10)
-                                end
+                self:Connection(RunService.PreRender:Connect(function(delta: number)
+                    if not Boosted then
+                        local RealSpeed: number = Speed
+                        if UseBoost then
+                            local Multiplier: number = GetSpeedMultiplier()
+                            if Multiplier ~= 0 then
+                                RealSpeed += (Multiplier - 10)
                             end
-
-                            RealSpeed = CombatCheck and 0 < #GameData.Data.KillAuraTargets and (RealSpeed / 2) or RealSpeed
-                            PrimaryPart.CFrame += (Humanoid.MoveDirection * (RealSpeed * delta))
-
-                            PrimaryPart.AssemblyLinearVelocity = Vector3.new(PrimaryPart.AssemblyLinearVelocity.X, Height, PrimaryPart.AssemblyLinearVelocity.Z)      
                         end
+
+                        RealSpeed = CombatCheck and 0 < #GameData.Data.KillAuraTargets and (RealSpeed / 2) or RealSpeed
+                        PrimaryPart.CFrame += (Humanoid.MoveDirection * (RealSpeed * delta))
+
+                        PrimaryPart.AssemblyLinearVelocity = Vector3.new(PrimaryPart.AssemblyLinearVelocity.X, Height, PrimaryPart.AssemblyLinearVelocity.Z)      
+                    end
                         
-                        Boosted = not Boosted
+                    Boosted = not Boosted
 
-                        if TimeUI then
-                            TimeUI:Update(string.format("%.1f", (StartTime + Time) - os.clock()))
-                        end
+                    if TimeUI then
+                        TimeUI:Update(string.format("%.1f", (StartTime + Time) - os.clock()))
+                    end
 
-                        if (os.clock() - StartTime) >= Time then
-                            self:SetValue(false)
-                        end
-                    end))
-                else
-                    local Velocity = VeloHeight + 5
-                    task.spawn(function()
-                        repeat
-                            task.wait()
-                            Velocity -= 0.1
-                            LocalPlayer.Character.PrimaryPart.AssemblyLinearVelocity = Vector3.new(0, Velocity, 0)
-                        until not self.Data.Enabled
-                    end)
-
-                    self:Connection(RunService.PreSimulation:Connect(function(Delta)
-                        if (os.clock() - StartTime) >= Time then
-                            self:SetValue(false)
-                            return
-                        end
-
-                        local MoveDirection = LocalPlayer.Character.PrimaryPart.CFrame.LookVector
-                        local LJSpeed = CombatCheck and 0 < #GameData.Data.KillAuraTargets and (VeloSpeed / 2) or VeloSpeed
-
-                        LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = (MoveDirection * (LJSpeed + GetSpeedMultiplier())) + Vector3.new(0, LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity.Y, 0)
-                        if LocalPlayer.Character.Humanoid.FloorMaterial == Enum.Material.Air then
-                            if not Boosted then
-                                LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity.X, VeloHeight + 5, LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity.Z)
-                                Boosted = true
-                            else
-                                LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity += Vector3.new(0, Delta * (workspace.Gravity - (VeloHeight + 14)), 0)
-                            end
-                        else
-                            LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity.X, VeloHeight + 5, LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity.Z)
-                        end
-
-                        if TimeUI then
-                            TimeUI:Update(string.format("%.1f", (StartTime + Time) - os.clock()))
-                        end
-                    end))
-                end
+                    if (os.clock() - StartTime) >= Time then
+                        self:SetValue(false)
+                    end
+                end))
             else
                 if Night:IsAlive(LocalPlayer) then
                     LocalPlayer.Character.PrimaryPart.Anchored = false
@@ -3726,40 +3638,14 @@ end)();
         end
     })
 
-    local Speed1, Speed2, Height1, Height2
-    LongJump:Dropdown({
-        Name = "Mode",
-        Flag = "LongJumpMode",
-        Default = "Hybrid",
-        Options = {"Hybrid", "Boost"},
-        CallingFunction = function(self, Value: string)
-            Mode = Value
-            Speed1:SetVisiblity(Value == "Boost")
-            Height1:SetVisiblity(Value == "Boost")
-            Speed2:SetVisiblity(Value == "Hybrid")
-            Height2:SetVisiblity(Value == "Hybrid")
-        end
-    })
-
-    Speed1 = LongJump:Slider({
+    LongJump:Slider({
         Name = "Speed",
         Flag = "LongJumpSpeed",
         Min = 40,
-        Max = 185,
-        Default = 180,
+        Max = 150,
+        Default = 120,
         CallingFunction = function(self, value: number)
             Speed = value
-        end
-    })
-
-    Speed2 = LongJump:Slider({
-        Name = "Speed",
-        Flag = "LongJumpSpeed1",
-        Min = 30,
-        Max = 60,
-        Default = 60,
-        CallingFunction = function(self, value: number)
-            VeloSpeed = value
         end
     })
 
@@ -3775,7 +3661,7 @@ end)();
         end
     })
 
-    Height1 = LongJump:Slider({
+    LongJump:Slider({
         Name = "Height",
         Flag = "LongJumpHeight",
         Min = 1,
@@ -3783,17 +3669,6 @@ end)();
         Default = 5,
         CallingFunction = function(self, value: number)
             Height = value
-        end
-    })
-
-    Height2 = LongJump:Slider({
-        Name = "Height",
-        Flag = "LongJumpHeight",
-        Min = 1,
-        Max = 20,
-        Default = 8,
-        CallingFunction = function(self, value: number)
-            VeloHeight = value
         end
     })
 
@@ -3868,7 +3743,7 @@ end)();
         MobileText = "Use Phase",
         Flag = "PhaseActualBind",
         DestroyMobileButtonOnDisable = true,
-        Default = Enum.KeyCode.LeftAlt,
+        Default = Enum.KeyCode.LeftShift,
         Events = {
             Began = function()
                 HoldingKeybind = true
@@ -5064,7 +4939,7 @@ end)();
                             local Claw = GetItem("summoner_claw", true)
                             if Claw and Claw.tool then
                                 if CanSwitchItem then
-                                    SwitchItem(Claw.tool, true)
+                                    SwitchItem(Claw.tool)
                                 end
 
                                 GameData.Utils.ClawHandController.lastAttackTime = workspace:GetServerTimeNow()
@@ -5750,6 +5625,74 @@ end)();
 end)();
 
 (function()
+    local Hook = nil
+    local NoFall = false
+
+    local function Buffer(mode)
+        if mode == "max_u32" then
+            local Floor = math.floor((2 ^ 16) * (2 ^ 16))
+            local Abs = math.abs(math.cos(math.pi))
+            return Floor - Abs
+        elseif mode == "packet_id" then
+            local Offset = math.floor(math.sqrt(9))
+            return (math.sqrt(9)) * (2 ^ 3) + Offset
+        end
+        return 0
+    end
+
+    local Desync = Windows.Movement:CreateModule({
+        Name = "Desync",
+        Flag = "Desync",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                Hook = function(packet)
+                    if type(packet) ~= "table" and type(packet) ~= "userdata" then return end
+                    if not packet.AsArray or packet.AsArray[1] ~= Buffer("packet_id") then
+                        return
+                    end
+
+                    local data = packet.AsBuffer
+                    if not data then return end
+
+                    buffer.writeu32(data, 1, Buffer("max_u32"))
+
+                    if NoFall then
+                        buffer.writeu8(data, 25, 7)
+                    end
+
+                    packet:SetData(data)
+                end
+
+                raknet.add_send_hook(Hook)
+
+                task.wait()
+
+                if GetNearestBed(true, true, true) and Night:IsAlive(LocalPlayer) then
+                    LocalPlayer.Character.Humanoid.Health = 0
+                elseif not GetNearestBed(true, true, true) then
+                    Warning("Desync", "No bed found", 5)
+                end
+
+            elseif Hook then
+                pcall(function()
+                    raknet.remove_send_hook(Hook)
+                end)
+                Hook = nil
+            end
+        end
+    })
+
+    Desync:MiniToggle({
+        Name = "No Fall",
+        Flag = "DesyncNoFall",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            NoFall = value
+        end
+    })
+end)();
+
+(function()
     local AutoBallonHeight: number = 0
     local Amount: number = 3
     local ShouldSwitchItem: boolean = false
@@ -5774,7 +5717,7 @@ end)();
                                     end
 
                                     if ShouldSwitchItem then
-                                        SwitchItem(Balloons.tool, false, true)
+                                        SwitchItem(Balloons.tool)
                                     end
 
                                     GameData.Utils.Remotes:Get("InflateBalloon"):SendToServer()
@@ -6061,9 +6004,12 @@ end)();
                     if Mouse then
                         local Pearl = GetItem("telepearl")
                         if Pearl then
-                            local PlayerPosition: BasePart = LocalPlayer.Character.PrimaryPart.Position
+                            local PlayerPosition: Vector3 = LocalPlayer.Character.PrimaryPart.Position
                             local MousePos: Vector3 = Mouse.Hit.Position
-                            MousePos = Vector3.new(MousePos.X, MousePos.Y, MousePos.Z)
+
+                            local Distance = (Vector3.new(PlayerPosition.X, 0, PlayerPosition.Z) - Vector3.new(MousePos.X, 0, MousePos.Z)).Magnitude
+                            MousePos = Vector3.new(MousePos.X, MousePos.Y + (Distance ^ 2) * 0.0035, MousePos.Z)
+                            
                             local LaunchVel: number = GameData.Utils.ProjMeta.telepearl.launchVelocity
                             local LookCF: CFrame = CFrame.new(PlayerPosition, MousePos)
                             local LookVec: Vector3 = LookCF.LookVector * LaunchVel
@@ -6080,8 +6026,6 @@ end)();
                         else
                             Warning("Mouse Teleport", "You must have a pearl.", 5)
                         end
-                    else
-                        Warning("Mouse Teleport", "Unable to find mouse.", 5)
                     end
                 else
                     Warning("Mouse Teleport", "You are dead.", 5)
@@ -6120,6 +6064,7 @@ end)();
             WallCheck = true,
             TargetPart = "HumanoidRootPart",
             AutoClick = true,
+            PerfectHits = true,
             ClickDelay = 0.4,
             Targets = {
                 Players = true,
@@ -6168,7 +6113,7 @@ end)();
 
                             if SilentAuraData.Settings.AutoClick then
                                 local Now = os.clock()
-                                if Now - SilentAuraData.Data.LastClick >= SilentAuraData.Settings.ClickDelay then
+                                if Now - SilentAuraData.Data.LastClick >= (SilentAuraData.Settings.PerfectHits and 1 / 16 * math.random(2, 5) or SilentAuraData.Settings.ClickDelay) then
                                     local Sword = GetSword()
                                     if Sword.Item then
                                         GameData.Utils.SwordController:swingSwordAtMouse()
@@ -6212,9 +6157,9 @@ end)();
     SilentAura:Slider({
         Name = "Click Speed",
         Flag = "SilentAuraClickSpeed",
-        Default = 4,
+        Default = 16,
         Min = 1,
-        Max = 10,
+        Max = 40,
         CallingFunction = function(self, value: number)
             SilentAuraData.Settings.ClickDelay = 1 / value * math.random(2, 5)
         end
@@ -6239,6 +6184,15 @@ end)();
         MinLimit = 0,
         CallingFunction = function(self, value)
             SilentAuraData.Settings.Targets = value
+        end
+    })
+
+    SilentAura:MiniToggle({
+        Name = "Perfect Hits",
+        Default = true,
+        Flag = "SilentAuraPerfectHits",
+        CallingFunction = function(self, value: boolean)
+            SilentAuraData.Settings.PerfectHits = value
         end
     })
 
@@ -6374,13 +6328,13 @@ end)();
             Range = 10,
             StrafeSpeed = 1.2,
             StrafeRadius = 8,
-            AutoJump = true,
+            AutoJump = false,
             JumpDelay = 0.6,
             SmartDodge = true,
             DodgeDistance = 6,
             ReverseInterval = 1.5,
             SprintMultiplier = 1.0,
-            Targets = {Players = true, Npcs = false},
+            Targets = {Players = true, Npcs = true},
             TeamCheck = true,
             Mode = "Distance"
         },
@@ -6582,7 +6536,6 @@ end)();
     TargetStrafe:MiniToggle({
         Name = "Auto Jump",
         Flag = "TargetStrafeAutoJump",
-        Default = true,
         CallingFunction = function(self, value: boolean)
             TargetStrafeData.Settings.AutoJump = value
         end
