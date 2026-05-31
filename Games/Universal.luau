@@ -507,6 +507,12 @@ end)();
             CircleSize = 80,
             Distance = 50,
             CircleEnabled = true,
+            Mode = "Smooth",
+            Prediction = false,
+            PredictionAmount = 0.12,
+            Jitter = false,
+            JitterAmount = 0,
+            Deadzone = 0,
             TeamCheck = false,
             TriggerDistance = false,
             WallCheck = false,
@@ -520,6 +526,37 @@ end)();
             HoldingTrigger = false,
         }
     }
+
+    local AimRandom = Random.new()
+
+    local function GetAimPosition(TargetPart: BasePart): Vector3
+        local Position = TargetPart.Position
+
+        if AimbotData.Settings.Prediction then
+            Position += TargetPart.AssemblyLinearVelocity * AimbotData.Settings.PredictionAmount
+        end
+
+        if AimbotData.Settings.Jitter and AimbotData.Settings.JitterAmount > 0 then
+            local Amount = AimbotData.Settings.JitterAmount / 100
+            local Right = CurrentCamera.CFrame.RightVector * AimRandom:NextNumber(-Amount, Amount)
+            local Up = CurrentCamera.CFrame.UpVector * AimRandom:NextNumber(-Amount, Amount)
+            Position += Right + Up
+        end
+
+        return Position
+    end
+
+    local function AimAt(Position: Vector3, Delta: number)
+        local NewCF = CFrame.new(CurrentCamera.CFrame.Position, Position)
+
+        if AimbotData.Settings.Mode == "Snap" or AimbotData.Settings.Smoothness >= 100 then
+            CurrentCamera.CFrame = NewCF
+        elseif AimbotData.Settings.Mode == "Humanized" then
+            CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(NewCF, math.clamp((AimbotData.Settings.Smoothness * Delta) * 0.65, 0, 1))
+        else
+            CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(NewCF, math.clamp(AimbotData.Settings.Smoothness * Delta, 0, 1))
+        end
+    end
 
     local function IsPathClear(target, TargetPart: Part?): boolean
         if not AimbotData.Settings.WallCheck then
@@ -594,6 +631,10 @@ end)();
                             local DistToMouse = (Vector2.new(Pos.X, Pos.Y) - MousePos).Magnitude
 
                             if OnScreen and (DistToMouse <= AimbotData.Settings.CircleSize or not AimbotData.Settings.CircleEnabled) then
+                                if AimbotData.Settings.Deadzone > 0 and DistToMouse <= AimbotData.Settings.Deadzone then
+                                    return
+                                end
+
                                 if AimbotData.Settings.TriggerDistance and NearestToMouse.DistanceFromPlayer >= AimbotData.Settings.Distance then
                                     return
                                 end
@@ -602,12 +643,7 @@ end)();
                                     return 
                                 end
 
-                                local NewCF = CFrame.new(CurrentCamera.CFrame.Position, TargetPart.Position)
-                                if AimbotData.Settings.Smoothness == 100 then
-                                    CurrentCamera.CFrame = NewCF
-                                else
-                                    CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(NewCF, AimbotData.Settings.Smoothness * Delta)
-                                end
+                                AimAt(GetAimPosition(TargetPart), Delta)
                             end
                         end
                     end
@@ -656,14 +692,58 @@ end)();
         end
     })
 
+    Aimbot:Dropdown({
+        Name = "Mode",
+        Flag = "AimbotMode",
+        Default = "Smooth",
+        Options = {"Smooth", "Snap", "Humanized"},
+        CallingFunction = function(self, value: string)
+            AimbotData.Settings.Mode = value
+        end
+    })
+
     Aimbot:Slider({
         Name = "Aim Speed",
         Flag = "AimbotSpeed",
-        Default = 100,
-        Min = 10,
-        Max = 100,
+        Default = 50,
+        Min = 1,
+        Max = 50,
         CallingFunction = function(self, value: number)
             AimbotData.Settings.Smoothness = value
+        end
+    })
+
+    Aimbot:Slider({
+        Name = "Deadzone",
+        Flag = "AimbotDeadzone",
+        Default = 20,
+        Min = 0,
+        Max = 50,
+        CallingFunction = function(self, value: number)
+            AimbotData.Settings.Deadzone = value
+        end
+    })
+
+    Aimbot:Slider({
+        Name = "Prediction",
+        Flag = "AimbotPredictionAmount",
+        Default = 0.12,
+        Min = 0,
+        Max = 0.5,
+        Increment = 0.01,
+        CallingFunction = function(self, value: number)
+            AimbotData.Settings.PredictionAmount = value
+        end
+    })
+
+    Aimbot:Slider({
+        Name = "Jitter",
+        Flag = "AimbotJitterAmount",
+        Default = 5,
+        Min = 1,
+        Max = 20,
+        CallingFunction = function(self, value: number)
+            AimbotData.Settings.JitterAmount = value
         end
     })
 
@@ -706,8 +786,8 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "FOV",
-        Default = true,
         Flag = "AimbotFOV",
+        Default = true,
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.CircleEnabled = value
 
@@ -736,6 +816,7 @@ end)();
     Aimbot:MiniToggle({
         Name = "Team Check",
         Flag = "AimbotTeamCheck",
+        Default = true,
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.TeamCheck = value
         end
@@ -754,6 +835,22 @@ end)();
         Flag = "AimbotWallCheck",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.WallCheck = value
+        end
+    })
+
+    Aimbot:MiniToggle({
+        Name = "Prediction",
+        Flag = "AimbotPrediction",
+        CallingFunction = function(self, value: boolean)
+            AimbotData.Settings.Prediction = value
+        end
+    })
+
+    Aimbot:MiniToggle({
+        Name = "Jitter",
+        Flag = "AimbotJitter",
+        CallingFunction = function(self, value: boolean)
+            AimbotData.Settings.Jitter = value
         end
     })
 
@@ -3324,17 +3421,22 @@ end)();
 (function()
     local Mode: string = "Comet"
 
-    local OldLighting = {
-        Ambient = Lighting.Ambient,
-        Brightness = Lighting.Brightness,
-        EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
-        EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
-        GlobalShadows = Lighting.GlobalShadows,
-        OutdoorAmbient = Lighting.OutdoorAmbient,
-        ClockTime = Lighting.ClockTime,
-        GeographicLatitude = Lighting.GeographicLatitude,
-        ExposureCompensation = Lighting.ExposureCompensation
+    local LightingProps = {
+        "Ambient",
+        "Brightness",
+        "EnvironmentDiffuseScale",
+        "EnvironmentSpecularScale",
+        "GlobalShadows",
+        "OutdoorAmbient",
+        "ClockTime",
+        "GeographicLatitude",
+        "ExposureCompensation",
+        "FogColor",
+        "FogEnd",
+        "FogStart"
     }
+    local OldLighting = {}
+    local OldChildren = {}
 
     local Settings = {
         AmbientColor = Color3.fromRGB(100, 100, 100),
@@ -3353,11 +3455,54 @@ end)();
         SkyboxUp = "Skybox Up ID"
     }
 
+    local function SaveLighting()
+        table.clear(OldLighting)
+        table.clear(OldChildren)
+
+        for _, Prop in LightingProps do
+            pcall(function()
+                OldLighting[Prop] = Lighting[Prop]
+            end)
+        end
+
+        for _, Child in Lighting:GetChildren() do
+            local Success, Clone = pcall(function()
+                return Child:Clone()
+            end)
+            if Success and Clone then
+                table.insert(OldChildren, Clone)
+            end
+        end
+    end
+
+    local function RestoreLighting()
+        for _, Child in Lighting:GetChildren() do
+            Child:Destroy()
+        end
+
+        for _, Child in OldChildren do
+            local Success, Clone = pcall(function()
+                return Child:Clone()
+            end)
+            if Success and Clone then
+                Clone.Parent = Lighting
+            end
+        end
+
+        for Prop, Value in OldLighting do
+            pcall(function()
+                Lighting[Prop] = Value
+            end)
+        end
+    end
+
     local GameAtmosphere = Tabs.Render:CreateModule({
         Name = "Atmosphere",
         Flag = "Atmosphere",
         CallingFunction = function(self, enabled: boolean)
             if enabled then
+                SaveLighting()
+
                 for _, v in next, Lighting:GetChildren() do
                     if v then
                         v:Destroy()
@@ -3365,7 +3510,7 @@ end)();
                 end
 
                 local Atmosphere = Instance.new("Atmosphere", Lighting)
-                --local Sky = Instance.new("Sky", Lighting)
+                local Sky = Instance.new("Sky", Lighting)
                 local Color = Instance.new("ColorCorrectionEffect", Lighting)
 
                 if Mode == "Winter" then
@@ -3383,13 +3528,13 @@ end)();
                     Atmosphere.Offset = 0.25
                     Atmosphere.Color = Color3.fromRGB(255, 255, 255)
 
-                    --[[Sky.SkyboxBk = "http://www.roblox.com/asset/?id=8139677359"
+                    Sky.SkyboxBk = "http://www.roblox.com/asset/?id=8139677359"
                     Sky.SkyboxDn = "http://www.roblox.com/asset/?id=8139677253"
                     Sky.SkyboxFt = "http://www.roblox.com/asset/?id=8139677111"
                     Sky.SkyboxLf = "http://www.roblox.com/asset/?id=8139676988"
                     Sky.SkyboxRt = "http://www.roblox.com/asset/?id=8139676842"
-                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=8139676647"]]
-                    --Sky.SunAngularSize = 10
+                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=8139676647"
+                    Sky.SunAngularSize = 10
 
                     Color.Brightness = 0.13
                     Color.Contrast = 0.05
@@ -3410,13 +3555,13 @@ end)();
                     Atmosphere.Offset = 0.3
                     Atmosphere.Color = Color3.fromRGB(255, 255, 255)
 
-                    --[[Sky.SkyboxBk = "http://www.roblox.com/asset/?id=16262356578"
+                    Sky.SkyboxBk = "http://www.roblox.com/asset/?id=16262356578"
                     Sky.SkyboxDn = "http://www.roblox.com/asset/?id=16262358026"
                     Sky.SkyboxFt = "http://www.roblox.com/asset/?id=16262360469"
                     Sky.SkyboxLf = "http://www.roblox.com/asset/?id=16262362003"
                     Sky.SkyboxRt = "http://www.roblox.com/asset/?id=16262363873"
-                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=16262366016"]]
-                    --Sky.SunAngularSize = 20
+                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=16262366016"
+                    Sky.SunAngularSize = 20
 
                     Color.Brightness = 0.18
                     Color.Contrast = 0.03
@@ -3437,31 +3582,31 @@ end)();
                     Atmosphere.Offset = 0.2
                     Atmosphere.Color = Color3.fromRGB(255, 255, 255)
 
-                    --[[Sky.SkyboxBk = "http://www.roblox.com/asset/?id=4495864450"
+                    Sky.SkyboxBk = "http://www.roblox.com/asset/?id=4495864450"
                     Sky.SkyboxDn = "http://www.roblox.com/asset/?id=4495864887"
                     Sky.SkyboxFt = "http://www.roblox.com/asset/?id=4495865458"
                     Sky.SkyboxLf = "http://www.roblox.com/asset/?id=4495866035"
                     Sky.SkyboxRt = "http://www.roblox.com/asset/?id=4495866584"
-                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=4495867486"]]
-                    --Sky.SunAngularSize = 1
+                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=4495867486"
+                    Sky.SunAngularSize = 1
 
                     Color.Brightness = 0.13
                     Color.Contrast = 0.03
                     Color.Saturation = -0.3
                     Color.TintColor = Color3.fromRGB(120, 85, 200)
                 elseif Mode == "Ocean" then
-                    --loadstring(game:HttpGet("https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Games/Shaders.luau"))()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Games/Shaders.luau"))()
                 else
                     Lighting.Ambient = Settings.AmbientColor
                     Lighting.Brightness = Settings.Brightness
                     Lighting.ClockTime = Settings.Time
 
-                    --[[Sky.SkyboxBk = "http://www.roblox.com/asset/?id=" .. Settings.SkyboxBk
+                    Sky.SkyboxBk = "http://www.roblox.com/asset/?id=" .. Settings.SkyboxBk
                     Sky.SkyboxDn = "http://www.roblox.com/asset/?id=" .. Settings.SkyboxDn
                     Sky.SkyboxFt = "http://www.roblox.com/asset/?id=" .. Settings.SkyboxFt
                     Sky.SkyboxLf = "http://www.roblox.com/asset/?id=" .. Settings.SkyboxLf
                     Sky.SkyboxRt = "http://www.roblox.com/asset/?id=" .. Settings.SkyboxRt
-                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=" .. Settings.SkyboxUp]]
+                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=" .. Settings.SkyboxUp
 
                     Atmosphere.Density = Settings.Density
                     Atmosphere.Color = Color3.fromRGB(255, 255, 255)
@@ -3472,21 +3617,7 @@ end)();
                     Color.TintColor = Settings.CCColor
                 end
             else
-                --[[for _, v in next, Lighting:GetChildren() do
-                    if v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("ColorCorrectionEffect") then
-                        v:Destroy()
-                    end
-                end]]
-
-                Lighting.Ambient = OldLighting.Ambient
-                Lighting.Brightness = OldLighting.Brightness
-                Lighting.EnvironmentDiffuseScale = OldLighting.EnvironmentDiffuseScale
-                Lighting.EnvironmentSpecularScale = OldLighting.EnvironmentSpecularScale
-                Lighting.GlobalShadows = OldLighting.GlobalShadows
-                Lighting.OutdoorAmbient = OldLighting.OutdoorAmbient
-                Lighting.ClockTime = OldLighting.ClockTime
-                Lighting.GeographicLatitude = OldLighting.GeographicLatitude
-                Lighting.ExposureCompensation = OldLighting.ExposureCompensation
+                RestoreLighting()
             end
         end
     })
@@ -3949,7 +4080,7 @@ end)();
 end)();
 
 (function()
-    local Gravity: number = 192
+    local Gravity: number = 100
     local OldGravity: number?
     local Module = Tabs.Movement:CreateModule({
         Name = "Gravity",
@@ -3975,7 +4106,7 @@ end)();
         Flag = "GravityValue",
         Min = 0,
         Max = 192,
-        Default = 192,
+        Default = 100,
         CallingFunction = function(self, value: number)
             Gravity = value
             if Module.Enabled then
