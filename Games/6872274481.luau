@@ -1400,8 +1400,8 @@ end)();
 (function()
     local KillAuraData = {
         Settings = {
-            Range = 27,
-            SwingRange = 32,
+            Range = 20,
+            SwingRange = 25,
             Delay = 0,
             AnimationRestoreTime = 0.5,
             MaxAngle = 360,
@@ -1797,7 +1797,7 @@ end)();
         Flag = "KillAuraRange",
         Min = 1,
         Max = 22,
-        Default = 22,
+        Default = 20,
         CallingFunction = function(self, value: number)
             KillAuraData.Settings.Range = value
         end
@@ -1807,8 +1807,8 @@ end)();
         Name = "Swing Range",
         Flag = "KillAuraSwingRange",
         Min = 1,
-        Max = 32,
-        Default = 32,
+        Max = 30,
+        Default = 22,
         CallingFunction = function(self, value: number)
             KillAuraData.Settings.SwingRange = value
         end
@@ -2011,7 +2011,7 @@ end)();
     })
 
     KillAura:MiniToggle({
-        Name = "Use Trigger",
+        Name = "Trigger",
         Flag = "KillAuraTriggerEnabled",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.TriggerButton = value
@@ -2020,12 +2020,11 @@ end)();
     })
 
     KillAura:MiniToggle({
-        Name = "Use Animation",
+        Name = "Animation",
         Flag = "KillAuraUseAnimation",
         Default = true,
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.UseAnimation = value
-
             AnimationRestoreTime:SetVisiblity(value)
             AnimationPicker:SetVisiblity(value)
         end
@@ -2039,6 +2038,12 @@ end)();
             CircleSize = 80,
             Distance = 50,
             CircleEnabled = true,
+            Mode = "Smooth",
+            Prediction = false,
+            PredictionAmount = 0.12,
+            Jitter = false,
+            JitterAmount = 0,
+            Deadzone = 0,
             TeamCheck = false,
             TriggerDistance = false,
             WallCheck = false,
@@ -2056,6 +2061,37 @@ end)();
             HoldingTrigger = false,
         }
     }
+
+    local AimRandom = Random.new()
+
+    local function GetAimPosition(TargetPart: BasePart): Vector3
+        local Position = TargetPart.Position
+
+        if AimbotData.Settings.Prediction then
+            Position += TargetPart.AssemblyLinearVelocity * AimbotData.Settings.PredictionAmount
+        end
+
+        if AimbotData.Settings.Jitter and AimbotData.Settings.JitterAmount > 0 then
+            local Amount = AimbotData.Settings.JitterAmount / 100
+            local Right = CurrentCamera.CFrame.RightVector * AimRandom:NextNumber(-Amount, Amount)
+            local Up = CurrentCamera.CFrame.UpVector * AimRandom:NextNumber(-Amount, Amount)
+            Position += Right + Up
+        end
+
+        return Position
+    end
+
+    local function AimAt(Position: Vector3, Delta: number)
+        local NewCF = CFrame.new(CurrentCamera.CFrame.Position, Position)
+
+        if AimbotData.Settings.Mode == "Snap" or AimbotData.Settings.Smoothness >= 100 then
+            CurrentCamera.CFrame = NewCF
+        elseif AimbotData.Settings.Mode == "Humanized" then
+            CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(NewCF, math.clamp((AimbotData.Settings.Smoothness * Delta) * 0.65, 0, 1))
+        else
+            CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(NewCF, math.clamp(AimbotData.Settings.Smoothness * Delta, 0, 1))
+        end
+    end
 
     local Aimbot = Windows.Combat:CreateModule({
         Name = "Aimbot",
@@ -2106,6 +2142,10 @@ end)();
                             local DistToMouse = (Vector2.new(Pos.X, Pos.Y) - MousePos).Magnitude
 
                             if OnScreen and (DistToMouse <= AimbotData.Settings.CircleSize or not AimbotData.Settings.CircleEnabled) then
+                                if AimbotData.Settings.Deadzone > 0 and DistToMouse <= AimbotData.Settings.Deadzone then
+                                    return
+                                end
+
                                 if AimbotData.Settings.TriggerDistance and NearestToMouse.DistanceFromPlayer >= AimbotData.Settings.Distance then
                                     return
                                 end
@@ -2118,8 +2158,7 @@ end)();
                                     end
                                 end
 
-                                local NewCF = CFrame.new(CurrentCamera.CFrame.Position, TargetPart.Position)
-                                CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(NewCF, AimbotData.Settings.Smoothness * Delta)
+                                AimAt(GetAimPosition(TargetPart), Delta)
                             end
                         end
                     end
@@ -2171,14 +2210,58 @@ end)();
         end
     })  
 
+    Aimbot:Dropdown({
+        Name = "Mode",
+        Flag = "AimbotMode",
+        Default = "Humanized",
+        Options = {"Smooth", "Snap", "Humanized"},
+        CallingFunction = function(self, value: string)
+            AimbotData.Settings.Mode = value
+        end
+    })
+
     Aimbot:Slider({
         Name = "Aim Speed",
         Flag = "AimbotSpeed",
-        Default = 100,
-        Min = 10,
-        Max = 100,
+        Default = 15,
+        Min = 1,
+        Max = 50,
         CallingFunction = function(self, value: number)
             AimbotData.Settings.Smoothness = value
+        end
+    })
+
+    Aimbot:Slider({
+        Name = "Deadzone",
+        Flag = "AimbotDeadzone",
+        Default = 20,
+        Min = 0,
+        Max = 40,
+        CallingFunction = function(self, value: number)
+            AimbotData.Settings.Deadzone = value
+        end
+    })
+
+    Aimbot:Slider({
+        Name = "Prediction",
+        Flag = "AimbotPredictionAmount",
+        Default = 0.12,
+        Min = 0,
+        Max = 0.5,
+        Increment = 0.01,
+        CallingFunction = function(self, value: number)
+            AimbotData.Settings.PredictionAmount = value
+        end
+    })
+
+    Aimbot:Slider({
+        Name = "Jitter",
+        Flag = "AimbotJitterAmount",
+        Default = 5,
+        Min = 1,
+        Max = 20,
+        CallingFunction = function(self, value: number)
+            AimbotData.Settings.JitterAmount = value
         end
     })
 
@@ -2199,9 +2282,9 @@ end)();
     Aimbot:Slider({
         Name = "Distance",
         Flag = "AimbotDistance",
-        Default = 50,
+        Default = 20,
         Min = 1,
-        Max = 100,
+        Max = 30,
         CallingFunction = function(self, value: number)
             AimbotData.Settings.Distance = value
         end
@@ -2221,7 +2304,6 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "FOV",
-        Default = true,
         Flag = "AimbotFOV",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.CircleEnabled = value
@@ -2251,6 +2333,7 @@ end)();
     Aimbot:MiniToggle({
         Name = "Team Check",
         Flag = "AimbotTeamCheck",
+        Default = true,
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.TeamCheck = value
         end
@@ -2259,6 +2342,7 @@ end)();
     Aimbot:MiniToggle({
         Name = "Distance Check",
         Flag = "AimbotDistanceCheck",
+        Default = true,
         CallingFunction = function(self, value: number)
             AimbotData.Settings.TriggerDistance = value
         end
@@ -2267,8 +2351,25 @@ end)();
     Aimbot:MiniToggle({
         Name = "Wall Check",
         Flag = "AimbotWallCheck",
+        Default = true,
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.WallCheck = value
+        end
+    })
+
+    Aimbot:MiniToggle({
+        Name = "Prediction",
+        Flag = "AimbotPrediction",
+        CallingFunction = function(self, value: boolean)
+            AimbotData.Settings.Prediction = value
+        end
+    })
+
+    Aimbot:MiniToggle({
+        Name = "Jitter",
+        Flag = "AimbotJitter",
+        CallingFunction = function(self, value: boolean)
+            AimbotData.Settings.Jitter = value
         end
     })
 
@@ -2844,6 +2945,7 @@ end)();
     local Distance: number = 23
     local Delay: number = 0
     local UICheck: boolean = false
+    local Skywars: boolean = false
     local Opened = {}
 
     local ChestStealer = Windows.Utility:CreateModule({
@@ -2852,6 +2954,8 @@ end)();
         CallingFunction = function(self, enabled: boolean)
             if enabled then 
                 repeat
+                    if Skywars and not GameData.Utils.Store:getState().Game.queueType:find("skywars") then return end
+
                     local Chest = GetNearestChest(Opened)
                     if Chest.Chest and Distance >= Chest.Distance and not table.find(Opened, Chest.Chest) and #Chest.ChestFolder:GetChildren() > 0 then
                         if UICheck and not GameData.Utils.App:isAppOpen(GameData.Utils.AppIds.CHEST_INVENTORY) then
@@ -2906,6 +3010,15 @@ end)();
         Default = 0,
         CallingFunction = function(self, value: number)
             Delay = value
+        end
+    })
+
+    ChestStealer:MiniToggle({
+        Name = "Only Skywars",
+        Flag = "ChestStealerSkywars",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            Skywars = value
         end
     })
 end)();
@@ -3249,34 +3362,120 @@ end)();
 (function()
     local ProjectileAura = {
         Settings = {
-            Range = 40,
-            Speed = 100,
-            Power = 50,
-            Delay = 0.1,
+            Range = 50,
+            FireRate = 0.02,
             MaxAngle = 360,
             TargetMode = "Distance",
-            TP = false,
-            WallCheck = false,
-            CombineWithKillAura = false,
+            WallCheck = true,
             Targets = {
-                Players = false,
+                Players = true,
                 Npcs = false
             }
         },
         Data = {
             LastSetTarget = false,
-            DelayProj = {},
-            ProjNames = {arrow = true, snowball = true},
-            Params = RaycastParams.new()
+            Delays = {},
+            Projectiles = {arrow = true, snowball = true},
+            RayParams = RaycastParams.new(),
+            Offset = {RelX = 0, RelY = 0, RelZ = 0},
+            Switching = false
         }
     }
 
-    local function GetAmmo(Check)
-        if not Check.ammoItemTypes then return nil end
+    pcall(function()
+        ProjectileAura.Data.Offset = debug.getupvalue(GameData.Utils.Projectile.enableBeam, 8) or ProjectileAura.Data.Offset
+    end)
 
-        local Inv = GetInventory().items
-        for i = 1, #Check.ammoItemTypes do
-            local Type = Check.ammoItemTypes[i]
+    ProjectileAura.Data.RayParams.RespectCanCollide = true
+    ProjectileAura.Data.RayParams.FilterType = Enum.RaycastFilterType.Include
+
+    local function AimPos(Root: BasePart, Humanoid: Humanoid): Vector3
+        local Pos = Root.Position
+        local Vel = Root.AssemblyLinearVelocity
+        local Lift = math.clamp(Humanoid.HipHeight * 0.35, 0.6, 1.35)
+
+        if Humanoid.FloorMaterial == Enum.Material.Air or Vel.Y > 3 then
+            local Map = workspace:FindFirstChild("Map")
+            local GroundCheck = RaycastParams.new()
+            GroundCheck.FilterType = Enum.RaycastFilterType.Include
+            GroundCheck.FilterDescendantsInstances = Map and {Map} or {}
+            GroundCheck.RespectCanCollide = true
+
+            local Ground = workspace:Raycast(Pos, Vector3.new(0, -18, 0), GroundCheck)
+            if Ground then
+                local GroundedRootY = Ground.Position.Y + Humanoid.HipHeight + 1.5
+                Pos = Vector3.new(Pos.X, math.min(Pos.Y, GroundedRootY), Pos.Z)
+            end
+        end
+
+        return Pos + Vector3.new(0, Lift, 0)
+    end
+
+    local function FlatVel(Root: BasePart): Vector3
+        local Vel = Root.AssemblyLinearVelocity
+        return Vector3.new(Vel.X, 0, Vel.Z)
+    end
+
+    local function SolveShot(Start: Vector3, Speed: number, Gravity: number, HitPos: Vector3, HitVel: Vector3): Vector3?
+        if Speed <= 0 then return end
+        if Gravity <= 0 then
+            local Time = (HitPos - Start).Magnitude / Speed
+            return HitPos + (HitVel * Time)
+        end
+
+        local Land = HitPos
+        local Time = math.max((Vector3.new(HitPos.X, Start.Y, HitPos.Z) - Start).Magnitude / Speed, 0.05)
+
+        for _ = 1, 4 do
+            Land = HitPos + (HitVel * Time)
+
+            local Delta = Land - Start
+            local Flat = Vector3.new(Delta.X, 0, Delta.Z)
+            local Dist = Flat.Magnitude
+            if Dist <= 0.05 then
+                return Land
+            end
+
+            local Speed2 = Speed * Speed
+            local Root = Speed2 * Speed2 - Gravity * (Gravity * Dist * Dist + 2 * Delta.Y * Speed2)
+            if Root < 0 then
+                local FallTime = Dist / Speed
+                return Land + Vector3.new(0, 0.5 * Gravity * FallTime * FallTime, 0)
+            end
+
+            local Angle = math.atan((Speed2 - math.sqrt(Root)) / (Gravity * Dist))
+            local Forward = Speed * math.cos(Angle)
+            if Forward <= 0.05 then
+                return Land
+            end
+
+            Time = Dist / Forward
+        end
+
+        local Delta = Land - Start
+        local Flat = Vector3.new(Delta.X, 0, Delta.Z)
+        local Dist = Flat.Magnitude
+        if Dist <= 0.05 then
+            return Land
+        end
+
+        local Speed2 = Speed * Speed
+        local Root = Speed2 * Speed2 - Gravity * (Gravity * Dist * Dist + 2 * Delta.Y * Speed2)
+        if Root < 0 then
+            local FallTime = Dist / Speed
+            return Land + Vector3.new(0, 0.5 * Gravity * FallTime * FallTime, 0)
+        end
+
+        local Angle = math.atan((Speed2 - math.sqrt(Root)) / (Gravity * Dist))
+        return Start + (Flat.Unit * Dist) + Vector3.new(0, math.tan(Angle) * Dist, 0)
+    end
+
+    local function GetAmmo(Source)
+        if not Source.ammoItemTypes then return nil end
+
+        local Inv = GetInventory().items or {}
+        for i = 1, #Source.ammoItemTypes do
+            local Type = Source.ammoItemTypes[i]
             for j = 1, #Inv do
                 if Inv[j].itemType == Type then
                     return Type
@@ -3287,9 +3486,9 @@ end)();
         return nil
     end
     
-    local function GetTools()
+    local function GetProjectiles()
         local Found = {}
-        local Inventory = GetInventory().items
+        local Inventory = GetInventory().items or {}
 
         for i = 1, #Inventory do
             local Item = Inventory[i]
@@ -3297,7 +3496,7 @@ end)();
             local Source = Data and Data.projectileSource
             if Source then
                 local Ammo = GetAmmo(Source)
-                if Ammo and ProjectileAura.Data.ProjNames[Ammo] then
+                if Ammo and ProjectileAura.Data.Projectiles[Ammo] then
                     Found[#Found + 1] = {
                         Item = Item,
                         Ammo = Ammo,
@@ -3311,15 +3510,64 @@ end)();
         return next(Found) and Found or {}
     end
 
-    local function CheckProj(Fired, Obj)
+    local function OnProjectileFire(Fired, Obj)
         if not Fired then
-            ProjectileAura.Data.DelayProj[Obj.Item.itemType] = os.clock()
+            ProjectileAura.Data.Delays[Obj.Item.itemType] = tick()
         else
             local Sounds = Obj.Meta.launchSound
             if Sounds and Sounds[1] then
-                GameData.Utils.Sound:playSound(Sounds[1])
+                GameData.Utils.Sound:playSound(Sounds[math.random(1, #Sounds)])
             end
         end
+    end
+
+    local function UpdateProjectileList(Value: string)
+        table.clear(ProjectileAura.Data.Projectiles)
+
+        for _, Name in Value:split(",") do
+            Name = Name:lower():gsub("^%s+", ""):gsub("%s+$", "")
+            if Name ~= "" then
+                ProjectileAura.Data.Projectiles[Name] = true
+            end
+        end
+    end
+
+    local function GetHand(): Instance?
+        local CurrentItem = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HandInvItem")
+        if CurrentItem and CurrentItem:IsA("ObjectValue") then
+            return CurrentItem.Value
+        end
+
+        local Inventory = GetInventory()
+        return Inventory and Inventory.hand and Inventory.hand.tool
+    end
+
+    local function Equip(Tool: Instance): boolean
+        if not Tool or GetHand() == Tool then
+            return true
+        end
+
+        if ProjectileAura.Data.Switching then
+            return false
+        end
+
+        ProjectileAura.Data.Switching = true
+        local Done, Success = false, false
+
+        local Worked = pcall(function()
+            GameData.Utils.Remotes:Get("SetInvItem"):CallServerAsync({
+                hand = Tool
+            }):andThen(function(Result)
+                Success = Result ~= false
+                Done = true
+            end)
+        end)
+
+        local Started = tick()
+        repeat task.wait() until Done or (tick() - Started) > 0.35
+        ProjectileAura.Data.Switching = false
+
+        return Worked and (Success or GetHand() == Tool)
     end
 
     local ProjAura = Windows.Combat:CreateModule({
@@ -3328,7 +3576,7 @@ end)();
         CallingFunction = function(self, enabled: boolean)
             if enabled then
                 repeat
-                    if Night:IsAlive(LocalPlayer) then
+                    if Night:IsAlive(LocalPlayer) and (workspace:GetServerTimeNow() - (GameData.Utils.SwordController.lastAttack or 0)) > 0.5 and not Windows.Movement.Modules.LongJump.Enabled then
                         local Target = GetEntity({
                             TeamCheck = true,
                             MaxRange = ProjectileAura.Settings.Range,
@@ -3340,60 +3588,80 @@ end)();
 
                         if Target.Entity and Night:IsAlive(Target.Entity, true) then
                             local Pos = LocalPlayer.Character.PrimaryPart.Position
-                            local Tools = GetTools()
+                            local Tools = GetProjectiles()
 
                             if #Tools > 0 then
                                 GameData.Data.Target = Target
                                 ProjectileAura.Data.LastSetTarget = true
 
-                                
                                 for i = 1, #Tools do
                                     local Obj = Tools[i]
                                     local ItemType = Obj.Item.itemType
 
-                                    if Windows.Movement.Modules.LongJump.Enabled or (not ProjectileAura.Settings.CombineWithKillAura and #GameData.Data.KillAuraTargets > 0) then
-                                        if ProjectileAura.Data.LastSetTarget then
-                                            GameData.Data.Target = nil
-                                            ProjectileAura.Data.LastSetTarget = false
-                                        end
-                                        task.wait()
-                                        continue
-                                    end
-
-                                    if (ProjectileAura.Data.DelayProj[ItemType] or 0) < os.clock() then
+                                    if (ProjectileAura.Data.Delays[ItemType] or 0) < tick() then
+                                        local Map = workspace:FindFirstChild("Map")
+                                        ProjectileAura.Data.RayParams.FilterDescendantsInstances = Map and {Map} or {}
                                         local ProjData = GameData.Utils.ProjMeta[Obj.Proj]
-                                        local LaunchVel = ProjData.launchVelocity
-                                        local AimPos = Aim(Pos, LaunchVel, ProjData.gravitationalAcceleration or 196.2, Target.Entity.PrimaryPart.Position, Target.Entity.PrimaryPart.Velocity, Target.Entity.Humanoid.HipHeight)
-                                        
-                                        if AimPos then
-                                            if ProjectileAura.Settings.WallCheck and not IsPathClear_Position(Target.Entity, AimPos, ProjectileAura.Data.Params) then
-                                                task.wait()
+                                        if not ProjData then
+                                            continue
+                                        end
+
+                                        local Root = Target.Data.Root or Target.Entity.PrimaryPart
+                                        local Humanoid = Target.Data.Humanoid or Target.Entity:FindFirstChildOfClass("Humanoid")
+                                        if not Root or not Humanoid then
+                                            continue
+                                        end
+
+                                        local LaunchVel = ProjData.launchVelocity or 100
+                                        local Gravity = ProjData.gravitationalAcceleration or 196.2
+                                        local TargetPos = AimPos(Root, Humanoid)
+                                        local TargetVelocity = FlatVel(Root)
+                                        local Calc = SolveShot(Pos, LaunchVel, Gravity, TargetPos + (Humanoid.MoveDirection or Vector3.zero), TargetVelocity)
+
+                                        if Calc then
+                                            if not Equip(Obj.Item.tool) then
+                                                ProjectileAura.Data.Delays[ItemType] = tick() + 0.15
                                                 continue
                                             end
 
-                                            SwitchItem(Obj.Item.tool)
-                                            coroutine.wrap(function()
-                                                local LookVec = (CFrame.new(Pos, AimPos)).LookVector * LaunchVel
+                                            local Velocity = FlatVel(Root)
+                                            Pos = LocalPlayer.Character.PrimaryPart.Position
 
-                                                if not ProjectileAura.Settings.TP then
-                                                    GameData.Utils.Projectile:createLocalProjectile(ProjData, Obj.Ammo, Obj.Proj, CFrame.new(Pos, AimPos).Position, HttpService:GenerateGUID(true), LookVec, {drawDurationSeconds = 1})
-                                                end
+                                            local Ping = math.min(LocalPlayer:GetNetworkPing(), 0.5)
+                                            TargetPos = AimPos(Root, Humanoid)
+                                            if Ping > 0.06 then
+                                                TargetPos += Velocity * Ping
+                                            end
 
-                                                GameData.Utils.Remotes:Get("ProjectileFire"):CallServerAsync(
-                                                    Obj.Item.tool, Obj.Ammo, Obj.Proj,
-                                                    CFrame.new(Pos, AimPos).Position,
-                                                    Pos, LookVec,
-                                                    HttpService:GenerateGUID(true),
-                                                    {drawDurationSec = ProjectileAura.Settings.Speed / 100, shotId = HttpService:GenerateGUID(false)},
-                                                    workspace:GetServerTimeNow() - 0.01 * ((ProjectileAura.Settings.Power - 5) / 2)
-                                                ):andThen(function(Ammo: Instance)
-                                                    CheckProj(Ammo, Obj)
+                                            Calc = SolveShot(Pos, LaunchVel, Gravity, TargetPos, Velocity)
+
+                                            if not Calc then
+                                                continue
+                                            end
+
+                                            task.spawn(function()
+                                                local Direction = CFrame.lookAt(Pos, Calc).LookVector
+                                                local Id = HttpService:GenerateGUID(true)
+                                                local Offset = ProjectileAura.Data.Offset
+                                                local ShootPosition = (CFrame.new(Pos, Calc) * CFrame.new(Vector3.new(-(Offset.RelX or 0), -(Offset.RelY or 0), -(Offset.RelZ or 0)))).Position
+
+                                                local Suc, Res = pcall(function()
+                                                    return GameData.Utils.Remotes:Get("ProjectileFire"):CallServerAsync(Obj.Item.tool, Obj.Ammo, Obj.Proj, ShootPosition, Pos, Direction * LaunchVel, Id,
+                                                    {drawDurationSeconds = 1, drawDurationSec = 1, shotId = HttpService:GenerateGUID(false)}, workspace:GetServerTimeNow() - 0.045)
                                                 end)
-                                            end)()
-                                            
-                                            ProjectileAura.Data.DelayProj[ItemType] = os.clock() + (Obj.Meta.fireDelaySec - 0.15)
-                                            if ProjectileAura.Settings.Delay > 0 then
-                                                task.wait(ProjectileAura.Settings.Delay)
+
+                                                if Suc and Res and Res.andThen then
+                                                    Res:andThen(function(Fired)
+                                                        OnProjectileFire(Fired, Obj)
+                                                    end)
+                                                else
+                                                    OnProjectileFire(Suc and Res, Obj)
+                                                end
+                                            end)
+
+                                            ProjectileAura.Data.Delays[ItemType] = tick() + (Obj.Meta.fireDelaySec or 0)
+                                            if ProjectileAura.Settings.FireRate > 0 then
+                                                task.wait(ProjectileAura.Settings.FireRate)
                                             end
                                         end
                                     end
@@ -3405,9 +3673,8 @@ end)();
                                 ProjectileAura.Data.LastSetTarget = false
                             end
                         end
-                        task.wait(ProjectileAura.Settings.Delay)
                     end
-                    task.wait()
+                    task.wait(0.05)
                 until not self.Enabled
             else
                 if ProjectileAura.Data.LastSetTarget then
@@ -3418,48 +3685,35 @@ end)();
         end
     })
 
+    ProjAura:TextBox({
+        Name = "Projectiles",
+        Flag = "ProjectileAuraProjectiles",
+        Default = "arrow, snowball",
+        CallingFunction = function(self, value: string)
+            UpdateProjectileList(value)
+        end
+    })
+
     ProjAura:Slider({
         Name = "Range",
         Flag = "ProjectileAuraRange",
         Min = 1,
         Max = 200,
-        Default = 40,
+        Default = 50,
         CallingFunction = function(self, value: number)
             ProjectileAura.Settings.Range = value
         end
     })
 
     ProjAura:Slider({
-        Name = "Speed",
-        Flag = "ProjectileAuraSpeed",
-        Min = 1,
-        Max = 200,
-        Default = 100,
-        CallingFunction = function(self, value: number)
-            ProjectileAura.Settings.Speed = value
-        end
-    })
-
-    ProjAura:Slider({
-        Name = "Power",
-        Flag = "ProjectileAuraPower",
-        Min = 1,
-        Max = 70,
-        Default = 50,
-        CallingFunction = function(self, value: number)
-            ProjectileAura.Settings.Power = value
-        end
-    })
-
-    ProjAura:Slider({
-        Name = "Delay",
-        Flag = "ProjectileAuraDelay",
+        Name = "Fire Rate",
+        Flag = "ProjectileAuraFireRate",
         Min = 0,
-        Max = 5,
-        Default = 0,
+        Max = 0.5,
+        Default = 0.02,
         Increment = 0.1,
         CallingFunction = function(self, value: number)
-            ProjectileAura.Settings.Delay = value
+            ProjectileAura.Settings.FireRate = value
         end
     })
 
@@ -3497,28 +3751,11 @@ end)();
     })    
 
     ProjAura:MiniToggle({
-        Name = "Allow KillAura",
-        Flag = "ProjectileAuraAllowKillAura",
-        Default = true,
-        CallingFunction = function(self, value: boolean)
-            ProjectileAura.Settings.CombineWithKillAura = value
-        end
-    })
-
-    ProjAura:MiniToggle({
         Name = "Wall Check",
         Flag = "ProjectileAuraWallCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
             ProjectileAura.Settings.WallCheck = value
-        end
-    })
-
-    ProjAura:MiniToggle({
-        Name = "Teleport",
-        Flag = "ProjectileAuraTeleport",
-        CallingFunction = function(self, value: boolean)
-            ProjectileAura.Settings.TP = value
         end
     })
 end)();
@@ -4166,7 +4403,7 @@ end)();
         Flag = "AntiHitDistance",
         Min = 1,
         Max = 30,
-        Default = 27,
+        Default = 22,
         CallingFunction = function(self, value: number)
             AntiHitData.Settings.Distance = value
         end
@@ -4629,7 +4866,7 @@ end
         CallingFunction = function(self, enabled: boolean)
             if enabled then
                 Part = Instance.new("Part", workspace)
-                Part.Position = Vector3.new(0, GetYLevel() - 6, 0)
+                Part.Position = Vector3.new(0, GetYLevel() - 8, 0)
                 Part.Size = Vector3.new(100000, 1, 100000)
                 Part.Color = AntiVoidData.Color
                 Part.Anchored = true
@@ -5670,7 +5907,7 @@ end)();
                 if GetNearestBed(true, true, true) and Night:IsAlive(LocalPlayer) then
                     LocalPlayer.Character.Humanoid.Health = 0
                 elseif not GetNearestBed(true, true, true) then
-                    Warning("Desync", "No bed found", 5)
+                    Warning("Desync", "No bed found; if Desync doesn't work, move & wait for lagback", 15)
                 end
 
             elseif Hook then
@@ -5709,10 +5946,14 @@ end)();
                         local Inflated: number = (LocalPlayer.Character:GetAttribute("InflatedBalloons") or 0)
                         if 3 > Inflated then
                             local Balloons = GetItem("balloon")
+                            if not Balloons then
+                                Balloons = GetItem("anniversary_balloon")
+                            end
+
                             if Balloons then
                                 for i = 1, (Amount - Inflated) do
                                     Inflated = (LocalPlayer.Character:GetAttribute("InflatedBalloons") or 0)
-                                    if Inflated >= 3 or not GetItem("balloon") then
+                                    if Inflated >= 3 or not (GetItem("balloon") or GetItem("anniversary_balloon")) then
                                         break
                                     end
 
@@ -7369,7 +7610,6 @@ end)();
     local Size1 = 6.8
     local Size2 = 8
 
-    local Old
     local ExpandedParts = {}
 
     local function ExpandPlayer(Character)
@@ -7441,7 +7681,9 @@ end)();
         Flag = "Hitboxes",
         CallingFunction = function(self, enabled: boolean)
             if enabled then
-                Reach()
+                if Sword then
+                    Reach()
+                end
 
                 for _, Player in Players:GetPlayers() do
                     if Player ~= LocalPlayer and Player.Character then
