@@ -382,7 +382,26 @@ local function GetBlocks()
     return Data
 end
 
-local function SwitchItem(Item: Instance)
+local function SwitchItem(Tool, Time)
+	Time = Time or 0.05
+
+	local Item = LocalPlayer.Character:FindFirstChild('HandInvItem')
+
+	if Tool.Parent ~= nil and Item and Item.Value ~= Tool then
+		task.spawn(function()
+			GameData.Utils.Remotes:Get("SetInvItem"):CallServerAsync({hand = Tool})
+		end)
+
+		Item.Value = Tool
+		task.wait(Time)
+
+		return true
+	end
+
+	return nil
+end
+
+--[[local function SwitchItem(Item: Instance)
     if not Item then
         return
     end
@@ -443,7 +462,7 @@ local function SwitchItem(Item: Instance)
 
     --     task.wait(0.001)
     -- end
-end
+end]]
 
 local function IsPathClear(target: Instance, TargetPart: Part?, Param: RaycastParams): boolean
     local Start: Vector3 = CurrentCamera.CFrame.Position + CurrentCamera.CFrame.LookVector * 1
@@ -1397,6 +1416,7 @@ end)();
     })
 end)();
 
+local Attacking = false;
 (function()
     local KillAuraData = {
         Settings = {
@@ -1617,7 +1637,7 @@ end)();
                             end
 
                             if KillAuraData.Settings.AutoSwitch and (not HandItem or HandItem and (not HandItem.tool or HandItem.tool ~= Sword.Item)) then
-                                SwitchItem(Sword.Item)
+                                SwitchItem(Sword.Item, 0)
                             end
 
                             local Box: Part
@@ -1718,7 +1738,9 @@ end)();
                             end
 
                             KillAuraData.Data.LastHit = os.clock()
+                            Attacking = true
                         else
+                            Attacking = false
                             if KillAuraData.Data.LastSetTarget then
                                 GameData.Data.Target = nil
                                 KillAuraData.Data.LastSetTarget = false
@@ -2954,7 +2976,10 @@ end)();
         CallingFunction = function(self, enabled: boolean)
             if enabled then 
                 repeat
-                    if Skywars and not GameData.Utils.Store:getState().Game.queueType:find("skywars") then return end
+                    if Skywars and not GameData.Utils.Store:getState().Game.queueType:find("skywars") then
+                        task.wait(1)
+                        continue
+                    end
 
                     local Chest = GetNearestChest(Opened)
                     if Chest.Chest and Distance >= Chest.Distance and not table.find(Opened, Chest.Chest) and #Chest.ChestFolder:GetChildren() > 0 then
@@ -2985,6 +3010,7 @@ end)();
                             GameData.Utils.Remotes:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer()
                         end)
                     end
+
                     task.wait(0.1)
                 until not self.Enabled
             end
@@ -3576,7 +3602,7 @@ end)();
         CallingFunction = function(self, enabled: boolean)
             if enabled then
                 repeat
-                    if Night:IsAlive(LocalPlayer) and (workspace:GetServerTimeNow() - (GameData.Utils.SwordController.lastAttack or 0)) > 0.5 and not Windows.Movement.Modules.LongJump.Enabled then
+                    if Night:IsAlive(LocalPlayer) and not Attacking and (workspace:GetServerTimeNow() - (GameData.Utils.SwordController.lastAttack or 0)) > 0.5 and not Windows.Movement.Modules.LongJump.Enabled then
                         local Target = GetEntity({
                             TeamCheck = true,
                             MaxRange = ProjectileAura.Settings.Range,
@@ -3619,7 +3645,7 @@ end)();
                                         local Calc = SolveShot(Pos, LaunchVel, Gravity, TargetPos + (Humanoid.MoveDirection or Vector3.zero), TargetVelocity)
 
                                         if Calc then
-                                            if not Equip(Obj.Item.tool) then
+                                            if not SwitchItem(Obj.Item.tool) then
                                                 ProjectileAura.Data.Delays[ItemType] = tick() + 0.15
                                                 continue
                                             end
@@ -3629,7 +3655,7 @@ end)();
 
                                             local Ping = math.min(LocalPlayer:GetNetworkPing(), 0.5)
                                             TargetPos = AimPos(Root, Humanoid)
-                                            if Ping > 0.06 then
+                                            if Ping >= 0.067 then
                                                 TargetPos += Velocity * Ping
                                             end
 
