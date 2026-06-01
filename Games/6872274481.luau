@@ -1799,7 +1799,7 @@ end)();
     end
 
     local function GetHitreg(Distance: number): number
-        local Hitreg: number = KillAuraData.Settings.Hitreg - 1
+        local Hitreg: number = KillAuraData.Settings.Hitreg + 1
 
         if KillAuraData.Settings.DynamicHits then
             local Limit: number = GameData.Utils.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE or 14.4
@@ -4618,7 +4618,7 @@ end)();
         local Tool = HeldTool()
         local Driver = Tool and GetDriver(Tool.Name)
         if Driver then
-            return Driver, ItemFromTool()(Tool)
+            return Driver, ItemFromTool(Tool)
         end
 
         for Name, Method in Drivers do
