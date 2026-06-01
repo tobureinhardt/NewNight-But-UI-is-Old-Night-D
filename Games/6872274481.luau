@@ -13,6 +13,7 @@ local HttpService: HttpService = Night.cloneref(game:GetService("HttpService"))
 local StarterGui: StarterGui = Night.cloneref(game:GetService("StarterGui"))
 local Stats: Stats = Night.cloneref(game:GetService("Stats")):FindFirstChild("PerfromanceStats")
 local TextChatService: TextChatService = Night.cloneref(game:GetService("TextChatService"))
+local ContextActionService: ContextActionService = Night.cloneref(game:GetService("ContextActionService"))
 
 local LocalPlayer: Player = Players.LocalPlayer
 local PlayerGui: PlayerGui = Night.cloneref(LocalPlayer:WaitForChild("PlayerGui"))
@@ -290,6 +291,87 @@ local function GetCurrentArmor(): string
     return
 end
 
+local function AimPos(Root: BasePart, Humanoid: Humanoid): Vector3
+    local Pos = Root.Position
+    local Vel = Root.AssemblyLinearVelocity
+    local Lift = math.clamp(Humanoid.HipHeight * 0.35, 0.6, 1.35)
+
+    if Humanoid.FloorMaterial == Enum.Material.Air or Vel.Y > 3 then
+        local Map = workspace:FindFirstChild("Map")
+        local GroundCheck = RaycastParams.new()
+        GroundCheck.FilterType = Enum.RaycastFilterType.Include
+        GroundCheck.FilterDescendantsInstances = Map and {Map} or {}
+        GroundCheck.RespectCanCollide = true
+
+        local Ground = workspace:Raycast(Pos, Vector3.new(0, -18, 0), GroundCheck)
+        if Ground then
+            local GroundedRootY = Ground.Position.Y + Humanoid.HipHeight + 1.5
+            Pos = Vector3.new(Pos.X, math.min(Pos.Y, GroundedRootY), Pos.Z)
+        end
+    end
+
+    return Pos + Vector3.new(0, Lift, 0)
+end
+
+    local function FlatVel(Root: BasePart): Vector3
+        local Vel = Root.AssemblyLinearVelocity
+        return Vector3.new(Vel.X, 0, Vel.Z)
+    end
+
+    local function SolveShot(Start: Vector3, Speed: number, Gravity: number, HitPos: Vector3, HitVel: Vector3): Vector3?
+        if Speed <= 0 then return end
+        if Gravity <= 0 then
+            local Time = (HitPos - Start).Magnitude / Speed
+            return HitPos + (HitVel * Time)
+        end
+
+        local Land = HitPos
+        local Time = math.max((Vector3.new(HitPos.X, Start.Y, HitPos.Z) - Start).Magnitude / Speed, 0.05)
+
+        for _ = 1, 4 do
+            Land = HitPos + (HitVel * Time)
+
+            local Delta = Land - Start
+            local Flat = Vector3.new(Delta.X, 0, Delta.Z)
+            local Dist = Flat.Magnitude
+            if Dist <= 0.05 then
+                return Land
+            end
+
+            local Speed2 = Speed * Speed
+            local Root = Speed2 * Speed2 - Gravity * (Gravity * Dist * Dist + 2 * Delta.Y * Speed2)
+            if Root < 0 then
+                local FallTime = Dist / Speed
+                return Land + Vector3.new(0, 0.5 * Gravity * FallTime * FallTime, 0)
+            end
+
+            local Angle = math.atan((Speed2 - math.sqrt(Root)) / (Gravity * Dist))
+            local Forward = Speed * math.cos(Angle)
+            if Forward <= 0.05 then
+                return Land
+            end
+
+            Time = Dist / Forward
+        end
+
+        local Delta = Land - Start
+        local Flat = Vector3.new(Delta.X, 0, Delta.Z)
+        local Dist = Flat.Magnitude
+        if Dist <= 0.05 then
+            return Land
+        end
+
+        local Speed2 = Speed * Speed
+        local Root = Speed2 * Speed2 - Gravity * (Gravity * Dist * Dist + 2 * Delta.Y * Speed2)
+        if Root < 0 then
+            local FallTime = Dist / Speed
+            return Land + Vector3.new(0, 0.5 * Gravity * FallTime * FallTime, 0)
+        end
+
+        local Angle = math.atan((Speed2 - math.sqrt(Root)) / (Gravity * Dist))
+        return Start + (Flat.Unit * Dist) + Vector3.new(0, math.tan(Angle) * Dist, 0)
+    end
+
 local function GetNextArmor()
     local CurrentArmor = GetCurrentArmor()
     if CurrentArmor then
@@ -384,8 +466,13 @@ end
 
 local function SwitchItem(Tool, Time)
 	Time = Time or 0.05
+	if not Tool then return false end
 
 	local Item = LocalPlayer.Character:FindFirstChild('HandInvItem')
+
+	if Tool and Item and Item.Value == Tool then
+		return true
+	end
 
 	if Tool.Parent ~= nil and Item and Item.Value ~= Tool then
 		task.spawn(function()
@@ -398,7 +485,39 @@ local function SwitchItem(Tool, Time)
 		return true
 	end
 
-	return nil
+	return false
+end
+
+local function FireProjectileRemote(...)
+    local Remote = GameData.Utils.Remotes:Get("ProjectileFire")
+
+    if Remote and Remote.instance and Remote.instance.InvokeServer then
+        return Remote.instance:InvokeServer(...)
+    end
+
+    if Remote and Remote.InvokeServer then
+        return Remote:InvokeServer(...)
+    end
+
+    if Remote and Remote.CallServerAsync then
+        local Done, Value = false, nil
+        local Result = Remote:CallServerAsync(...)
+
+        if Result and Result.andThen then
+            Result:andThen(function(Response)
+                Value = Response
+                Done = true
+            end)
+
+            local Started = tick()
+            repeat task.wait() until Done or (tick() - Started) > 0.75
+            return Value
+        end
+
+        return Result
+    end
+
+    return nil
 end
 
 --[[local function SwitchItem(Item: Instance)
@@ -1416,27 +1535,40 @@ end)();
     })
 end)();
 
-local Attacking = false;
 (function()
     local KillAuraData = {
         Settings = {
             Range = 20,
             SwingRange = 25,
             Delay = 0,
+            Hitreg = 36,
+            DynamicHits = false,
+            SyncHitTime = false,
+            ContinueSwinging = 1,
             AnimationRestoreTime = 0.5,
             MaxAngle = 360,
-            MaxTargets = 1,
+            MaxTargets = 5,
+            AttackMode = "Switch",
             AutoSwitch = false,
             NoSwing = false,
             HandCheck = false,
             WallCheck = false,
+            AttackableCheck = false,
             UseAnimation = false,
             Cooldown = false,
             TriggerButton = false,
+            CustomHitReg = false,
+            HitsPerSecond = 50,
+            AirHits = true,
+            AirHitsChance = 100,
             Boxes = false,
             Particles = false,
             InfRange = false,
             AutoJump = false,
+            FastHits = false,
+            FastHitsLegit = false,
+            FastHitsFireRate = 0.06,
+            FastHitsProjectiles = {arrow = true, snowball = true},
             SelectedAnimation = "Night",
             TargetMode = "Distance",
             BoxColor = Color3.fromRGB(255, 0, 0),
@@ -1445,9 +1577,10 @@ local Attacking = false;
             ParticleRate = 40,
             ParticleLifeTime = 2,
             Targets = {
-                Players = false,
-                Npcs = false
-            }
+                Players = true,
+                Npcs = true
+            },
+            Priority = "Players"
         },
         Data = {
             OldPlayAnimationViewModel = nil,
@@ -1459,6 +1592,14 @@ local Attacking = false;
             LastSetTarget = false,
             Params = RaycastParams.new(),
             LastHit = 0,
+            LastCustomHit = 0,
+            LastSwing = -20,
+            LastPacket = 0,
+            LastFastHit = 0,
+            FastHitIndex = 0,
+            FastHitDelays = {},
+            SwitchIndex = 1,
+            SwitchAt = 0,
             Effects = {
                 Boxes = {},
                 Particles = {}
@@ -1505,15 +1646,395 @@ local Attacking = false;
         }
     }
 
-    local function CalcPrediction(Player: Vector3, Target: Vector3, Range: number): Vector3
-        local Dir: Vector3 = Target - Player
-        local Dist: number = Dir.Magnitude
-
-        if Dist <= 11.5 or Range <= 11.5 then
-            return Player
+    local function CanHitWithCustomReg(): boolean
+        if not KillAuraData.Settings.CustomHitReg then
+            return true
         end
 
-        return Player + Dir.Unit * (Dist - 14)
+        if KillAuraData.Settings.HitsPerSecond >= 36 then
+            return true
+        end
+
+        local CurrentTime: number = tick()
+        local DelayBetweenHits: number = 10 / math.max(KillAuraData.Settings.HitsPerSecond, 1)
+
+        if CurrentTime - KillAuraData.Data.LastCustomHit >= DelayBetweenHits then
+            KillAuraData.Data.LastCustomHit += DelayBetweenHits
+            if CurrentTime - KillAuraData.Data.LastCustomHit > DelayBetweenHits then
+                KillAuraData.Data.LastCustomHit = CurrentTime
+            end
+            return true
+        end
+
+        return false
+    end
+
+    local function UpdateFastHitProjectiles(value: string)
+        table.clear(KillAuraData.Settings.FastHitsProjectiles)
+
+        for _, Name in value:split(",") do
+            Name = Name:lower():gsub("^%s+", ""):gsub("%s+$", "")
+            if Name ~= "" then
+                KillAuraData.Settings.FastHitsProjectiles[Name] = true
+            end
+        end
+    end
+
+    local function GetFastHitAmmo(source)
+        if not source.ammoItemTypes then return nil end
+
+        local Inventory = GetInventory()
+        local Items = Inventory and Inventory.items or {}
+        for _, AmmoType in source.ammoItemTypes do
+            for _, Item in Items do
+                if Item.itemType == AmmoType then
+                    return AmmoType
+                end
+            end
+        end
+
+        return nil
+    end
+
+    local function GetFastHitProjectiles()
+        local Projectiles = {}
+        local Inventory = GetInventory()
+        local Items = Inventory and Inventory.items or {}
+
+        for _, Item in Items do
+            local Meta = GameData.Utils.ItemMeta[Item.itemType]
+            local Source = Meta and Meta.projectileSource
+            local Ammo = Source and GetFastHitAmmo(Source)
+
+            if Ammo and KillAuraData.Settings.FastHitsProjectiles[Ammo] then
+                Projectiles[#Projectiles + 1] = {
+                    Item = Item,
+                    Ammo = Ammo,
+                    Projectile = Source.projectileType(Ammo),
+                    Source = Source
+                }
+            end
+        end
+
+        return Projectiles
+    end
+
+    local function TryFastHit(Target, SelfPos: Vector3, HitPosition: Vector3)
+        if not KillAuraData.Settings.FastHits or tick() < KillAuraData.Data.LastFastHit then
+            return
+        end
+
+        local Root = Target.Data.Root or Target.Entity.PrimaryPart
+        local Humanoid = Target.Data.Humanoid or Target.Entity:FindFirstChildOfClass("Humanoid")
+        if not Root or not Humanoid then return end
+
+        local Map = workspace:FindFirstChild("Map")
+        KillAuraData.Data.Params.FilterType = Enum.RaycastFilterType.Include
+        KillAuraData.Data.Params.FilterDescendantsInstances = Map and {Map} or {}
+        if not IsPathClear(Target.Entity, Root, KillAuraData.Data.Params) then
+            return
+        end
+
+        local Projectiles = GetFastHitProjectiles()
+        if #Projectiles == 0 then return end
+
+        KillAuraData.Data.FastHitIndex += 1
+        if not Projectiles[KillAuraData.Data.FastHitIndex] then
+            KillAuraData.Data.FastHitIndex = 1
+        end
+
+        local Obj = Projectiles[KillAuraData.Data.FastHitIndex]
+        if tick() < (KillAuraData.Data.FastHitDelays[Obj.Item.itemType] or 0) then
+            return
+        end
+
+        local ProjMeta = GameData.Utils.ProjMeta[Obj.Projectile]
+        if not ProjMeta then return end
+
+        SwitchItem(Obj.Item.tool, 0)
+        if KillAuraData.Settings.FastHitsLegit then
+            task.wait(0.05)
+        end
+
+        local LaunchVelocity = ProjMeta.launchVelocity or 100
+        local Gravity = ProjMeta.gravitationalAcceleration or 196.2
+        local TargetVelocity = FlatVel(Root)
+        local TargetPos = AimPos(Root, Humanoid)
+        local Calc = SolveShot(SelfPos, LaunchVelocity, Gravity, TargetPos, TargetVelocity)
+        if not Calc then return end
+
+        local Direction = CFrame.lookAt(SelfPos, Calc).LookVector
+        local Id = HttpService:GenerateGUID(true)
+        local ShootPosition = CFrame.new(SelfPos, Calc).Position
+
+        FireProjectileRemote(Obj.Item.tool, Obj.Ammo, Obj.Projectile, ShootPosition, HitPosition, Direction * LaunchVelocity, Id,
+            {
+                drawDurationSeconds = 1,
+                drawDurationSec = 1,
+                shotId = HttpService:GenerateGUID(false)
+            },
+            workspace:GetServerTimeNow() - 0.045
+        )
+
+        KillAuraData.Data.FastHitDelays[Obj.Item.itemType] = tick() + (Obj.Source.fireDelaySec or 0)
+        KillAuraData.Data.LastFastHit = tick() + (LocalPlayer:GetNetworkPing() + KillAuraData.Settings.FastHitsFireRate)
+    end
+
+    local function IsInAir(Entity: Model): boolean
+        local Humanoid: Humanoid? = Entity and Entity:FindFirstChildOfClass("Humanoid")
+        if not Humanoid then
+            return false
+        end
+
+        local State = Humanoid:GetState()
+        return Humanoid.FloorMaterial == Enum.Material.Air or State == Enum.HumanoidStateType.Jumping or State == Enum.HumanoidStateType.Freefall or State == Enum.HumanoidStateType.Physics
+    end
+
+    local function CanAirHit(Entity: Model): boolean
+        if not KillAuraData.Settings.AirHits or not IsInAir(Entity) then
+            return true
+        end
+
+        return math.random(1, 100) <= KillAuraData.Settings.AirHitsChance
+    end
+
+    local function GetHitreg(Distance: number): number
+        local Hitreg: number = KillAuraData.Settings.Hitreg - 1
+
+        if KillAuraData.Settings.DynamicHits then
+            local Limit: number = GameData.Utils.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE or 14.4
+            local SafeRange: number = Hitreg < Limit and Hitreg or Limit
+            local Window: number = KillAuraData.Settings.Range - SafeRange
+
+            if Window < 1 then
+                Window = 1
+            end
+
+            local Scale: number = (Distance - SafeRange) / Window
+
+            if Scale < 0 then
+                Scale = 0
+            elseif Scale > 1 then
+                Scale = 1
+            end
+
+            Hitreg = Hitreg + (SafeRange - Hitreg) * Scale
+        end
+
+        return Hitreg
+    end
+
+    local function CalculateAuraPosition(SelfPos: Vector3, TargetRoot: BasePart): Vector3
+        local Ping: number = LocalPlayer:GetNetworkPing()
+        local Velocity: Vector3 = TargetRoot.AssemblyLinearVelocity
+
+        local Scale: number = Ping <= 0.03 and 0.03 or (Ping >= 0.4 and 0.4 or Ping)
+
+        return Velocity * Scale
+    end
+
+    local function ResetAuraVisuals()
+        KillAuraData.Data.AnimationPlaying = false
+
+        for _, Group in KillAuraData.Data.Effects do
+            for _, Object in Group do
+                Object:Destroy()
+            end
+
+            table.clear(Group)
+        end
+
+        if KillAuraData.Data.OriginalHandPos then
+            local ViewModel: Model = GetViewModel()
+            local RightHand: MeshPart = ViewModel and ViewModel:FindFirstChild("RightHand")
+            if ViewModel and RightHand then
+                local RightWrist: Motor6D = RightHand:FindFirstChild("RightWrist")
+                if RightWrist then
+                    TweenService:Create(RightWrist, TweenInfo.new(KillAuraData.Settings.AnimationRestoreTime), {C0 = KillAuraData.Data.OriginalHandPos}):Play()
+                end
+            end
+        end
+    end
+
+    local function RenderAuraTarget(Target)
+        if KillAuraData.Settings.Boxes then
+            coroutine.wrap(function()
+                local Box: Part = KillAuraData.Data.Effects.Boxes[Target.Entity]
+                if not Box then
+                    Box = Instance.new("Part", Target.Entity)
+                    Box.Size = Vector3.new(5, 6, 5)
+                    Box.Material = Enum.Material.Air
+                    Box.CanCollide = false
+                    Box.Anchored = true
+
+                    KillAuraData.Data.Effects.Boxes[Target.Entity] = Box
+                end
+
+                Box.CFrame = Target.Entity.PrimaryPart.CFrame
+                Box.Transparency = KillAuraData.Settings.BoxTransparency
+                Box.Color = KillAuraData.Settings.BoxColor
+            end)()
+        end
+
+        if KillAuraData.Settings.Particles then
+            coroutine.wrap(function()
+                local Emitter: ParticleEmitter = KillAuraData.Data.Effects.Particles[Target.Entity]
+                if not Emitter then
+                    Emitter = Instance.new("ParticleEmitter", Target.Entity.PrimaryPart)
+                    Emitter.EmissionDirection = Enum.NormalId.Front
+                    Emitter.SpreadAngle = Vector2.new(1, 1)
+                    Emitter.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 2.5)})
+
+                    KillAuraData.Data.Effects.Particles[Target.Entity] = Emitter
+                end
+
+                Emitter.Lifetime = NumberRange.new(KillAuraData.Settings.ParticleLifeTime, KillAuraData.Settings.ParticleLifeTime)
+                Emitter.Rate = KillAuraData.Settings.ParticleRate
+                Emitter.Color = ColorSequence.new(KillAuraData.Settings.ParticleColor)
+            end)()
+        end
+    end
+
+    local LastSwing: number = 0
+    local function PlayAnim(Module)
+        if not KillAuraData.Settings.NoSwing then
+            if os.clock() - LastSwing >= 0.22 then
+                LastSwing = os.clock()
+                GameData.Utils.Animation:playAnimation(LocalPlayer, GameData.Utils.ProdAnimations[GameData.Utils.AnimationType.SWORD_SWING])
+            end
+        end
+
+        if KillAuraData.Settings.UseAnimation then
+            coroutine.wrap(function()
+                local ViewModel: Model = GetViewModel()
+                local RightHand: MeshPart = ViewModel and ViewModel:FindFirstChild("RightHand")
+                local SelectedAnimation: {[string]: {Position: CFrame, Angle: CFrame, Duration: number}} = KillAuraData.Animations[KillAuraData.Settings.SelectedAnimation]
+
+                if ViewModel and RightHand and SelectedAnimation and not KillAuraData.Data.AnimationPlaying then
+                    local RightWrist: Motor6D = RightHand:FindFirstChild("RightWrist")
+                    if RightWrist then
+                        if not KillAuraData.Data.OriginalHandPos then
+                            KillAuraData.Data.OriginalHandPos = RightWrist.C0
+                        end
+
+                        KillAuraData.Data.AnimationPlaying = true
+                        for _, Step in SelectedAnimation do
+                            local Tween: Tween = TweenService:Create(RightWrist, TweenInfo.new(Step.Duration), {C0 = KillAuraData.Data.OriginalHandPos * Step.Position * Step.Angle})
+                            Tween:Play()
+                            Tween.Completed:Wait()
+
+                            if not Module.Enabled or not KillAuraData.Settings.UseAnimation then
+                                break
+                            end
+                        end
+                    end
+
+                    KillAuraData.Data.AnimationPlaying = false
+                end
+            end)()
+        elseif not KillAuraData.Settings.NoSwing then
+            if os.clock() - LastSwing >= 0.22 then
+                LastSwing = os.clock()
+                GameData.Utils.ViewmodelController:playAnimation(GameData.Utils.AnimationType.FP_SWING_SWORD)
+            end
+        end
+    end
+
+    local function GetAuraTargets(MaxRange: number)
+        local Found = {}
+        local Character = LocalPlayer.Character
+        local Root: BasePart? = Character and Character.PrimaryPart
+        if not Root then
+            return Found
+        end
+
+        local Params
+        if KillAuraData.Settings.WallCheck then
+            Params = RaycastParams.new()
+            Params.IgnoreWater = true
+            Params.FilterType = Enum.RaycastFilterType.Exclude
+            Params.FilterDescendantsInstances = CollectionService:GetTagged("entity")
+        end
+
+        for _, Data in GetEntities() do
+            if Data.Entity == Character then
+                continue
+            end
+
+            if not Night:IsAlive(Data.Entity, true) then
+                continue
+            end
+
+            if Data.Entity:GetAttribute("Team") == Character:GetAttribute("Team") then
+                continue
+            end
+
+            if (Data.Player and not KillAuraData.Settings.Targets.Players) or (not Data.Player and not KillAuraData.Settings.Targets.Npcs) then
+                continue
+            end
+
+            if not Data.Root then
+                continue
+            end
+
+            local Distance: number = Night:GetDistanceFrom(Root.Position, Data.Root.Position)
+            if Distance > MaxRange then
+                continue
+            end
+
+            local Angle: number = GetAngle(Root.CFrame, Data.Root.Position)
+            if Angle > (KillAuraData.Settings.MaxAngle / 2 * math.pi / 180) then
+                continue
+            end
+
+            if Params and not IsPathClear(Data.Entity, Data.Root, Params) then
+                continue
+            end
+
+            Found[#Found + 1] = {
+                Entity = Data.Entity,
+                Distance = Distance,
+                Data = Data,
+                Angle = Angle,
+                Priority = (KillAuraData.Settings.Priority == "Players" and Data.Player) and 0 or ((KillAuraData.Settings.Priority == "NPCs" and not Data.Player) and 0 or 1)
+            }
+        end
+
+        table.sort(Found, function(A, B)
+            if A.Priority ~= B.Priority then
+                return A.Priority < B.Priority
+            end
+
+            if KillAuraData.Settings.TargetMode == "Lowest Health" then
+                return (A.Data.Health or math.huge) < (B.Data.Health or math.huge)
+            elseif KillAuraData.Settings.TargetMode == "Highest Health" then
+                return (A.Data.Health or 0) > (B.Data.Health or 0)
+            elseif KillAuraData.Settings.TargetMode == "Angle" then
+                return A.Angle < B.Angle
+            end
+
+            return A.Distance < B.Distance
+        end)
+
+        if KillAuraData.Settings.AttackMode == "Switch" and #Found > 1 then
+            if tick() > KillAuraData.Data.SwitchAt then
+                KillAuraData.Data.SwitchAt = tick() + 0.7
+                KillAuraData.Data.SwitchIndex += 1
+            end
+
+            if not Found[KillAuraData.Data.SwitchIndex] then
+                KillAuraData.Data.SwitchIndex = 1
+            end
+
+            return {Found[KillAuraData.Data.SwitchIndex]}
+        end
+
+        local Limit: number = KillAuraData.Settings.AttackMode == "Multi" and KillAuraData.Settings.MaxTargets or 1
+        while #Found > Limit do
+            table.remove(Found)
+        end
+
+        return Found
     end
 
     local KillAura = Windows.Combat:CreateModule({
@@ -1556,216 +2077,114 @@ local Attacking = false;
                         end
 
                         local Humanoid: Humanoid = LocalPlayer.Character.Humanoid
-                        local NearestEntity
-                        local GotFromTargets: boolean = false
-                        local CurrentTargetData = {
-                            Distance = math.huge,
-                            Entity = nil
-                        }
-
-                        for i,v in GameData.Data.KillAuraTargets do
-                            if v.Entity and Night:IsAlive(v.Entity, true) then
-                                local NewAngle: number = GetAngle(LocalPlayer.Character.PrimaryPart.CFrame, v.Entity.PrimaryPart.Position)
-                                if NewAngle < (KillAuraData.Settings.MaxAngle / 2 * math.pi / 180) then
-                                    local Distance: number = Night:GetDistanceFrom(LocalPlayer.Character.PrimaryPart.Position, v.Entity.PrimaryPart.Position)
-                                    if (Distance > KillAuraData.Settings.Range and Distance > KillAuraData.Settings.SwingRange) then
-                                        table.remove(GameData.Data.KillAuraTargets, i)
-                                        continue
-                                    end
-
-                                    if CurrentTargetData.Distance >= Distance then
-                                        v.Distance = Distance
-                                        v.Data.Angle = NewAngle
-
-                                        CurrentTargetData = v
-                                    end
-                                else
-                                    table.remove(GameData.Data.KillAuraTargets, i)
-                                end 
-                            else
-                                table.remove(GameData.Data.KillAuraTargets, i)
-                            end
-                        end
-
-                        if CurrentTargetData.Entity then
-                            NearestEntity = CurrentTargetData
-                            GotFromTargets = true
-                        else
-                            local Range: number = (KillAuraData.Settings.SwingRange > KillAuraData.Settings.Range and KillAuraData.Settings.SwingRange) or KillAuraData.Settings.Range
-                            NearestEntity = GetEntity({
-                                TeamCheck = true, 
-                                MaxRange = Range,
-                                MaxAngle = KillAuraData.Settings.MaxAngle,
-                                Mode = KillAuraData.Settings.TargetMode,
-                                Targets = KillAuraData.Settings.Targets,
-                                Visible = KillAuraData.Settings.WallCheck
-                            })
-                        end
-
-                        if NearestEntity.Entity then
-                            KillAuraData.Data.LastSetTarget = true
-                            GameData.Data.Target = NearestEntity
-                            local HandItem = GetInventory().hand
-                            if KillAuraData.Settings.HandCheck then
-                                if HandItem and HandItem.tool then
-                                    local Meta = GameData.Utils.ItemMeta[HandItem.itemType]
-                                    if not Meta or not Meta.sword then
-                                        task.wait()
-                                        return
-                                    end
-                                else
+                        local HandItem = GetInventory().hand
+                        if KillAuraData.Settings.HandCheck then
+                            if HandItem and HandItem.tool then
+                                local Meta = GameData.Utils.ItemMeta[HandItem.itemType]
+                                if not Meta or not Meta.sword then
                                     task.wait()
                                     return
                                 end
-                            end
-
-                            if not GotFromTargets then
-                                local Found: boolean = false
-                                for i,v in GameData.Data.KillAuraTargets do
-                                    if v.Entity and v.Entity == NearestEntity.Entity then
-                                        Found = true
-                                    end
-                                end
-
-                                if not Found then
-                                    table.insert(GameData.Data.KillAuraTargets, NearestEntity)
-                                end
-
-                                if #GameData.Data.KillAuraTargets > KillAuraData.Settings.MaxTargets then
-                                    table.remove(GameData.Data.KillAuraTargets, 1)
-                                end
-                            end
-
-                            if KillAuraData.Settings.AutoSwitch and (not HandItem or HandItem and (not HandItem.tool or HandItem.tool ~= Sword.Item)) then
-                                SwitchItem(Sword.Item, 0)
-                            end
-
-                            local Box: Part
-                            if KillAuraData.Settings.Boxes then
-                                coroutine.wrap(function()
-                                    Box = KillAuraData.Data.Effects.Boxes[NearestEntity.Entity]
-                                    if not Box then
-                                        Box = Instance.new("Part", NearestEntity.Entity)
-                                        Box.Size = Vector3.new(5, 6, 5)
-                                        Box.Material = Enum.Material.Air
-                                        Box.CanCollide = false
-                                        Box.Anchored = true
-
-                                        KillAuraData.Data.Effects.Boxes[NearestEntity.Entity] = Box
-                                    end
-
-                                    Box.CFrame = NearestEntity.Entity.PrimaryPart.CFrame
-                                    Box.Transparency = KillAuraData.Settings.BoxTransparency
-                                    Box.Color = KillAuraData.Settings.BoxColor
-                                end)()
-                            end
-
-                            if KillAuraData.Settings.Particles then 
-                                coroutine.wrap(function()
-                                    local Emitter: ParticleEmitter = KillAuraData.Data.Effects.Particles[NearestEntity.Entity]
-                                    if not Emitter then
-                                        Emitter = Instance.new("ParticleEmitter", NearestEntity.Entity.PrimaryPart)
-                                        Emitter.EmissionDirection = Enum.NormalId.Front
-                                        Emitter.SpreadAngle = Vector2.new(1, 1)
-                                        Emitter.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 2.5)})
-
-                                        KillAuraData.Data.Effects.Particles[NearestEntity.Entity] = Emitter
-                                    end
-
-                                    Emitter.Lifetime = NumberRange.new(KillAuraData.Settings.ParticleLifeTime, KillAuraData.Settings.ParticleLifeTime)
-                                    Emitter.Rate = KillAuraData.Settings.ParticleRate
-                                    Emitter.Color = ColorSequence.new(KillAuraData.Settings.ParticleColor)
-                                end)()
-                            end
-
-                            if KillAuraData.Settings.AutoJump and Humanoid.FloorMaterial ~= Enum.Material.Air and Humanoid.MoveDirection.Magnitude > 0 then
-                                Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                            end
-
-                            if KillAuraData.Settings.Range >= NearestEntity.Distance then
-                                local HitPos: Vector3 = CalcPrediction(LocalPlayer.Character.PrimaryPart.Position, NearestEntity.Entity.PrimaryPart.Position, KillAuraData.Settings.Range)--(math.clamp(NearestEntity.Distance - 14.4, 10, 30) * (NearestEntity.Entity.PrimaryPart.Position - LocalPlayer.Character.PrimaryPart.Position).Unit) + LocalPlayer.Character.PrimaryPart.Position
-                                GameData.Utils.Remotes:Get("SwordHit"):SendToServer({
-                                    entityInstance = NearestEntity.Entity,
-                                    chargedAttack = {chargeRatio = 0},
-                                    validate = {
-                                        targetPosition = {value = NearestEntity.Data.Root.Position},
-                                        raycast = {
-                                            cursorDirection = {value = CFrame.lookAt(NearestEntity.Data.Root.Position, CurrentCamera.CFrame.Position)},
-                                            cameraPosition = {value = HitPos}
-                                        },
-                                        selfPosition = {value = HitPos}
-                                    },
-                                    weapon = Sword.Item
-                                })
-                            end
-
-                            if not KillAuraData.Settings.NoSwing then
-                                GameData.Utils.Animation:playAnimation(LocalPlayer, GameData.Utils.ProdAnimations[GameData.Utils.AnimationType.SWORD_SWING])
-                            end
-
-                            if KillAuraData.Settings.UseAnimation then
-                                coroutine.wrap(function()
-                                    local ViewModel: Model = GetViewModel()
-                                    local RightHand: MeshPart = ViewModel and ViewModel:FindFirstChild("RightHand")
-                                    local SelectedAnimation: {[string]: {Position: CFrame, Angle: CFrame, Duration: number}} = KillAuraData.Animations[KillAuraData.Settings.SelectedAnimation]
-
-                                    if ViewModel and RightHand and SelectedAnimation and not KillAuraData.Data.AnimationPlaying then
-                                        local RightWrist: Motor6D = RightHand:FindFirstChild("RightWrist")
-                                        if RightWrist then
-                                            if not KillAuraData.Data.OriginalHandPos then
-                                                KillAuraData.Data.OriginalHandPos = RightWrist.C0
-                                            end
-
-                                            KillAuraData.Data.AnimationPlaying = true
-                                            for i,v in SelectedAnimation do
-                                                local Tween: Tween = TweenService:Create(RightWrist, TweenInfo.new(v.Duration), {C0 = KillAuraData.Data.OriginalHandPos * v.Position * v.Angle})
-                                                Tween:Play()
-                                                Tween.Completed:Wait()
-
-                                                if not self.Enabled or not KillAuraData.Settings.UseAnimation then
-                                                    break
-                                                end
-                                            end
-                                        end
-
-                                        KillAuraData.Data.AnimationPlaying = false
-                                    end
-                                end)()
                             else
-                                if not KillAuraData.Settings.NoSwing then
-                                    GameData.Utils.ViewmodelController:playAnimation(GameData.Utils.AnimationType.FP_SWING_SWORD)
+                                task.wait()
+                                return
+                            end
+                        end
+
+                        if KillAuraData.Settings.AttackableCheck then
+                            local StunnedUntil = LocalPlayer.Character:GetAttribute("StunnedUntilTime") or 0
+                            if StunnedUntil > workspace:GetServerTimeNow() then
+                                task.wait()
+                                return
+                            end
+                        end
+
+                        if KillAuraData.Settings.AutoSwitch and (not HandItem or HandItem and (not HandItem.tool or HandItem.tool ~= Sword.Item)) then
+                            SwitchItem(Sword.Item, 0)
+                        end
+
+                        if KillAuraData.Settings.AutoJump and Humanoid.FloorMaterial ~= Enum.Material.Air and Humanoid.MoveDirection.Magnitude > 0 then
+                            Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
+
+                        local SwingRangeValue: number = math.max(KillAuraData.Settings.SwingRange, KillAuraData.Settings.Range)
+                        local Targets = GetAuraTargets(SwingRangeValue)
+
+                        if #Targets > 0 then
+                            KillAuraData.Data.LastSetTarget = true
+                            GameData.Data.KillAuraTargets = Targets
+                            GameData.Data.Target = Targets[1]
+
+                            local HasPlayedSwing = false
+                            for Index, Target in Targets do
+                                RenderAuraTarget(Target)
+                                if not GameData.Data.Target then
+                                    GameData.Data.Target = Target
+                                end
+
+                                if Target.Distance <= KillAuraData.Settings.Range then
+                                    local TargetRoot: BasePart? = Target.Data.Root or Target.Entity.PrimaryPart
+                                    if not TargetRoot then
+                                        continue
+                                    end
+
+                                    if not CanAirHit(Target.Entity) then
+                                        continue
+                                    end
+
+                                    local SelfPos: Vector3 = LocalPlayer.Character.PrimaryPart.Position
+                                    local TargetPos: Vector3 = TargetRoot.Position + CalculateAuraPosition(SelfPos, TargetRoot)
+                                    local Direction: Vector3 = CFrame.lookAt(SelfPos, TargetPos).LookVector
+                                    local Distance: number = (TargetPos - SelfPos).Magnitude
+                                    local Hitreg: number = GetHitreg(Distance)
+                                    local HitPosition: Vector3 = SelfPos + Direction * math.max(Distance - Hitreg, 0)
+                                    local SyncDelay: number = KillAuraData.Settings.SyncHitTime and math.max(35 - Hitreg, 0) / 35 or 0
+
+                                    if tick() < KillAuraData.Data.LastPacket then
+                                        continue
+                                    end
+
+                                    if not CanHitWithCustomReg() then
+                                        continue
+                                    end
+
+                                    KillAuraData.Data.LastPacket = tick() + SyncDelay
+                                    KillAuraData.Data.LastHit = os.clock()
+                                    KillAuraData.Data.LastSwing = tick()
+                                    GameData.Utils.SwordController.lastAttack = workspace:GetServerTimeNow()
+
+                                    GameData.Utils.Remotes:Get("SwordHit"):SendToServer({
+                                        entityInstance = Target.Entity,
+                                        chargedAttack = {chargeRatio = 0},
+                                        validate = {
+                                            targetPosition = {value = TargetPos},
+                                            raycast = {
+                                                cursorDirection = {value = Direction},
+                                                cameraPosition = {value = HitPosition}
+                                            },
+                                            selfPosition = {value = HitPosition}
+                                        },
+                                        weapon = Sword.Item
+                                    })
+
+                                    TryFastHit(Target, SelfPos, HitPosition)
+
+                                    if not HasPlayedSwing then
+                                        HasPlayedSwing = true
+                                        PlayAnim(self)
+                                    end
                                 end
                             end
-
-                            KillAuraData.Data.LastHit = os.clock()
-                            Attacking = true
+                        elseif KillAuraData.Settings.ContinueSwinging > 0 and (tick() - KillAuraData.Data.LastSwing) <= KillAuraData.Settings.ContinueSwinging then
+                            PlayAnim(self)
                         else
-                            Attacking = false
                             if KillAuraData.Data.LastSetTarget then
                                 GameData.Data.Target = nil
                                 KillAuraData.Data.LastSetTarget = false
                             end
 
-                            KillAuraData.Data.AnimationPlaying = false
-
-                            for i,v in KillAuraData.Data.Effects do
-                                for i2, v2 in v do
-                                    v2:Destroy()
-                                end
-
-                                table.clear(v)
-                            end
-
-                            if KillAuraData.Data.OriginalHandPos then
-                                local ViewModel: Model = GetViewModel()
-                                local RightHand: MeshPart = ViewModel and ViewModel:FindFirstChild("RightHand")
-                                if ViewModel and RightHand then
-                                    local RightWrist: Motor6D = RightHand:FindFirstChild("RightWrist")
-                                    if RightWrist then
-                                        TweenService:Create(RightWrist, TweenInfo.new(KillAuraData.Settings.AnimationRestoreTime), {C0 = KillAuraData.Data.OriginalHandPos}):Play()
-                                    end
-                                end
-                            end
+                            table.clear(GameData.Data.KillAuraTargets)
+                            ResetAuraVisuals()
                         end
                     end
                 end))
@@ -1813,13 +2232,14 @@ local Attacking = false;
             end
         }
     })
+    local MaxTargets
     
     KillAura:Slider({
         Name = "Range",
         Flag = "KillAuraRange",
         Min = 1,
         Max = 22,
-        Default = 20,
+        Default = 22,
         CallingFunction = function(self, value: number)
             KillAuraData.Settings.Range = value
         end
@@ -1837,6 +2257,30 @@ local Attacking = false;
     })
 
     KillAura:Slider({
+        Name = "Hitreg",
+        Flag = "KillAuraHitreg",
+        Min = 1,
+        Max = 35,
+        Default = 35,
+        Increment = 0.1,
+        CallingFunction = function(self, value: number)
+            KillAuraData.Settings.Hitreg = value
+        end
+    })
+
+    KillAura:Slider({
+        Name = "Continue Swinging",
+        Flag = "KillAuraContinueSwinging",
+        Min = 0,
+        Max = 2,
+        Default = 0,
+        Increment = 0.1,
+        CallingFunction = function(self, value: number)
+            KillAuraData.Settings.ContinueSwinging = value
+        end
+    })
+
+    KillAura:Slider({
         Name = "Max Angle",
         Flag = "KillAuraMaxAngle",
         Min = 1,
@@ -1847,14 +2291,27 @@ local Attacking = false;
         end
     })
 
-    KillAura:Slider({
+    MaxTargets = KillAura:Slider({
         Name = "Max Targets",
         Flag = "KillAuraMaxTargets",
         Min = 1,
         Max = 10,
-        Default = 1,
+        Default = 5,
         CallingFunction = function(self, value: number)
             KillAuraData.Settings.MaxTargets = value
+        end
+    })
+
+    KillAura:Dropdown({
+        Name = "Attack Mode",
+        Flag = "KillAuraAttackMode",
+        Default = "Switch",
+        Options = {"Single", "Multi", "Switch"},
+        CallingFunction = function(self, value: string)
+            KillAuraData.Settings.AttackMode = value
+            MaxTargets:SetVisiblity(value == "Multi")
+            KillAuraData.Data.SwitchIndex = 1
+            KillAuraData.Data.SwitchAt = 0
         end
     })
 
@@ -1866,7 +2323,14 @@ local Attacking = false;
         MaxLimit = 2,
         MinLimit = 0,
         CallingFunction = function(self, value: {})
-            KillAuraData.Settings.Targets = value
+            if value.Players ~= nil or value.Npcs ~= nil then
+                KillAuraData.Settings.Targets = value
+            else
+                KillAuraData.Settings.Targets = {
+                    Players = table.find(value, "Players") ~= nil,
+                    Npcs = table.find(value, "Npcs") ~= nil
+                }
+            end
         end
     })  
     
@@ -1880,6 +2344,16 @@ local Attacking = false;
         end
     })    
 
+    KillAura:Dropdown({
+        Name = "Target Priority",
+        Flag = "KillAuraTargetPriority",
+        Default = "Players",
+        Options = {"Players", "NPCs"},
+        CallingFunction = function(self, value: string)
+            KillAuraData.Settings.Priority = value
+        end
+    })
+
     KillAura:Slider({
         Name = "Delay",
         Flag = "KillAuraDelay",
@@ -1889,6 +2363,41 @@ local Attacking = false;
         Increment = 0.1,
         CallingFunction = function(self, value: number)
             KillAuraData.Settings.Delay = value
+        end
+    })
+
+    local HitsPerSecond = KillAura:Slider({
+        Name = "Hits Per Second",
+        Flag = "KillAuraHitsPerSecond",
+        Min = 1,
+        Max = 100,
+        Default = 50,
+        CallingFunction = function(self, value: number)
+            KillAuraData.Settings.HitsPerSecond = value
+        end
+    })
+
+    local FastHitsFireRate = KillAura:Slider({
+        Name = "Fast Hits Fire Rate",
+        Flag = "KillAuraFastHitsFireRate",
+        Min = 0,
+        Max = 2,
+        Default = 0.06,
+        Increment = 0.01,
+        CallingFunction = function(self, value: number)
+            KillAuraData.Settings.FastHitsFireRate = value
+        end
+    })
+
+    local AirHitsChance = KillAura:Slider({
+        Name = "Air Hits Chance",
+        Flag = "KillAuraAirHitsChance",
+        Min = 0,
+        Max = 100,
+        Default = 100,
+        Increment = 5,
+        CallingFunction = function(self, value: number)
+            KillAuraData.Settings.AirHitsChance = value
         end
     })
 
@@ -1968,6 +2477,69 @@ local Attacking = false;
     })
 
     KillAura:MiniToggle({
+        Name = "Custom Hit Reg",
+        Flag = "KillAuraCustomHitReg",
+        CallingFunction = function(self, value: boolean)
+            KillAuraData.Settings.CustomHitReg = value
+            KillAuraData.Data.LastCustomHit = 0
+            HitsPerSecond:SetVisiblity(value)
+        end
+    })
+
+    KillAura:MiniToggle({
+        Name = "Dynamic Hits",
+        Flag = "KillAuraDynamicHits",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            KillAuraData.Settings.DynamicHits = value
+        end
+    })
+
+    KillAura:MiniToggle({
+        Name = "Fast Hits",
+        Flag = "KillAuraFastHits",
+        CallingFunction = function(self, value: boolean)
+            KillAuraData.Settings.FastHits = value
+            FastHitsFireRate:SetVisiblity(value)
+        end
+    })
+
+    KillAura:MiniToggle({
+        Name = "Fast Hits RL",
+        Flag = "KillAuraFastHitsLegit",
+        CallingFunction = function(self, value: boolean)
+            KillAuraData.Settings.FastHitsLegit = value
+        end
+    })
+
+    KillAura:TextBox({
+        Name = "Fast Hits Projectiles",
+        Flag = "KillAuraFastHitsProjectiles",
+        Default = "arrow, snowball",
+        CallingFunction = function(self, value: string)
+            UpdateFastHitProjectiles(value)
+        end
+    })
+
+    KillAura:MiniToggle({
+        Name = "Sync Hit Time",
+        Flag = "KillAuraSyncHitTime",
+        CallingFunction = function(self, value: boolean)
+            KillAuraData.Settings.SyncHitTime = value
+        end
+    })
+
+    KillAura:MiniToggle({
+        Name = "Air Hits",
+        Flag = "KillAuraAirHits",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            KillAuraData.Settings.AirHits = value
+            AirHitsChance:SetVisiblity(value)
+        end
+    })
+
+    KillAura:MiniToggle({
         Name = "Auto Jump",
         Flag = "KillAuraAutoJump",
         CallingFunction = function(self, value: boolean)
@@ -2025,6 +2597,14 @@ local Attacking = false;
     })
 
     KillAura:MiniToggle({
+        Name = "Attackable Check",
+        Flag = "KillAuraAttackableCheck",
+        CallingFunction = function(self, value: boolean)
+            KillAuraData.Settings.AttackableCheck = value
+        end
+    })
+
+    KillAura:MiniToggle({
         Name = "No Swing",
         Flag = "KillAuraNoSwing",
         CallingFunction = function(self, value: boolean)
@@ -2051,6 +2631,11 @@ local Attacking = false;
             AnimationPicker:SetVisiblity(value)
         end
     })
+
+    HitsPerSecond:SetVisiblity(KillAuraData.Settings.CustomHitReg)
+    FastHitsFireRate:SetVisiblity(KillAuraData.Settings.FastHits)
+    AirHitsChance:SetVisiblity(KillAuraData.Settings.AirHits)
+    MaxTargets:SetVisiblity(KillAuraData.Settings.AttackMode == "Multi")
 end)();
 
 (function()
@@ -3415,87 +4000,6 @@ end)();
     ProjectileAura.Data.RayParams.RespectCanCollide = true
     ProjectileAura.Data.RayParams.FilterType = Enum.RaycastFilterType.Include
 
-    local function AimPos(Root: BasePart, Humanoid: Humanoid): Vector3
-        local Pos = Root.Position
-        local Vel = Root.AssemblyLinearVelocity
-        local Lift = math.clamp(Humanoid.HipHeight * 0.35, 0.6, 1.35)
-
-        if Humanoid.FloorMaterial == Enum.Material.Air or Vel.Y > 3 then
-            local Map = workspace:FindFirstChild("Map")
-            local GroundCheck = RaycastParams.new()
-            GroundCheck.FilterType = Enum.RaycastFilterType.Include
-            GroundCheck.FilterDescendantsInstances = Map and {Map} or {}
-            GroundCheck.RespectCanCollide = true
-
-            local Ground = workspace:Raycast(Pos, Vector3.new(0, -18, 0), GroundCheck)
-            if Ground then
-                local GroundedRootY = Ground.Position.Y + Humanoid.HipHeight + 1.5
-                Pos = Vector3.new(Pos.X, math.min(Pos.Y, GroundedRootY), Pos.Z)
-            end
-        end
-
-        return Pos + Vector3.new(0, Lift, 0)
-    end
-
-    local function FlatVel(Root: BasePart): Vector3
-        local Vel = Root.AssemblyLinearVelocity
-        return Vector3.new(Vel.X, 0, Vel.Z)
-    end
-
-    local function SolveShot(Start: Vector3, Speed: number, Gravity: number, HitPos: Vector3, HitVel: Vector3): Vector3?
-        if Speed <= 0 then return end
-        if Gravity <= 0 then
-            local Time = (HitPos - Start).Magnitude / Speed
-            return HitPos + (HitVel * Time)
-        end
-
-        local Land = HitPos
-        local Time = math.max((Vector3.new(HitPos.X, Start.Y, HitPos.Z) - Start).Magnitude / Speed, 0.05)
-
-        for _ = 1, 4 do
-            Land = HitPos + (HitVel * Time)
-
-            local Delta = Land - Start
-            local Flat = Vector3.new(Delta.X, 0, Delta.Z)
-            local Dist = Flat.Magnitude
-            if Dist <= 0.05 then
-                return Land
-            end
-
-            local Speed2 = Speed * Speed
-            local Root = Speed2 * Speed2 - Gravity * (Gravity * Dist * Dist + 2 * Delta.Y * Speed2)
-            if Root < 0 then
-                local FallTime = Dist / Speed
-                return Land + Vector3.new(0, 0.5 * Gravity * FallTime * FallTime, 0)
-            end
-
-            local Angle = math.atan((Speed2 - math.sqrt(Root)) / (Gravity * Dist))
-            local Forward = Speed * math.cos(Angle)
-            if Forward <= 0.05 then
-                return Land
-            end
-
-            Time = Dist / Forward
-        end
-
-        local Delta = Land - Start
-        local Flat = Vector3.new(Delta.X, 0, Delta.Z)
-        local Dist = Flat.Magnitude
-        if Dist <= 0.05 then
-            return Land
-        end
-
-        local Speed2 = Speed * Speed
-        local Root = Speed2 * Speed2 - Gravity * (Gravity * Dist * Dist + 2 * Delta.Y * Speed2)
-        if Root < 0 then
-            local FallTime = Dist / Speed
-            return Land + Vector3.new(0, 0.5 * Gravity * FallTime * FallTime, 0)
-        end
-
-        local Angle = math.atan((Speed2 - math.sqrt(Root)) / (Gravity * Dist))
-        return Start + (Flat.Unit * Dist) + Vector3.new(0, math.tan(Angle) * Dist, 0)
-    end
-
     local function GetAmmo(Source)
         if not Source.ammoItemTypes then return nil end
 
@@ -3538,7 +4042,7 @@ end)();
 
     local function OnProjectileFire(Fired, Obj)
         if not Fired then
-            ProjectileAura.Data.Delays[Obj.Item.itemType] = tick()
+            ProjectileAura.Data.Delays[Obj.Item.itemType] = tick() + 0.25
         else
             local Sounds = Obj.Meta.launchSound
             if Sounds and Sounds[1] then
@@ -3596,13 +4100,20 @@ end)();
         return Worked and (Success or GetHand() == Tool)
     end
 
+    local Cooldown = 0
+
     local ProjAura = Windows.Combat:CreateModule({
         Name = "Projectile Aura",
         Flag = "ProjectileAura",
         CallingFunction = function(self, enabled: boolean)
             if enabled then
                 repeat
-                    if Night:IsAlive(LocalPlayer) and not Attacking and (workspace:GetServerTimeNow() - (GameData.Utils.SwordController.lastAttack or 0)) > 0.5 and not Windows.Movement.Modules.LongJump.Enabled then
+                    task.wait()
+                    if Night:IsAlive(LocalPlayer) and not Windows.Movement.Modules.LongJump.Enabled then
+                        if (workspace:GetServerTimeNow() - (GameData.Utils.SwordController.lastAttack or 0)) < 0.5 then
+                            continue
+                        end
+
                         local Target = GetEntity({
                             TeamCheck = true,
                             MaxRange = ProjectileAura.Settings.Range,
@@ -3645,7 +4156,7 @@ end)();
                                         local Calc = SolveShot(Pos, LaunchVel, Gravity, TargetPos + (Humanoid.MoveDirection or Vector3.zero), TargetVelocity)
 
                                         if Calc then
-                                            if not SwitchItem(Obj.Item.tool) then
+                                            if not Equip(Obj.Item.tool) then
                                                 ProjectileAura.Data.Delays[ItemType] = tick() + 0.15
                                                 continue
                                             end
@@ -3671,21 +4182,22 @@ end)();
                                                 local Offset = ProjectileAura.Data.Offset
                                                 local ShootPosition = (CFrame.new(Pos, Calc) * CFrame.new(Vector3.new(-(Offset.RelX or 0), -(Offset.RelY or 0), -(Offset.RelZ or 0)))).Position
 
+                                                Cooldown = 999999
+
                                                 local Suc, Res = pcall(function()
-                                                    return GameData.Utils.Remotes:Get("ProjectileFire"):CallServerAsync(Obj.Item.tool, Obj.Ammo, Obj.Proj, ShootPosition, Pos, Direction * LaunchVel, Id,
+                                                    return FireProjectileRemote(Obj.Item.tool, Obj.Ammo, Obj.Proj, ShootPosition, Pos, Direction * LaunchVel, Id,
                                                     {drawDurationSeconds = 1, drawDurationSec = 1, shotId = HttpService:GenerateGUID(false)}, workspace:GetServerTimeNow() - 0.045)
                                                 end)
 
-                                                if Suc and Res and Res.andThen then
-                                                    Res:andThen(function(Fired)
-                                                        OnProjectileFire(Fired, Obj)
-                                                    end)
-                                                else
-                                                    OnProjectileFire(Suc and Res, Obj)
-                                                end
+                                                OnProjectileFire(Suc and Res, Obj)
+
+                                                Cooldown = tick()
                                             end)
 
                                             ProjectileAura.Data.Delays[ItemType] = tick() + (Obj.Meta.fireDelaySec or 0)
+
+                                            repeat task.wait() until tick() > Cooldown
+
                                             if ProjectileAura.Settings.FireRate > 0 then
                                                 task.wait(ProjectileAura.Settings.FireRate)
                                             end
@@ -3762,9 +4274,16 @@ end)();
         MaxLimit = 2,
         MinLimit = 0,
         CallingFunction = function(self, value: {})
-            ProjectileAura.Settings.Targets = value
+            if value.Players ~= nil or value.Npcs ~= nil then
+                ProjectileAura.Settings.Targets = value
+            else
+                ProjectileAura.Settings.Targets = {
+                    Players = table.find(value, "Players") ~= nil,
+                    Npcs = table.find(value, "Npcs") ~= nil
+                }
+            end
         end
-    })  
+    })
 
     ProjAura:Dropdown({
         Name = "Target Mode",
@@ -3787,16 +4306,394 @@ end)();
 end)();
 
 (function()
-    local Speed: number = 120
-    local Time: number = 1.5
-    local StartTime: number = 0
-    local Height: number = 5
-    local UseBoost: boolean = false
-    local UseTimeUI: boolean = false
-    local CombatCheck: boolean = false
-    local TimeUI
+    local LongJump
 
-    local LongJump = Windows.Movement:CreateModule({
+    local Settings = {
+        FireballSpeed = 28,
+        HammerSpeed = 60,
+        YuziSpeed = 150,
+        CameraDirection = false
+    }
+
+    local State = {
+        Start = nil,
+        Direction = nil,
+        Boost = 0,
+        EndTick = 0,
+        Token = 0,
+        Locked = false,
+        Controls = nil,
+        OldWalkSpeed = nil,
+        OldJumpPower = nil,
+        OldJumpHeight = nil,
+        Placed = {}
+    }
+
+    local MovementActions = {
+        Enum.PlayerActions.CharacterForward,
+        Enum.PlayerActions.CharacterBackward,
+        Enum.PlayerActions.CharacterLeft,
+        Enum.PlayerActions.CharacterRight,
+        Enum.PlayerActions.CharacterJump
+    }
+
+    local function SinkMovement()
+        return Enum.ContextActionResult.Sink
+    end
+
+    local function GetCharacterParts()
+        if not Night:IsAlive(LocalPlayer) then return nil, nil end
+        local Character = LocalPlayer.Character
+        return Character.PrimaryPart, Character:FindFirstChildOfClass("Humanoid")
+    end
+
+    local function ForceImmediateRestore()
+        local Root, Humanoid = GetCharacterParts()
+
+        ContextActionService:UnbindAction("NightLongJumpMovementLock")
+
+        pcall(function()
+            if State.Controls then
+                State.Controls:Enable()
+            else
+                require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule")):GetControls():Enable()
+            end
+        end)
+
+        if Humanoid then
+            Humanoid.WalkSpeed = State.OldWalkSpeed or 16
+            Humanoid.JumpPower = State.OldJumpPower or 50
+            Humanoid.JumpHeight = State.OldJumpHeight or 7.2
+            Humanoid:Move(Vector3.zero, false)
+        end
+
+        if Root then
+            Root.AssemblyLinearVelocity = Vector3.zero
+        end
+
+        State.Locked = false
+        State.Controls = nil
+    end
+
+    local function SetControlsLocked(locked: boolean)
+        if State.Locked == locked then return end
+        State.Locked = locked
+
+        local Root, Humanoid = GetCharacterParts()
+
+        if locked then
+            pcall(function()
+                GameData.Utils.Sprint:stopSprinting()
+            end)
+
+            ContextActionService:BindActionAtPriority(
+                "NightLongJumpMovementLock",
+                SinkMovement,
+                false,
+                3000,
+                unpack(MovementActions)
+            )
+
+            pcall(function()
+                local Controls = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule")):GetControls()
+                Controls:Disable()
+                State.Controls = Controls
+            end)
+
+            if Humanoid then
+                State.OldWalkSpeed = Humanoid.WalkSpeed
+                State.OldJumpPower = Humanoid.JumpPower
+                State.OldJumpHeight = Humanoid.JumpHeight
+                Humanoid.WalkSpeed = 0
+                Humanoid.JumpPower = 0
+                Humanoid.JumpHeight = 0
+                Humanoid:Move(Vector3.zero, false)
+            end
+
+            if Root then
+                Root.AssemblyLinearVelocity *= Vector3.new(0, 1, 0)
+            end
+        else
+            ForceImmediateRestore()
+        end
+    end
+
+    local function FlatUnit(vec: Vector3): Vector3
+        local Flat = Vector3.new(vec.X, 0, vec.Z)
+        return Flat.Magnitude > 0 and Flat.Unit or Vector3.new(0, 0, -1)
+    end
+
+    local function CurrentLookVector(): Vector3
+        local Root = GetCharacterParts()
+        return (Settings.CameraDirection and CurrentCamera or Root).CFrame.LookVector
+    end
+
+    local function HeldTool(): Instance?
+        local CurrentItem = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HandInvItem")
+        if CurrentItem and CurrentItem:IsA("ObjectValue") then
+            return CurrentItem.Value
+        end
+
+        local Inventory = GetInventory()
+        return Inventory and Inventory.hand and Inventory.hand.tool
+    end
+
+    local function ItemFromTool(tool: Instance?)
+        if not tool then return nil end
+
+        local Inventory = GetInventory()
+        local Items = Inventory and Inventory.items or {}
+        for _, Item in Items do
+            if Item.tool == tool or Item.itemType == tool.Name then
+                return Item
+            end
+        end
+
+        return nil
+    end
+
+    local function GetSafeModifiers(): any
+        local ModifierObject = GameData.Utils.Sprint:getMovementStatusModifier()
+
+        if ModifierObject.getModifiers then
+            return ModifierObject:getModifiers()
+        end
+
+        return ModifierObject.modifiers or {}
+    end
+
+    local function GetConstant(ConstantSpeed: number, CurrentMulti: number): (boolean, number)
+        local MaxValue = math.max(CurrentMulti, 1)
+
+        if ConstantSpeed > MaxValue then
+            local RoundedConstant = math.round(ConstantSpeed)
+            local Adjusted = ConstantSpeed - (RoundedConstant * (62 / 1000))
+
+            return false, Adjusted
+        end
+
+        return true, CurrentMulti
+    end
+
+    local function AddMoveMultiplier(CurrentMulti: number, MoveMultiplier: number): number
+        local Delta = MoveMultiplier - 1
+
+        if Delta <= 0 then
+            return CurrentMulti
+        end
+
+        return CurrentMulti + Delta
+    end
+
+    local function ApplyFinalBoost(CurrentMulti: number): number
+        local Rounded = math.round(CurrentMulti)
+
+        local BaseBoost = 16 / 100
+        local ScaledBoost = Rounded * 2 / 100
+
+        return CurrentMulti + BaseBoost + ScaledBoost
+    end
+
+    local function BoostSpeed(): number
+        local Multi = 0
+        local Increase = true
+
+        local Modifiers = GetSafeModifiers()
+
+        for _, Modifier in next, Modifiers do
+            local ConstantSpeed = (Modifier and Modifier.constantSpeedMultiplier) or 0
+            Increase, Multi = GetConstant(ConstantSpeed, Multi)
+        end
+
+        for _, Modifier in next, Modifiers do
+            local MoveSpeed = (Modifier and Modifier.moveSpeedMultiplier) or 0
+            Multi = AddMoveMultiplier(Multi, MoveSpeed)
+        end
+
+        if Multi > 0 and Increase then
+            Multi = ApplyFinalBoost(Multi)
+        end
+
+        return (Multi + 1) * ((3 ^ 3) - 7)
+    end
+
+    local function ArmBoost(direction: Vector3, boost: number, duration: number)
+        State.Direction = FlatUnit(direction)
+        State.Boost = boost
+        State.EndTick = tick() + duration
+    end
+
+    local function FireJumpProjectile(item, position: Vector3?, projectile: string, velocity: number, direction: Vector3)
+        if not item or not position then return end
+
+        local Origin = position - direction * 0.1
+        local Shoot = CFrame.lookAlong(Origin, Vector3.new(0, -velocity, 0))
+
+        SwitchItem(item.tool)
+        task.wait(0.2)
+
+        GameData.Utils.Remotes:Get("ProjectileFire"):CallServerAsync(
+            item.tool,
+            item.itemType,
+            projectile,
+            Shoot.Position,
+            Origin,
+            Shoot.LookVector * velocity,
+            HttpService:GenerateGUID(false),
+            {
+                drawDurationSec = 0,
+                drawDurationSeconds = 0,
+                shotId = HttpService:GenerateGUID(false)
+            },
+            workspace:GetServerTimeNow() - 0.325
+        )
+    end
+
+    local function FinishAttempt(module)
+        State.Token += 1
+        ForceImmediateRestore()
+
+        if module.Enabled then
+            module:SetValue(false)
+        end
+    end
+
+    local Drivers, Mode = {}, ""
+
+    Drivers.fireball = function(item, position: Vector3?, direction: Vector3)
+        Mode = "Fireball"
+        FireJumpProjectile(item, position, "fireball", 60, direction)
+    end
+
+    Drivers.jade_hammer = function(item, _, direction: Vector3)
+        if not item then return end
+
+        Mode = "Jade"
+
+        local Ability = item.itemType .. "_jump"
+        while LongJump.Enabled and not GameData.Utils.AbilityController:canUseAbility(Ability) do
+            task.wait()
+        end
+
+        if LongJump.Enabled and GameData.Utils.AbilityController:canUseAbility(Ability) then
+            GameData.Utils.AbilityController:useAbility(Ability)
+            ArmBoost(direction, 1.3 * (Settings.HammerSpeed + 10), 2.5)
+        end
+    end
+
+    Drivers.wood_dao = function(item, position: Vector3?, direction: Vector3)
+        if not item or not position then return end
+
+        Mode = "Yuzi"
+
+        while LongJump.Enabled and ((LocalPlayer.Character:GetAttribute("CanDashNext") or 0) > workspace:GetServerTimeNow() or not GameData.Utils.AbilityController:canUseAbility("dash")) do
+            task.wait()
+        end
+
+        if LongJump.Enabled then
+            GameData.Utils.SwordController.lastAttack = workspace:GetServerTimeNow()
+            SwitchItem(item.tool, 0.1)
+            ReplicatedStorage["events-@easy-games/game-core:shared/game-core-networking@getEvents.Events"].useAbility:FireServer("dash", {
+                direction = direction,
+                origin = position,
+                weapon = item.itemType
+            })
+            ArmBoost(direction, math.max(Settings.YuziSpeed - 3, 0), 2.5)
+        end
+    end
+
+    local DriverAliases = {
+        stone_dao = Drivers.wood_dao,
+        iron_dao = Drivers.wood_dao,
+        diamond_dao = Drivers.wood_dao,
+        emerald_dao = Drivers.wood_dao,
+        void_axe = Drivers.jade_hammer
+    }
+
+    local function GetDriver(name: string)
+        return Drivers[name] or DriverAliases[name]
+    end
+
+    local function FindDriver()
+        local Tool = HeldTool()
+        local Driver = Tool and GetDriver(Tool.Name)
+        if Driver then
+            return Driver, ItemFromTool()(Tool)
+        end
+
+        for Name, Method in Drivers do
+            local Item = GetItem(Name)
+            if Item then
+                return Method, Item
+            end
+        end
+
+        for Name, Method in DriverAliases do
+            local Item = GetItem(Name)
+            if Item then
+                return Method, Item
+            end
+        end
+
+        return nil, nil
+    end
+
+    local function StartFailsafe(module, token: number)
+        task.delay(3, function()
+            if module.Enabled and State.Token == token and State.Boost == 0 then
+                FinishAttempt(module)
+            end
+        end)
+    end
+
+    local function WaitForIdle(token: number): boolean
+        local Started = tick()
+
+        repeat
+            local Root, Humanoid = GetCharacterParts()
+            if not LongJump.Enabled or State.Token ~= token or not Root or not Humanoid then
+                return false
+            end
+
+            pcall(function()
+                GameData.Utils.Sprint:stopSprinting()
+            end)
+
+            Humanoid.WalkSpeed = 0
+            Humanoid.JumpPower = 0
+            Humanoid.JumpHeight = 0
+            Humanoid:Move(Vector3.zero, false)
+            Root.AssemblyLinearVelocity = Vector3.new(0, math.min(Root.AssemblyLinearVelocity.Y, 0), 0)
+            task.wait()
+        until (tick() - Started) >= ((3 ^ 2 + 3 ^ 2) / 100)
+
+        for _ = 1, 8 do
+            local Root, Humanoid = GetCharacterParts()
+            if not LongJump.Enabled or State.Token ~= token or not Root or not Humanoid then
+                return false
+            end
+
+            Humanoid:Move(Vector3.zero, false)
+            Root.AssemblyLinearVelocity = Vector3.new(0, Root.AssemblyLinearVelocity.Y, 0)
+
+            local FlatVelocity = Vector3.new(Root.AssemblyLinearVelocity.X, 0, Root.AssemblyLinearVelocity.Z)
+            if FlatVelocity.Magnitude <= 0.1 then
+                State.Start = Root.Position
+                return true
+            end
+
+            task.wait()
+        end
+
+        local Root = GetCharacterParts()
+        if Root then
+            State.Start = Root.Position
+        end
+
+        return true
+    end
+
+    LongJump = Windows.Movement:CreateModule({
         Name = "Long Jump",
         Flag = "LongJump",
         CallingFunction = function(self, enabled: boolean)
@@ -3806,169 +4703,136 @@ end)();
                     return
                 end
 
+                Warning("Long Jump", "Don't move!", 1)
+
                 local Fly = Windows.Movement.Modules.Fly
                 if Fly.Enabled then
                     Fly:SetValue(false)
                 end
 
-                if UseTimeUI then
-                    TimeUI = Night:Countdown(Time)
-                end
+                State.Token += 1
+                State.Start = LocalPlayer.Character.PrimaryPart.Position
+                State.Direction = nil
+                State.Boost = 0
+                State.EndTick = 0
+                SetControlsLocked(true)
 
-                local FireBall = GetItem("fireball")
-                local CanLongJump: boolean = false
-                local PrimaryPart: BasePart = LocalPlayer.Character.PrimaryPart
-                local Humanoid: Humanoid = LocalPlayer.Character.Humanoid
+                self:Connection(GameData.Events.Damage.Event:Connect(function(Values)
+                    if Values.DamagedPlayer == LocalPlayer then
+                        local KnockbackBoost = GameData.Utils.Knockback.calculateKnockbackVelocity(Vector3.one, 1, {
+                            vertical = 0,
+                            horizontal = 1
+                        }).Magnitude * 1.1
 
-                PrimaryPart.Anchored = true
-                if FireBall then
-                    local TempCon
-                    TempCon = self:Connection(GameData.Events.Damage.Event:Connect(function(Values)
-                        if Values.Type.Value == "TNT" and Values.DamagedPlayer == LocalPlayer then
-                            CanLongJump = true
-                            PrimaryPart.Anchored = false
-
-                            StartTime = os.clock()
-                            TempCon:Disconnect()                            
+                        if KnockbackBoost >= State.Boost and Night:IsAlive(LocalPlayer) then
+                            local Root = LocalPlayer.Character.PrimaryPart
+                            local Pos = Values.Damager and Values.Damager.PrimaryPart and Values.Damager.PrimaryPart.Position
+                            local Vec = Pos and (Root.Position - Pos) or Root.CFrame.LookVector
+                            ArmBoost(Vec.Magnitude > 0 and Vec or Root.CFrame.LookVector, math.max(KnockbackBoost, 2.5 * (Mode == "Fireball" and Settings.FireballSpeed or Mode == "Hammer" and Settings.HammerSpeed or Settings.YuziSpeed)), 2.5)
                         end
-                    end))
-
-                    SwitchItem(FireBall.tool)
-                    GameData.Utils.Remotes:Get("ProjectileFire"):CallServerAsync(
-                        FireBall.tool, FireBall.itemType, FireBall.itemType,
-                        PrimaryPart.Position, PrimaryPart.Position, vector.create(0, -30, 0),
-                        HttpService:GenerateGUID(false),
-                        {
-                            drawDurationSec = 0,
-                            shotId = HttpService:GenerateGUID(false)
-                        },
-                        workspace:GetServerTimeNow() - 0.325
-                    )
-                else
-                    local Dao = GetItem("_dao", true)
-                    if Dao and GameData.Utils.AbilityController:canUseAbility("dash") then
-                        ReplicatedStorage["events-@easy-games/game-core:shared/game-core-networking@getEvents.Events"].useAbility:FireServer("dash", {
-                            direction = LocalPlayer.Character.PrimaryPart.CFrame.LookVector,
-                            origin = LocalPlayer.Character.PrimaryPart.Position,
-                            weapon = Dao.itemType
-                        })
-
-                        CanLongJump = true
-                        PrimaryPart.Anchored = false
-                        StartTime = os.clock()
-                    end
-                end
-
-                repeat task.wait() until CanLongJump
-
-                local Boosted: boolean = false
-                self:Connection(RunService.PreRender:Connect(function(delta: number)
-                    if not Boosted then
-                        local RealSpeed: number = Speed
-                        if UseBoost then
-                            local Multiplier: number = GetSpeedMultiplier()
-                            if Multiplier ~= 0 then
-                                RealSpeed += (Multiplier - 10)
-                            end
-                        end
-
-                        RealSpeed = CombatCheck and 0 < #GameData.Data.KillAuraTargets and (RealSpeed / 2) or RealSpeed
-                        PrimaryPart.CFrame += (Humanoid.MoveDirection * (RealSpeed * delta))
-
-                        PrimaryPart.AssemblyLinearVelocity = Vector3.new(PrimaryPart.AssemblyLinearVelocity.X, Height, PrimaryPart.AssemblyLinearVelocity.Z)      
-                    end
-                        
-                    Boosted = not Boosted
-
-                    if TimeUI then
-                        TimeUI:Update(string.format("%.1f", (StartTime + Time) - os.clock()))
-                    end
-
-                    if (os.clock() - StartTime) >= Time then
-                        self:SetValue(false)
                     end
                 end))
-            else
-                if Night:IsAlive(LocalPlayer) then
-                    LocalPlayer.Character.PrimaryPart.Anchored = false
-                end
 
-                if TimeUI then
-                    TimeUI:Destroy()
-                    TimeUI = nil
-                end
+                self:Connection(RunService.PreSimulation:Connect(function(delta: number)
+                    local Root, Humanoid = GetCharacterParts()
+
+                    if not self.Enabled then
+                        ForceImmediateRestore()
+                        return
+                    end
+
+                    if Humanoid then
+                        Humanoid.WalkSpeed = 0
+                        Humanoid.JumpPower = 0
+                        Humanoid.JumpHeight = 0
+                        Humanoid:Move(Vector3.zero, false)
+                    end
+
+                    if Root and Humanoid and isnetworkowner(Root) then
+                        if State.Direction and State.EndTick > tick() then
+                            Root.AssemblyLinearVelocity = Vector3.new(0, Root.AssemblyLinearVelocity.Y, 0) + State.Direction * (BoostSpeed() + ((State.EndTick - tick()) > 11e-1 and State.Boost or 0))
+                            
+                            if Humanoid.FloorMaterial == Enum.Material.Air and not State.Start then
+                                Root.AssemblyLinearVelocity += Vector3.new(0, delta * (workspace.Gravity - 25), 0)
+                            else
+                                Root.AssemblyLinearVelocity = Vector3.new(Root.AssemblyLinearVelocity.X, 5, Root.AssemblyLinearVelocity.Z)
+                            end
+                            
+                            State.Start = nil
+                        else
+                            if State.Start then
+                                Root.CFrame = CFrame.lookAlong(State.Start, Root.CFrame.LookVector)
+                            end
+                            Root.AssemblyLinearVelocity = Vector3.zero
+                            if State.Direction then
+                                FinishAttempt(self)
+                            end
+                            State.Boost = 0
+                        end
+                    else
+                        State.Start = nil
+                    end
+                end))
+
+                local Token = State.Token
+                task.spawn(function()
+                    if not WaitForIdle(Token) then
+                        return
+                    end
+
+                    local Driver, Item = FindDriver()
+                    if Driver then
+                        task.spawn(Driver, Item, State.Start, CurrentLookVector())
+                        StartFailsafe(self, Token)
+                        return
+                    end
+
+                    FinishAttempt(self)
+                end)
+            else
+                FinishAttempt(self)
             end
         end
     })
 
     LongJump:Slider({
-        Name = "Speed",
-        Flag = "LongJumpSpeed",
-        Min = 40,
-        Max = 150,
-        Default = 120,
-        CallingFunction = function(self, value: number)
-            Speed = value
-        end
-    })
-
-    LongJump:Slider({
-        Name = "Time",
-        Flag = "LongJumpTime",
-        Min = 0.1,
-        Max = 2,
-        Default = 1.5,
-        Increment = 0.1,
-        CallingFunction = function(self, value: number)
-            Time = value
-        end
-    })
-
-    LongJump:Slider({
-        Name = "Height",
-        Flag = "LongJumpHeight",
+        Name = "Fireball Speed",
+        Flag = "LongJumpSpeedFireball",
         Min = 1,
-        Max = 20,
-        Default = 5,
+        Max = 28,
+        Default = 28,
         CallingFunction = function(self, value: number)
-            Height = value
+            Settings.FireballSpeed = value
+        end
+    })
+
+    LongJump:Slider({
+        Name = "Yuzi Speed",
+        Flag = "LongJumpSpeedYuzi",
+        Min = 1,
+        Max = 150,
+        Default = 150,
+        CallingFunction = function(self, value: number)
+            Settings.YuziSpeed = value
+        end
+    })
+
+    LongJump:Slider({
+        Name = "Hammer Speed",
+        Flag = "LongJumpSpeedHammer",
+        Min = 1,
+        Max = 60,
+        Default = 60,
+        CallingFunction = function(self, value: number)
+            Settings.HammerSpeed = value
         end
     })
 
     LongJump:MiniToggle({
-        Name = "Combat Check",
-        Flag = "LongJumpCombatCheck",
-        Default = true,
+        Name = "Camera Direction",
+        Flag = "LongJumpCameraDirection",
         CallingFunction = function(self, value: boolean)
-            CombatCheck = value
-        end
-    })
-
-    LongJump:MiniToggle({
-        Name = "Time Bar",
-        Flag = "LongJumpTimeBar",
-        Default = true,
-        CallingFunction = function(self, value: boolean)
-            UseTimeUI = value
-            if value then
-                if LongJump.Enabled and not TimeUI then
-                    TimeUI = Night:Countdown(Time)
-                end
-            else
-                if TimeUI then
-                    TimeUI:Destroy()
-                    TimeUI = nil
-                end
-            end
-        end
-    })
-
-    LongJump:MiniToggle({
-        Name = "Consumable Boost",
-        Flag = "LongJumpConsumableBoost",
-        Default = true,
-        CallingFunction = function(self, value: boolean)
-            UseBoost = value
+            Settings.CameraDirection = value
         end
     })
 end)();
@@ -4892,7 +5756,7 @@ end
         CallingFunction = function(self, enabled: boolean)
             if enabled then
                 Part = Instance.new("Part", workspace)
-                Part.Position = Vector3.new(0, GetYLevel() - 8, 0)
+                Part.Position = Vector3.new(0, GetYLevel() - 10, 0)
                 Part.Size = Vector3.new(100000, 1, 100000)
                 Part.Color = AntiVoidData.Color
                 Part.Anchored = true
@@ -5890,6 +6754,7 @@ end)();
 (function()
     local Hook = nil
     local NoFall = false
+    local Reset = false
 
     local function Buffer(mode)
         if mode == "max_u32" then
@@ -5930,10 +6795,10 @@ end)();
 
                 task.wait()
 
-                if GetNearestBed(true, true, true) and Night:IsAlive(LocalPlayer) then
+                if GetNearestBed(true, true, true) and Night:IsAlive(LocalPlayer) and Reset then
                     LocalPlayer.Character.Humanoid.Health = 0
                 elseif not GetNearestBed(true, true, true) then
-                    Warning("Desync", "No bed found; if Desync doesn't work, move & wait for lagback", 15)
+                    Warning("Desync | Reset", "No bed found", 10)
                 end
 
             elseif Hook then
@@ -5951,6 +6816,15 @@ end)();
         Default = true,
         CallingFunction = function(self, value: boolean)
             NoFall = value
+        end
+    })
+
+    Desync:MiniToggle({
+        Name = "Reset",
+        Flag = "DesyncReset",
+        Default = true,
+        CallingFunction = function(self, value: boolean)
+            Reset = value
         end
     })
 end)();
