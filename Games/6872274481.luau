@@ -623,21 +623,61 @@ local function GetAngle(CFrame: CFrame, TargetPos: Vector3): number
     return math.acos(math.clamp(LookVector:Dot(ScaledVector.Unit), -1, 1))
 end
 
+local CachedEntities = {}
+local CachedEntitiesList = {}
+
+local function CheckEntity(v: Instance)
+    if not v:IsA("Model") then return end
+    local Humanoid = v:FindFirstChild("Humanoid") or v:WaitForChild("Humanoid", 2)
+    if not Humanoid then return end
+    local Root = v.PrimaryPart or v:WaitForChild("HumanoidRootPart", 2)
+    if not Root then return end
+    
+    local Player = Players:GetPlayerFromCharacter(v)
+    local Type = CollectionService:GetTags(v)[3] or ""
+    
+    local Data = {
+        Entity = v,
+        Player = Player,
+        Humanoid = Humanoid,
+        Root = Root,
+        Type = Type,
+        Health = 100,
+        MaxHealth = 100
+    }
+    CachedEntities[v] = Data
+    table.insert(CachedEntitiesList, Data)
+end
+
+local function RemoveEntity(v: Instance)
+    CachedEntities[v] = nil
+    for i, data in ipairs(CachedEntitiesList) do
+        if data.Entity == v then
+            table.remove(CachedEntitiesList, i)
+            break
+        end
+    end
+end
+
+for _, v in ipairs(CollectionService:GetTagged("entity")) do
+    task.spawn(CheckEntity, v)
+end
+
+Assets.Connections:Add(CollectionService:GetInstanceAddedSignal("entity"):Connect(CheckEntity))
+Assets.Connections:Add(CollectionService:GetInstanceRemovedSignal("entity"):Connect(RemoveEntity))
+
 local function GetEntities(): {{Entity: Model, Player: Player?, Health: number, MaxHealth: number, Humanoid: Humanoid, Root: BasePart, Type: string}}
     local Entities = {}
-    for i,v in CollectionService:GetTagged("entity") do
-        local Humanoid: Humanoid = v:FindFirstChild("Humanoid")
-        table.insert(Entities, {
-            Entity = v,
-            Player = Players:GetPlayerFromCharacter(v),
-            Health = v:GetAttribute("Health") or Humanoid and Humanoid.Health,
-            MaxHealth = v:GetAttribute("MaxHealth") or Humanoid and Humanoid.MaxHealth,
-            Humanoid = Humanoid,
-            Root = v.PrimaryPart,
-            Type = CollectionService:GetTags(v)[3]
-        })
+    for _, Data in ipairs(CachedEntitiesList) do
+        local Entity = Data.Entity
+        local Humanoid = Data.Humanoid
+        if Entity and Entity.Parent and Humanoid and Humanoid.Parent then
+            Data.Health = Entity:GetAttribute("Health") or Humanoid.Health
+            Data.MaxHealth = Entity:GetAttribute("MaxHealth") or Humanoid.MaxHealth
+            Data.Root = Entity.PrimaryPart or Data.Root
+            table.insert(Entities, Data)
+        end
     end
-
     return Entities
 end
 
@@ -6432,7 +6472,7 @@ end)();
                     end))
                 end
 
-                LocalPlayer.CharacterAdded:Connect(VoidDrop)
+                self:Connection(LocalPlayer.CharacterAdded:Connect(VoidDrop))
                 VoidDrop()
             end
         end
@@ -6576,11 +6616,11 @@ end)();
     Windows.Utility:CreateModule({
         Name = "Anti Detection",
         Flag = "AntiDetection",
-        CallingFunction = function(self, enabled: boolean)
+        CallingFunction = function(module, enabled: boolean)
             if enabled then
                 if not Hook then
                     Hook = hookmetamethod(game, "__namecall", function(self, ...)
-                        if (self.Name == "reportPerformanceMetrics" or self.Name == "AnalyticsReportEvent") and self.Enabled then
+                        if (self.Name == "reportPerformanceMetrics" or self.Name == "AnalyticsReportEvent") and module.Enabled then
                             return
                         end
                         return Hook(self, ...)
@@ -6756,6 +6796,13 @@ end)();
     local NoFall = false
     local Reset = false
 
+    local function Resync()
+        if Night:IsAlive(LocalPlayer) then
+            LocalPlayer.Character.HumanoidRootPart.CFrame += Vector3.new(math.nan, math.nan, math.nan)
+            Warning("Desync", "Resynced", 5)
+        end
+    end
+
     local function Buffer(mode)
         if mode == "max_u32" then
             local Floor = math.floor((2 ^ 16) * (2 ^ 16))
@@ -6808,6 +6855,20 @@ end)();
                 Hook = nil
             end
         end
+    })
+
+    Desync:KeyBind({
+        Name = "Resync",
+        Flag = "DesyncResync",
+        Default = Enum.KeyCode.L,
+        Events = {
+            Began = function()
+                Resync()
+            end,
+            Ended = function()
+                Resync()
+            end
+        }
     })
 
     Desync:MiniToggle({
@@ -7407,22 +7468,25 @@ end)();
 
             AutoDodgeData.Data.OverlapParams.FilterDescendantsInstances = {LocalPlayer.Character or {}}
 
-            self:Connection(RunService.PreRender:Connect(function()
-                if not Night:IsAlive(LocalPlayer) then return end
+            self:Connection(task.spawn(function()
+                while task.wait(0.05) do
+                    if not self.Enabled then break end
+                    if not Night:IsAlive(LocalPlayer) then continue end
 
-                if GameData.Utils.Store:getState().Game.matchState ~= GameData.Utils.MatchStates.RUNNING then
-                    return
-                end
+                    if GameData.Utils.Store:getState().Game.matchState ~= GameData.Utils.MatchStates.RUNNING then
+                        continue
+                    end
 
-                local Root = LocalPlayer.Character.HumanoidRootPart
-                if not Root then return end
-                if (os.clock() - AutoDodgeData.Data.LastDodgeTime) < AutoDodgeData.Settings.Delay then return end
+                    local Root = LocalPlayer.Character.HumanoidRootPart
+                    if not Root then continue end
+                    if (os.clock() - AutoDodgeData.Data.LastDodgeTime) < AutoDodgeData.Settings.Delay then continue end
 
-                local nearby = workspace:GetPartBoundsInRadius(Root.Position, AutoDodgeData.Settings.Range, AutoDodgeData.Data.OverlapParams)
-                for _, part in nearby do
-                    if IsEnemyArrow(part) then
-                        Dodge(Root)
-                        break
+                    local nearby = workspace:GetPartBoundsInRadius(Root.Position, AutoDodgeData.Settings.Range, AutoDodgeData.Data.OverlapParams)
+                    for _, part in nearby do
+                        if IsEnemyArrow(part) then
+                            Dodge(Root)
+                            break
+                        end
                     end
                 end
             end))
@@ -8665,17 +8729,25 @@ end)();
 end)();
 
 (function()
+    local KeepSprintEnabled = false
+    local NamecallHooked = false
+
     Windows.Movement:CreateModule({
         Name = "Keep Sprint",
         Flag = "KeepSprint",
         CallingFunction = function(self, enabled: boolean)
-            local Old; Old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-                local method = getnamecallmethod()
-                if enabled and method == "blockSprint" then
-                    setnamecallmethod("blockSprinting")
-                end
-                return Old(self, ...)
-            end))
+            KeepSprintEnabled = enabled
+
+            if not NamecallHooked then
+                NamecallHooked = true
+                local Old; Old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+                    local method = getnamecallmethod()
+                    if KeepSprintEnabled and method == "blockSprint" then
+                        setnamecallmethod("blockSprinting")
+                    end
+                    return Old(self, ...)
+                end))
+            end
             GameData.Utils.Sprint.stopSprinting()
         end
     })
