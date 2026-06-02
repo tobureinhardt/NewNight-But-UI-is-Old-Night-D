@@ -3783,6 +3783,14 @@ end)();
 
 (function()
     local Hook = nil
+    local Reset = false
+
+    local function Resync()
+        if Night:IsAlive(LocalPlayer) then
+            LocalPlayer.Character.HumanoidRootPart.CFrame += Vector3.new(math.nan, math.nan, math.nan)
+            Warning("Desync", "Resynced", 5)
+        end
+    end
 
     local function Buffer(mode)
         if mode == "max_u32" then
@@ -3796,7 +3804,7 @@ end)();
         return 0
     end
 
-    Tabs.Movement:CreateModule({
+    local Desync = Tabs.Movement:CreateModule({
         Name = "Desync",
         Flag = "UniversalDesync",
         CallingFunction = function(self, enabled: boolean)
@@ -3816,12 +3824,38 @@ end)();
                 end
 
                 raknet.add_send_hook(Hook)
+
+                if Night:IsAlive(LocalPlayer) and Reset then
+                    LocalPlayer.Character.Humanoid.Health = 0
+                end
             elseif Hook then
                 pcall(function()
                     raknet.remove_send_hook(Hook)
                 end)
                 Hook = nil
             end
+        end
+    })
+
+    Desync:KeyBind({
+        Name = "Resync",
+        Flag = "DesyncResync",
+        Default = Enum.KeyCode.L,
+        Events = {
+            Began = function()
+                Resync()
+            end,
+            Ended = function()
+                Resync()
+            end
+        }
+    })
+
+    Desync:MiniToggle({
+        Name = "Reset",
+        Flag = "DesyncReset",
+        CallingFunction = function(self, value: boolean)
+            Reset = value
         end
     })
 end)();
