@@ -502,7 +502,14 @@ do
                 end
 
                 v2:ToggleSettings(false)
-                v2:SetValue(false, false, false)
+
+                -- Only disable the module if it needs to actually turn off,
+                -- to avoid the enable→disable→enable cycle that causes
+                -- CallingFunction to fire redundantly and override itself.
+                if not ModuleValue and v2.Enabled then
+                    v2:SetValue(false, false, false)
+                end
+
                 for i3, v3 in v2.Settings do
                     local Section = NewData[i3]
                     if Section then
@@ -536,7 +543,10 @@ do
                     end
                 end
 
-                v2:SetValue(ModuleValue, false, false, true)
+                -- Only set the module value if the state actually needs to change
+                if ModuleValue ~= v2.Enabled then
+                    v2:SetValue(ModuleValue, false, false, true)
+                end
             end
         end
 
@@ -661,16 +671,24 @@ do
             end
 
             if ConfigPath then
+                if makefolder and not isfolder("NewNight/Configs/"..ConfigPath) then
+                    makefolder("NewNight/Configs/"..ConfigPath)
+                end
+
                 if isfile("NewNight/Configs/"..ConfigPath.."/LastUsed.txt") then
                     ConfigPath = ConfigPath.."/"..readfile("NewNight/Configs/"..ConfigPath.."/LastUsed.txt")
                 else
-                    ConfigPath = ConfigPath.."/Default"
                     writefile("NewNight/Configs/"..ConfigPath.."/LastUsed.txt", "Default")
+                    ConfigPath = ConfigPath.."/Default"
                 end
             end
 
             if ConfigPath then
                 Assets.Config:Load(ConfigPath)
+                local BaseConfigFolder = ConfigPath:split("/")[1]
+                if BaseConfigFolder then
+                    Assets.Functions:CreateConfigOptions(BaseConfigFolder)
+                end
             end
         end
 
@@ -1016,28 +1034,47 @@ function Assets.Functions:CreateNotification(Data: {Title: string, Description: 
     end
 
     local Font = Font.new(Assets.Functions:GetFont("BuilderSans"), Enum.FontWeight.SemiBold)
-    local Bounds = Assets.Functions:GetTextBounds(Data.Description, Font, 15).X
-    local BoundsTitle = Assets.Functions:GetTextBounds(Data.Title, Font, 18).X
-    local TitleBigger: boolean = false
-    if BoundsTitle > Bounds then
-        Bounds = BoundsTitle
-        TitleBigger = true
+    local TitleTextSize = 18
+    local DescTextSize = 15
+
+    -- Measure single-line widths to determine notification width
+    local SingleLineTitleWidth = Assets.Functions:GetTextBounds(Data.Title, Font, TitleTextSize).X
+    local SingleLineDescWidth = Assets.Functions:GetTextBounds(Data.Description, Font, DescTextSize).X
+    local MaxTextWidth = math.max(SingleLineTitleWidth, SingleLineDescWidth)
+
+    -- Cap width between 160 and 450, with padding for the frame
+    local ContentWidth = math.clamp(MaxTextWidth, 160, 450)
+    local NotificationWidth = ContentWidth + 45
+    local Padding = 10
+
+    -- Measure wrapped text heights using the capped content width
+    local WrappedTitleBounds = Assets.Functions:GetTextBounds(Data.Title, Font, TitleTextSize)
+    local WrappedDescBounds = Assets.Functions:GetTextBounds(Data.Description, Font, DescTextSize)
+
+    -- If the text is wider than our content area, re-measure with width constraint
+    local TitleHeight = WrappedTitleBounds.Y
+    local DescHeight = WrappedDescBounds.Y
+    if SingleLineTitleWidth > ContentWidth then
+        local TitleLines = math.ceil(SingleLineTitleWidth / ContentWidth)
+        TitleHeight = TitleLines * (TitleTextSize + 2)
+    end
+    if SingleLineDescWidth > ContentWidth then
+        local DescLines = math.ceil(SingleLineDescWidth / ContentWidth)
+        DescHeight = DescLines * (DescTextSize + 2)
     end
 
-    local ShrinkText: boolean = false
-    if Bounds > 900 then
-        ShrinkText = true
-        Bounds = 900
-    elseif 160 > Bounds then
-        Bounds = 160
-    end
+    -- Dynamic notification height: padding + title + gap + description + padding
+    local TitleYPos = Padding
+    local DescYPos = Padding + TitleHeight + 4
+    local NotificationHeight = math.max(56, Padding + TitleHeight + 4 + DescHeight + Padding)
 
     local Notification: Frame = Instance.new("Frame", NotificationHolder)
     Notification.BackgroundColor3 = Color3.fromRGB(14, 16, 23)
     Notification.AnchorPoint = Vector2.new(0.5, 0)
     Notification.Position = UDim2.fromScale(0.5, 0.925)
-    Notification.Size = UDim2.fromOffset(Bounds + 45, 56)
+    Notification.Size = UDim2.fromOffset(NotificationWidth, NotificationHeight)
     Notification.ZIndex = 1000
+    Notification.ClipsDescendants = true
     Instance.new("UICorner", Notification).CornerRadius = UDim.new(0, 12)
     RealNotificationData.Notification = Notification
     CreateShadow(Notification)
@@ -1050,37 +1087,30 @@ function Assets.Functions:CreateNotification(Data: {Title: string, Description: 
     Title.BackgroundTransparency = 1
     Title.BorderSizePixel = 0
     Title.AnchorPoint = Vector2.new(0.5, 0)
-    Title.Position = UDim2.fromScale(0.5, 0.129)
-    Title.Size = UDim2.fromOffset(Bounds, 19)
+    Title.Position = UDim2.new(0.5, 0, 0, TitleYPos)
+    Title.Size = UDim2.fromOffset(ContentWidth, TitleHeight)
     Title.ZIndex = 1000
     Title.FontFace = Font
     Title.Text = Data.Title
     Title.TextColor3 = Color3.fromRGB(220, 220, 220)
-    Title.TextSize = 18
+    Title.TextSize = TitleTextSize
     Title.TextWrapped = true
     Title.TextStrokeTransparency = 1
 
     local Description: TextLabel = Instance.new("TextLabel", Notification)
     Description.BackgroundTransparency = 1
     Description.AnchorPoint = Vector2.new(0.5, 0)
-    Description.Position = UDim2.fromScale(0.5, 0.554)
-    Description.Size = UDim2.fromOffset(Bounds, 14)
+    Description.Position = UDim2.new(0.5, 0, 0, DescYPos)
+    Description.Size = UDim2.fromOffset(ContentWidth, DescHeight)
     Description.BorderSizePixel = 0
     Description.ZIndex = 1000
     Description.FontFace = Font
     Description.Text = Data.Description
     Description.TextColor3 = Color3.fromRGB(68, 78, 100)
-    Description.TextSize = 15
+    Description.TextSize = DescTextSize
     Description.TextWrapped = true
     Description.TextStrokeTransparency = 1
     UIData.Notifications[RealNotificationData.Data.Flag] = RealNotificationData
-
-    if ShrinkText then
-        if TitleBigger then
-            Title.TextSize = 10
-        end
-        Description.TextSize = 12
-    end
 
     function RealNotificationData.Functions:Destroy(Animation: boolean)
         table.clear(RealNotificationData)
@@ -3948,6 +3978,10 @@ end
 function Assets.Functions:CreateConfigOptions(Game: string)
     for i,v in UIData.ConfigButtons do
         v:Destroy()
+    end
+
+    if makefolder and not isfolder("NewNight/Configs/"..tostring(Game)) then
+        makefolder("NewNight/Configs/"..tostring(Game))
     end
 
     if isfile and listfiles and readfile then 
