@@ -1575,6 +1575,7 @@ end)();
     })
 end)();
 
+local CanFastHit = false
 (function()
     local KillAuraData = {
         Settings = {
@@ -2178,7 +2179,7 @@ end)();
                                     local Distance: number = (TargetPos - SelfPos).Magnitude
                                     local Hitreg: number = GetHitreg(Distance)
                                     local HitPosition: Vector3 = SelfPos + Direction * math.max(Distance - Hitreg, 0)
-                                    local SyncDelay: number = KillAuraData.Settings.SyncHitTime and math.max(35 - Hitreg, 0) / 35 or 0
+                                    local SyncDelay: number = KillAuraData.Settings.SyncHitTime and math.max(36 - Hitreg, 0) / 36 or 0
 
                                     if tick() < KillAuraData.Data.LastPacket then
                                         continue
@@ -2207,7 +2208,7 @@ end)();
                                         weapon = Sword.Item
                                     })
 
-                                    TryFastHit(Target, SelfPos, HitPosition)
+                                    --TryFastHit(Target, SelfPos, HitPosition)
 
                                     if not HasPlayedSwing then
                                         HasPlayedSwing = true
@@ -2300,8 +2301,8 @@ end)();
         Name = "Hitreg",
         Flag = "KillAuraHitreg",
         Min = 1,
-        Max = 35,
-        Default = 35,
+        Max = 36,
+        Default = 36,
         Increment = 0.1,
         CallingFunction = function(self, value: number)
             KillAuraData.Settings.Hitreg = value
@@ -2541,6 +2542,7 @@ end)();
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.FastHits = value
             FastHitsFireRate:SetVisiblity(value)
+            CanFastHit = value
         end
     })
 
@@ -3601,8 +3603,8 @@ end)();
         CallingFunction = function(self, enabled: boolean)
             if enabled then 
                 repeat
+                    task.wait()
                     if Skywars and not GameData.Utils.Store:getState().Game.queueType:find("skywars") then
-                        task.wait(1)
                         continue
                     end
 
@@ -3635,7 +3637,6 @@ end)();
                             GameData.Utils.Remotes:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer()
                         end)
                     end
-
                     task.wait(0.1)
                 until not self.Enabled
             end
@@ -3670,6 +3671,23 @@ end)();
         Default = true,
         CallingFunction = function(self, value: boolean)
             Skywars = value
+        end
+    })
+end)();
+
+(function()
+    Windows.Utility:CreateModule({
+        Name = "HealthExploit",
+        Flag = "HealthExploit",
+        CallingFunction = function(self, enabled: boolean)
+            if enabled then
+                repeat
+                    ReplicatedStorage.rbxts_include.node_modules["@rbxts"].net.out._NetManaged.PlayerEatCake:FireServer({
+                        block = ReplicatedStorage.Items.cake_one
+                    })
+                    task.wait()
+                until not self.Enabled
+            end
         end
     })
 end)();
@@ -4150,8 +4168,10 @@ end)();
                 repeat
                     task.wait()
                     if Night:IsAlive(LocalPlayer) and not Windows.Movement.Modules.LongJump.Enabled then
-                        if (workspace:GetServerTimeNow() - (GameData.Utils.SwordController.lastAttack or 0)) < 0.5 then
-                            continue
+                        if not CanFastHit then
+                            if (workspace:GetServerTimeNow() - (GameData.Utils.SwordController.lastAttack or 0)) < 0.5 then
+                                continue
+                            end
                         end
 
                         local Target = GetEntity({
