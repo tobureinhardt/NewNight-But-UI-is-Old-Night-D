@@ -3677,7 +3677,7 @@ end)();
 
 (function()
     Windows.Utility:CreateModule({
-        Name = "HealthExploit",
+        Name = "Health Exploit",
         Flag = "HealthExploit",
         CallingFunction = function(self, enabled: boolean)
             if enabled then
