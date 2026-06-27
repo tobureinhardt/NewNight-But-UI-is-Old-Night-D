@@ -718,6 +718,9 @@ function Assets.Functions:CreateTab(Data)
         Modules = {}
     }
     
+    Night.UIData = Night.UIData or {}
+    Night.UIData[Data.Flag or Data.Name] = Tab
+    
     function Tab:CreateModule(MData)
         local SModule = STab.Functions.NewModule({
             Name = MData.Name,
@@ -815,6 +818,28 @@ function Assets.Functions:CreateTab(Data)
                         if SData.Events and SData.Events.Ended then SData.Events.Ended() end
                     end
                 }
+            })
+            local Wrapper = {}
+            function Wrapper:SetVisiblity(v) end
+            function Wrapper:SetValue(v) end
+            return Wrapper
+        end
+        
+        function Module:KeyBind(SData)
+            return Module.Functions:KeyBind(SData)
+        end
+        
+        function Module:TextBox(SData)
+            local Setting = SModule.Functions.Settings.TextBox({
+                Name = SData.Name,
+                Flag = SData.Flag,
+                Default = SData.Default or "",
+                Placeholder = SData.Placeholder or SData.Name,
+                Callback = function(self, val)
+                    if SData.CallingFunction then
+                        SData.CallingFunction(self, val)
+                    end
+                end
             })
             local Wrapper = {}
             function Wrapper:SetVisiblity(v) end
