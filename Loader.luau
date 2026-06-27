@@ -17,7 +17,7 @@ local Players: Players = cloneref(game:GetService("Players"))
 local LocalPlayer: Player = Players.LocalPlayer
 local Camera: Camera = workspace.CurrentCamera
 
-local BaseGit: string = "https://github.com/null-wtf/NewNight"
+local BaseGit: string = "https://github.com/tobureinhardt/NewNight-But-UI-is-Old-Night-D"
 local NightInit: {[any]: any} = getgenv().NightInit or {}
 local Night = {
     Version = "3.17",
@@ -123,10 +123,10 @@ end
 
 DownloadDirectory("https://api.github.com/repos/null-wtf/NewNight/contents/Assets", "NewNight/Assets")
 writefile("NewNight/Assets/UpdatedIcons.txt", "")
-if Night.Dev and isfile("NewNight/Library/Main.luau") then
-    loadstring(readfile("NewNight/Library/Main.luau"))()
+if Night.Dev and isfile("NewNight-But-UI-is-Old-Night-D/Library/Main.luau") then
+    loadstring(readfile("NewNight-But-UI-is-Old-Night-D/Library/Main.luau"))()
 else
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Library/Main.luau"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/tobureinhardt/NewNight-But-UI-is-Old-Night-D/refs/heads/main/Library/Main.luau"))()
 end
 
 if not Night.Assets or Night.Assets and (not Night.Assets.Connections or not Night.Assets.Functions) then
@@ -164,10 +164,10 @@ if queue_on_teleport then
             end
 
             queue_on_teleport(Data .. [[}
-                if NightInit.Dev and isfile("NewNight/Loader.luau") then
-                    loadstring(readfile("NewNight/Loader.luau"))()
+                if NightInit.Dev and isfile("NewNight-But-UI-is-Old-Night-D/Loader.luau") then
+                    loadstring(readfile("NewNight-But-UI-is-Old-Night-D/Loader.luau"))()
                 else
-                    loadstring(game:HttpGet("https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Loader.luau"))()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/tobureinhardt/NewNight-But-UI-is-Old-Night-D/refs/heads/main/Loader.luau"))()
                 end
             ]])
         end
