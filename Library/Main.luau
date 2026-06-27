@@ -725,6 +725,7 @@ function Assets.Functions:CreateTab(Data)
         local SModule = STab.Functions.NewModule({
             Name = MData.Name,
             Description = MData.Name,
+            Flag = MData.Flag,
             Callback = function(self, state)
                 if MData.CallingFunction then
                     MData.CallingFunction(self, state)
