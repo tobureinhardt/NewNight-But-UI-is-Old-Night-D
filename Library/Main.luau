@@ -312,7 +312,7 @@ do
     end
 
     function Assets.Functions:LoadAsset(Name: string): string
-        local path = "NewNight-main/Assets/Icons/"..Name..".png"
+        local path = "NewNight/Assets/Icons/"..Name..".png"
         local icon = ""
         if isfile and isfile(path) and getcustomasset then
             icon = getcustomasset(path)
@@ -336,7 +336,7 @@ do
 
         local FontFamily = {name = Name, faces = {}}
         for i,v in Faces do
-            local FontPath = "NewNight-main/Assets/Fonts/"..v.File..".otf"
+            local FontPath = "NewNight/Assets/Fonts/"..v.File..".otf"
             if isfile and isfile(FontPath) then
                 local Face = {
                     name = v.Name,
@@ -353,8 +353,8 @@ do
             end
         end
 
-        writefile("NewNight-main/Assets/Fonts/"..Name..".json", HttpService:JSONEncode(FontFamily))
-        local id = getcustomasset("NewNight-main/Assets/Fonts/"..Name..".json")
+        writefile("NewNight/Assets/Fonts/"..Name..".json", HttpService:JSONEncode(FontFamily))
+        local id = getcustomasset("NewNight/Assets/Fonts/"..Name..".json")
         UIData.Fonts[Name] = {
             Checked = true,
             Font = id
@@ -441,20 +441,20 @@ do
         if not Night.Load.Loaded then return end
         
         local Suc, NewData = pcall(HttpService.JSONEncode, HttpService, Data)
-        if not isfolder("NewNight-main/Configs") then
-            makefolder("NewNight-main/Configs")
+        if not isfolder("NewNight/Configs") then
+            makefolder("NewNight/Configs")
         end
 
         if Suc and NewData and writefile and makefolder then
             if Directories then
                 for i,v in Directories do
-                    if not isfolder("NewNight-main/Configs/"..v) then
-                        makefolder("NewNight-main/Configs/"..v)
+                    if not isfolder("NewNight/Configs/"..v) then
+                        makefolder("NewNight/Configs/"..v)
                     end
                 end
             end
 
-            writefile("NewNight-main/Configs/"..Path..".json", NewData)
+            writefile("NewNight/Configs/"..Path..".json", NewData)
             return true
         end
 
@@ -463,8 +463,8 @@ do
 
     function Assets.Config:Load(Config: string): boolean
         local _, NewData = true, DeepClone(DefaultConfig)
-        if isfile and isfile("NewNight-main/Configs/"..Config..".json") and readfile then
-            _, NewData = pcall(HttpService.JSONDecode, HttpService, readfile("NewNight-main/Configs/"..Config..".json"))
+        if isfile and isfile("NewNight/Configs/"..Config..".json") and readfile then
+            _, NewData = pcall(HttpService.JSONDecode, HttpService, readfile("NewNight/Configs/"..Config..".json"))
         end
 
 
@@ -615,8 +615,8 @@ do
     end
 
     function Assets.Functions:LoadFile(Game: string, LoadConfig: boolean?, Premium: boolean?)
-        local Path: string = "NewNight-main/Games/"..tostring(Game)..".luau"
-        local PremiumPath: string = "NewNight-main/Premium/Games/"..tostring(Game)..".luau"
+        local Path: string = "NewNight/Games/"..tostring(Game)..".luau"
+        local PremiumPath: string = "NewNight/Premium/Games/"..tostring(Game)..".luau"
 
         if LoadConfig == nil then
             LoadConfig = true
@@ -626,7 +626,7 @@ do
             if Night.Dev and isfile and isfile(Path) and readfile then
                 loadstring(readfile(Path))()
             else
-                local Success: boolean, Req: string? = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/null-wtf/NewNight-main/refs/heads/main/Games/"..Game..".luau")
+                local Success: boolean, Req: string? = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Games/"..Game..".luau")
                 if Success and typeof(Req) == "string" and Req ~= "404: Not Found" then
                     loadstring(Req)()
                 end
@@ -645,7 +645,7 @@ do
                 if Night.Dev and isfile and isfile(PremiumPath) and readfile then
                     loadstring(readfile(PremiumPath))()
                 else
-                    local Success: boolean, Req: string? = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/null-wtf/NewNight-main/refs/heads/main/Premium/Games/"..Game..".luau")
+                    local Success: boolean, Req: string? = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Premium/Games/"..Game..".luau")
                     if Success and typeof(Req) == "string" and Req ~= "404: Not Found" then
                         loadstring(Req)()
                     end
@@ -666,19 +666,19 @@ do
 
         if LoadConfig then
             local ConfigPath: string = tostring(not table.find(Night.IgnoreConfigs, tostring(Night.Game)) and Night.Game or Game)
-            if not isfolder("NewNight-main/Configs/"..ConfigPath) and not table.find(Night.IgnoreConfigs, tostring(Game)) then
+            if not isfolder("NewNight/Configs/"..ConfigPath) and not table.find(Night.IgnoreConfigs, tostring(Game)) then
                 ConfigPath = tostring(Game)
             end
 
             if ConfigPath then
-                if makefolder and not isfolder("NewNight-main/Configs/"..ConfigPath) then
-                    makefolder("NewNight-main/Configs/"..ConfigPath)
+                if makefolder and not isfolder("NewNight/Configs/"..ConfigPath) then
+                    makefolder("NewNight/Configs/"..ConfigPath)
                 end
 
-                if isfile("NewNight-main/Configs/"..ConfigPath.."/LastUsed.txt") then
-                    ConfigPath = ConfigPath.."/"..readfile("NewNight-main/Configs/"..ConfigPath.."/LastUsed.txt")
+                if isfile("NewNight/Configs/"..ConfigPath.."/LastUsed.txt") then
+                    ConfigPath = ConfigPath.."/"..readfile("NewNight/Configs/"..ConfigPath.."/LastUsed.txt")
                 else
-                    writefile("NewNight-main/Configs/"..ConfigPath.."/LastUsed.txt", "Default")
+                    writefile("NewNight/Configs/"..ConfigPath.."/LastUsed.txt", "Default")
                     ConfigPath = ConfigPath.."/Default"
                 end
             end
