@@ -722,21 +722,49 @@ function Assets.Functions:CreateTab(Data)
     Night.UIData[Data.Flag or Data.Name] = Tab
     
     function Tab:CreateModule(MData)
+        local Module = {
+            Enabled = false,
+            Functions = {},
+            Connections = {}
+        }
+        
         local SModule = STab.Functions.NewModule({
             Name = MData.Name,
             Description = MData.Name,
             Flag = MData.Flag,
             Callback = function(self, state)
+                Module.Enabled = state
+                if not state then
+                    for i, con in pairs(Module.Connections) do
+                        if typeof(con) == "thread" then
+                            coroutine.close(con)
+                        elseif typeof(con) == "table" and con.Disconnect then
+                            con:Disconnect()
+                        elseif typeof(con) == "RBXScriptConnection" then
+                            con:Disconnect()
+                        end
+                    end
+                    table.clear(Module.Connections)
+                end
+                
                 if MData.CallingFunction then
-                    MData.CallingFunction(self, state)
+                    MData.CallingFunction(Module, state)
                 end
             end
         })
         
-        local Module = {
-            Enabled = false,
-            Functions = {}
-        }
+        
+        function Module:Connection(con)
+            table.insert(Module.Connections, con)
+            return con
+        end
+        
+        function Module:Destroy()
+            if SModule and SModule.Functions and SModule.Functions.Destroy then
+                SModule.Functions.Destroy()
+            end
+        end
+
         
         function Module:Slider(SData)
             local Setting = SModule.Functions.Settings.Slider({
@@ -752,8 +780,16 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v) end
-            function Wrapper:SetValue(v) end
+                        function Wrapper:SetVisiblity(v)
+                if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
+                    Setting.Functions.SetVisiblity(v)
+                end
+            end
+            function Wrapper:SetValue(v)
+                if Setting and Setting.Functions and Setting.Functions.SetValue then
+                    Setting.Functions.SetValue(v)
+                end
+            end
             return Wrapper
         end
         
@@ -770,8 +806,16 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v) end
-            function Wrapper:SetValue(v) end
+                        function Wrapper:SetVisiblity(v)
+                if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
+                    Setting.Functions.SetVisiblity(v)
+                end
+            end
+            function Wrapper:SetValue(v)
+                if Setting and Setting.Functions and Setting.Functions.SetValue then
+                    Setting.Functions.SetValue(v)
+                end
+            end
             return Wrapper
         end
         
@@ -787,8 +831,16 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v) end
-            function Wrapper:SetValue(v) end
+                        function Wrapper:SetVisiblity(v)
+                if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
+                    Setting.Functions.SetVisiblity(v)
+                end
+            end
+            function Wrapper:SetValue(v)
+                if Setting and Setting.Functions and Setting.Functions.SetValue then
+                    Setting.Functions.SetValue(v)
+                end
+            end
             return Wrapper
         end
         
@@ -801,8 +853,16 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v) end
-            function Wrapper:SetValue(v) end
+                        function Wrapper:SetVisiblity(v)
+                if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
+                    Setting.Functions.SetVisiblity(v)
+                end
+            end
+            function Wrapper:SetValue(v)
+                if Setting and Setting.Functions and Setting.Functions.SetValue then
+                    Setting.Functions.SetValue(v)
+                end
+            end
             return Wrapper
         end
         
@@ -821,8 +881,16 @@ function Assets.Functions:CreateTab(Data)
                 }
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v) end
-            function Wrapper:SetValue(v) end
+                        function Wrapper:SetVisiblity(v)
+                if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
+                    Setting.Functions.SetVisiblity(v)
+                end
+            end
+            function Wrapper:SetValue(v)
+                if Setting and Setting.Functions and Setting.Functions.SetValue then
+                    Setting.Functions.SetValue(v)
+                end
+            end
             return Wrapper
         end
         
@@ -843,8 +911,16 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v) end
-            function Wrapper:SetValue(v) end
+                        function Wrapper:SetVisiblity(v)
+                if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
+                    Setting.Functions.SetVisiblity(v)
+                end
+            end
+            function Wrapper:SetValue(v)
+                if Setting and Setting.Functions and Setting.Functions.SetValue then
+                    Setting.Functions.SetValue(v)
+                end
+            end
             return Wrapper
         end
         
