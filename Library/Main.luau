@@ -94,8 +94,11 @@ local UIData = {
     }
 }
 
-Night.UIData = UIData
-Night.Assets = Assets
+    Night.Scale = 0.5
+    Night.OnUninject = Instance.new("BindableEvent")
+
+    Night.UIData = UIData
+    Night.Assets = Assets
 
 local UIScale: UIScale = Instance.new("UIScale")
 UIScale.Scale = Night.Scale
@@ -425,7 +428,28 @@ do
         return ConnectionData
     end
 
-    function Assets.Connections:DisconnectAll()
+    function Assets.Functions:Uninject()
+        Night.OnUninject:Fire()
+    end
+
+    function Assets.Functions:GetTargetHud()
+        return {
+            Update = function(self, data) end,
+            Destroy = function(self) end
+        }
+    end
+
+    function Assets.Functions:DestroyTargetHud()
+    end
+
+    function Assets.Functions:Countdown(time)
+        return {
+            Update = function(self, text) end,
+            Destroy = function(self) end
+        }
+    end
+
+    function Assets.Functions:DisconnectAll()
         for i,v : {Connection: RBXScriptConnection | thread, Disconnect: (self: any) -> ()} in Night.Connections do
             if v and v.Disconnect then
                 v:Disconnect()
@@ -715,7 +739,26 @@ function Assets.Functions:CreateTab(Data)
     })
     
     local Tab = {
-        Modules = {}
+        Modules = setmetatable({}, {
+            __index = function(t, k)
+                return {
+                    Enabled = false,
+                    Destroy = function() end,
+                    Enable = function() end,
+                    Disable = function() end,
+                    SetVisiblity = function() end,
+                    SetValue = function() end,
+                    Slider = function() return { SetVisiblity = function() end, SetValue = function() end } end,
+                    MiniToggle = function() return { SetVisiblity = function() end, SetValue = function() end } end,
+                    Toggle = function() return { SetVisiblity = function() end, SetValue = function() end } end,
+                    Dropdown = function() return { SetVisiblity = function() end, SetValue = function() end } end,
+                    ColorSlider = function() return { SetVisiblity = function() end, SetValue = function() end } end,
+                    TextBox = function() return { SetVisiblity = function() end, SetValue = function() end } end,
+                    KeyBind = function() return { SetVisiblity = function() end, SetValue = function() end } end,
+                    Connection = function() return {} end
+                }
+            end
+        })
     }
     
     Night.UIData = Night.UIData or {}
@@ -823,7 +866,7 @@ function Assets.Functions:CreateTab(Data)
             local Setting = SModule.Functions.Settings.MiniToggle({
                 Name = SData.Name,
                 Flag = SData.Flag,
-                Default = SData.Default,
+                Default = SData.Default or false,
                 Callback = function(self, val)
                     if SData.CallingFunction then
                         SData.CallingFunction(self, val)
@@ -842,6 +885,10 @@ function Assets.Functions:CreateTab(Data)
                 end
             end
             return Wrapper
+        end
+
+        function Module:Toggle(SData)
+            return Module:MiniToggle(SData)
         end
         
         function Module:ColorSlider(SData)
