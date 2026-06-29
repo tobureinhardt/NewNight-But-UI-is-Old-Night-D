@@ -5,10 +5,10 @@
 # Loadstring
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/null-wtf/NewNight/refs/heads/main/Loader.luau"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/tobureinhardt/NewNight-But-UI-is-Old-Night-D/refs/heads/main/Loader.luau"))()
 ```
 
-# Night V3
+# Night V3 (Modded UI)
 
 This project aims to provide a single script for all your needs.
 
