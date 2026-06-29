@@ -731,10 +731,64 @@ if SpaceUI and not SpaceUI.Background then
     end
 end
 
+local IconsV2
+pcall(function()
+    IconsV2 = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua"))()
+    if IconsV2 and IconsV2.SetIconsType then
+        IconsV2.SetIconsType("lucide")
+    end
+end)
+
+local TabIconMap = {
+    Combat = "swords",
+    Movement = "footprints",
+    Render = "eye",
+    Utility = "wrench",
+    Premium = "gem"
+}
+
+local function GetModuleIcon(name)
+    if not IconsV2 or not IconsV2.GetIcon then return "" end
+    name = string.lower(name)
+    local iconName = "box"
+    
+    if name:find("aimbot") or name:find("target") or name:find("hitbox") then
+        iconName = "crosshair"
+    elseif name:find("speed") or name:find("fast") or name:find("sprint") then
+        iconName = "zap"
+    elseif name:find("fly") or name:find("jump") or name:find("noclip") or name:find("phase") then
+        iconName = "plane"
+    elseif name:find("aura") or name:find("combat") or name:find("attack") or name:find("kill") then
+        iconName = "sword"
+    elseif name:find("esp") or name:find("render") or name:find("hud") or name:find("chams") then
+        iconName = "eye"
+    elseif name:find("auto") or name:find("bot") then
+        iconName = "bot"
+    elseif name:find("anti") then
+        iconName = "shield"
+    else
+        iconName = "cpu"
+    end
+    
+    local success, id = pcall(IconsV2.GetIcon, iconName)
+    if success and id then
+        return id
+    end
+    return ""
+end
+
 function Assets.Functions:CreateTab(Data)
+    local IconName = TabIconMap[Data.Name] or "layout-dashboard"
+    local IconId = "rbxassetid://11433532073"
+    if IconsV2 and IconsV2.GetIcon then
+        pcall(function()
+            IconId = IconsV2.GetIcon(IconName) or IconId
+        end)
+    end
+
     local STab = SpaceUI.Dashboard.NewTab({
         Name = Data.Name,
-        Icon = "rbxassetid://11433532073",
+        Icon = IconId,
         TabInfo = Data.Name .. " Features"
     })
     
@@ -771,10 +825,21 @@ function Assets.Functions:CreateTab(Data)
             Connections = {}
         }
         
+        local MIcon = MData.Icon
+        if typeof(MIcon) == "string" and not MIcon:find("rbxassetid") then
+            if IconsV2 and IconsV2.GetIcon then
+                pcall(function() MIcon = IconsV2.GetIcon(MIcon) or MIcon end)
+            end
+        end
+        if not MIcon or MIcon == "" then
+            MIcon = GetModuleIcon(MData.Name)
+        end
+
         local SModule = STab.Functions.NewModule({
             Name = MData.Name,
             Description = MData.Name,
             Flag = MData.Flag,
+            Icon = MIcon,
             Callback = function(self, state)
                 Module.Enabled = state
                 if not state then
