@@ -103,10 +103,13 @@ local function DownloadDirectory(DirectoryLink: string, SavePath: string): boole
             local Suc2: boolean, Body = pcall(HttpService.JSONDecode, HttpService, DirData)
             if Suc2 and typeof(Body) == "table" then
                 for i,v in Body do
-                    if v.type == "dir" then
-                        if (isfolder and not isfolder(`{SavePath}/{v.name}`)) or not isfolder then
-                            DownloadDirectory(`{DirectoryLink}/{v.name}`, `{SavePath}/{v.name}`)
-                        end
+                    if v.type == "dir" and v.url then
+                        if isfolder and not isfolder(`{SavePath}/{v.name}`) then
+                            DownloadDirectory(v.url, `{SavePath}/{v.name}`)
+                        else
+							delfolder(`{SavePath}/{v.name}`)
+							DownloadDirectory(v.url, `{SavePath}/{v.name}`)
+						end
                     elseif v.type == "file" and v.download_url then
                         if not isfile(`{SavePath}/{v.name}`) then
                             DownloadAsset(v.download_url, `{SavePath}/{v.name}`)
