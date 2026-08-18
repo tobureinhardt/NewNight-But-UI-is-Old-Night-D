@@ -157,7 +157,7 @@ pcall(setthreadidentity, 8);
 
     Speed:Dropdown({
         Name = "Mode",
-        Description = "Choose how speed and velocity calculations are applied to the character.",
+        Description = "Chooses how your character's speed boost is applied (velocity, CFrame, teleport, or walkspeed)",
         Flag = "UniversalSpeedMode",
         Default = "Velocity",
         Options = {"Velocity", "CFrame", "TP", "Walkspeed"},
@@ -168,7 +168,7 @@ pcall(setthreadidentity, 8);
 
     Speed:Slider({
         Name = "Speed",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets how fast your character moves while Speed is enabled",
         Flag = "UniversalSpeedValue",
         Default = 50,
         Min = 0,
@@ -180,7 +180,7 @@ pcall(setthreadidentity, 8);
 
     local PulseDelay = Speed:Slider({
         Name = "Pulse Delay",
-        Description = "Configure waiting interval between speed burst pulses.",
+        Description = "Sets the delay in seconds between each speed pulse",
         Flag = "UniversalPulseDelay",
         Default = 2,
         Min = 1,
@@ -193,7 +193,7 @@ pcall(setthreadidentity, 8);
 
     local PulseTime = Speed:Slider({
         Name = "Pulse Time",
-        Description = "Set the active duration for each speed pulse.",
+        Description = "Sets how long each speed pulse lasts",
         Flag = "UniversalPulseTime",
         Default = 2,
         Min = 1,
@@ -206,7 +206,7 @@ pcall(setthreadidentity, 8);
 
     local JumpDelay = Speed:Slider({
         Name = "Jump Delay",
-        Description = "Set the minimum cooldown time between consecutive jumps.",
+        Description = "Sets the delay in seconds before Auto Jump triggers again",
         Flag = "UniversalSpeedAutoJumpDelay",
         Default = 0,
         Min = 0,
@@ -218,7 +218,7 @@ pcall(setthreadidentity, 8);
     
     Speed:MiniToggle({
         Name = "Auto Jump",
-        Description = "Automatically jump while moving to maintain momentum.",
+        Description = "Automatically makes your character jump repeatedly while moving",
         Flag = "UniversalSpeedAutoJump",
         CallingFunction = function(self, value: boolean)
             SpeedData.Settings.AutoJump = value
@@ -228,7 +228,7 @@ pcall(setthreadidentity, 8);
 
     Speed:MiniToggle({
         Name = "Pulse",
-        Description = "Apply movement velocity in periodic burst pulses.",
+        Description = "Applies speed in short bursts instead of continuously, which can help evade some anticheats",
         Flag = "UniversalSpeedPulse",
         CallingFunction = function(self, value: boolean)
             SpeedData.Settings.Pulse = value
@@ -240,7 +240,7 @@ pcall(setthreadidentity, 8);
 
     local IgnoreTerrain = Speed:MiniToggle({
         Name = "Ignore Terrain",
-        Description = "Exclude map terrain geometry from wall collision checks.",
+        Description = "Ignores the baseplate/terrain when checking for walls, letting Wall Check skip terrain collisions",
         Flag = "UniversalSpeedWallCheckIgnoreTerrain",
         CallingFunction = function(self, value: boolean)
             SpeedData.Settings.IgnoreTerrain = value
@@ -249,7 +249,7 @@ pcall(setthreadidentity, 8);
 
     Speed:MiniToggle({
         Name = "Wall Check",
-        Description = "Verify direct line of sight to avoid targeting through obstacles.",
+        Description = "Raycasts ahead of your character to stop speed from clipping you through walls",
         Flag = "UniveralSpeedWallCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -351,7 +351,7 @@ end)();
 
     Fly.Functions:KeyBind({
         Name = "Fly Up",
-        Description = "Keybind to ascend vertically while flying.",
+        Description = "Sets the key that moves your character upward while flying",
         MobileText = "Fly Up",
         Flag = "UniversalFlyUpKyebind",
         DestroyMobileButtonOnDisable = true,
@@ -368,7 +368,7 @@ end)();
 
     Fly.Functions:KeyBind({
         Name = "Fly Down",
-        Description = "Keybind to descend vertically while flying.",
+        Description = "Sets the key that moves your character downward while flying",
         MobileText = "Fly Down",
         Flag = "UniversalFlyDownKyebind",
         DestroyMobileButtonOnDisable = true,
@@ -385,7 +385,7 @@ end)();
 
     Fly:Slider({
         Name = "Speed",
-        Description = "Horizontal flight movement speed.",
+        Description = "Sets how fast your character moves horizontally while flying",
         Flag = "UniversalFlySpeed",
         Default = 50,
         Min = 0,
@@ -397,7 +397,7 @@ end)();
 
     Fly:Slider({
         Name = "Vertical Speed",
-        Description = "Adjust ascent and descent velocity during flight.",
+        Description = "Sets how fast your character moves vertically while flying",
         Flag = "UniversalVerticalFlySpeed",
         Default = 70,
         Min = 0,
@@ -409,7 +409,7 @@ end)();
 
     local FlyPulseDelay = Fly:Slider({
         Name = "Pulse Delay",
-        Description = "Configure waiting interval between speed burst pulses.",
+        Description = "Sets the delay in seconds between each fly pulse",
         Flag = "UniversaFlylPulseDelay",
         Default = 2,
         Min = 1,
@@ -422,7 +422,7 @@ end)();
 
     local FlyPulseTime = Fly:Slider({
         Name = "Pulse Time",
-        Description = "Set the active duration for each speed pulse.",
+        Description = "Sets how long each fly pulse lasts",
         Flag = "UniversalFlyPulseTime",
         Default = 2,
         Min = 1,
@@ -435,7 +435,7 @@ end)();
 
     Fly:Dropdown({
         Name = "Speed Mode",
-        Description = "Choose how speed and velocity calculations are applied to the character.",
+        Description = "Chooses how flight movement is applied (velocity or CFrame based)",
         Flag = "UniversalFlySpeedMode",
         Default = "Velocity",
         Options = {"Velocity", "CFrame", "TP"},
@@ -446,7 +446,7 @@ end)();
 
     Fly:MiniToggle({
         Name = "Pulse",
-        Description = "Apply movement velocity in periodic burst pulses.",
+        Description = "Applies fly movement in short bursts instead of continuously",
         Flag = "UniversalFlySpeedPulse",
         CallingFunction = function(self, value: boolean)
             FlyData.Settings.Pulse = value
@@ -481,7 +481,7 @@ end)();
     
     FovChanger:Slider({
         Name = "FOV",
-        Description = "Adjust camera field of view zoom level.",
+        Description = "Sets the camera's field of view in degrees",
         Flag = "UniversalFOVValue",
         Default = 120,
         Min = 0,
@@ -677,7 +677,7 @@ end)();
 
     local KeyTrigger = Aimbot.Functions:KeyBind({
         Name = "Trigger",
-        Description = "Button or keybind used to activate target tracking.",
+        Description = "Sets the key that activates the aimbot trigger",
         MobileText = "Trigger",
         Flag = "UniversalAimbotTrigger",
         DestroyMobileButtonOnDisable = true,
@@ -703,7 +703,7 @@ end)();
 
     Aimbot:Dropdown({
         Name = "Part",
-        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
+        Description = "Chooses which body part the aimbot targets",
         Flag = "AimbotPart",
         Default = "Head",
         Options = AimParts,
@@ -714,7 +714,7 @@ end)();
 
     Aimbot:Dropdown({
         Name = "Mode",
-        Description = "Select target tracking mode between Camera, Mouse, or Silent.",
+        Description = "Chooses how the aimbot locks onto targets (e.g. camera or silent aim)",
         Flag = "AimbotMode",
         Default = "Smooth",
         Options = {"Smooth", "Snap", "Humanized"},
@@ -725,7 +725,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Aim Speed",
-        Description = "Smoothness and tracking speed of camera rotation.",
+        Description = "Sets how quickly the aimbot's camera snaps to the target",
         Flag = "AimbotSpeed",
         Default = 50,
         Min = 1,
@@ -737,7 +737,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Deadzone",
-        Description = "Inner deadzone radius where tracking adjustments pause.",
+        Description = "Sets the minimum distance from the crosshair before the aimbot starts targeting",
         Flag = "AimbotDeadzone",
         Default = 20,
         Min = 0,
@@ -749,7 +749,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Prediction",
-        Description = "Amount of target movement compensation based on velocity.",
+        Description = "Adjusts how far ahead the aimbot predicts a moving target's position",
         Flag = "AimbotPredictionAmount",
         Default = 0.12,
         Min = 0,
@@ -762,7 +762,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Jitter",
-        Description = "Intensity of randomized aim offset.",
+        Description = "Adds random offset to aim position to make aimbot less detectable",
         Flag = "AimbotJitterAmount",
         Default = 5,
         Min = 1,
@@ -774,7 +774,7 @@ end)();
 
     local FovSize = Aimbot:Slider({
         Name = "FOV Size",
-        Description = "Maximum angular radius around crosshair for targeting.",
+        Description = "Sets the radius of the field-of-view circle used to detect targets",
         Flag = "AimbotFOVSize",
         Default = 80,
         Min = 1,
@@ -789,7 +789,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Distance",
-        Description = "Maximum detection and interaction distance in studs.",
+        Description = "Sets the maximum distance at which the aimbot will target players",
         Flag = "AimbotDistance",
         Default = 50,
         Min = 1,
@@ -801,6 +801,7 @@ end)();
 
     local FovColor = Aimbot:ColorSlider({
         Name = "FOV Color",
+        Description = "Sets the color of the field-of-view circle shown on screen",
         Flag = "AimbotFOVCircleColor",
         Default = Color3.fromRGB(255, 0, 0),
         CallingFunction = function(self, Color: Color3)
@@ -813,7 +814,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "FOV",
-        Description = "Draw a visible circle indicating the targeting area.",
+        Description = "Shows a field-of-view circle on screen indicating the aimbot's targeting range",
         Flag = "AimbotFOV",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -843,7 +844,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Team Check",
-        Description = "Filter out friendly teammates and allies from targeting.",
+        Description = "Prevents the aimbot from targeting players on your own team",
         Flag = "AimbotTeamCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -853,7 +854,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Distance Check",
-        Description = "Ignore players located beyond the configured reach range.",
+        Description = "Prevents the aimbot from targeting players outside the Distance range",
         Flag = "AimbotDistanceCheck",
         CallingFunction = function(self, value: number)
             AimbotData.Settings.TriggerDistance = value
@@ -862,7 +863,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Wall Check",
-        Description = "Verify direct line of sight to avoid targeting through obstacles.",
+        Description = "Prevents the aimbot from targeting players blocked by walls",
         Flag = "AimbotWallCheck",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.WallCheck = value
@@ -871,7 +872,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Prediction",
-        Description = "Predict future enemy positions to compensate for latency.",
+        Description = "Enables prediction so the aimbot leads moving targets",
         Flag = "AimbotPrediction",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.Prediction = value
@@ -880,7 +881,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Jitter",
-        Description = "Add subtle random jitter to simulate human aim.",
+        Description = "Enables random aim offset so targeting looks less robotic",
         Flag = "AimbotJitter",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.Jitter = value
@@ -889,7 +890,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Trigger Button",
-        Description = "Button or keybind used to activate target tracking.",
+        Description = "Requires holding the trigger key for the aimbot to target, instead of always-on",
         Flag = "UniversalAimbotTriggerButton",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.UseTriggerButton = value
@@ -1486,7 +1487,7 @@ end)();
     local Fill, FillColor, Healthbar, Name, Box
     ESP:Dropdown({
         Name = "Mode",
-        Description = "Choose visual render style for highlighted players.",
+        Description = "Chooses which ESP style is used to highlight players (e.g. box, chams)",
         Flag = "ESPMode",
         Default = "Dynamic",
         Options = {"Dynamic", "Classic", "Locked", "Skeleton", "3D Box"},
@@ -1510,7 +1511,7 @@ end)();
 
     ESP:Dropdown({
         Name = "Box Type",
-        Description = "Choose visual render style for highlighted players.",
+        Description = "Chooses the shape of the box drawn around each player",
         Flag = "ESPBoxType",
         Default = "Box",
         Options = {"Box", "Cornered"},
@@ -1521,6 +1522,7 @@ end)();
 
     ESP:ColorSlider({
         Name = "Color",
+        Description = "Sets the outline color of the ESP box",
         Flag = "ESPColor",
         Default = Color3.fromRGB(255, 0, 0),
         CallingFunction = function(self, color: Color3)
@@ -1530,6 +1532,7 @@ end)();
 
     FillColor = ESP:ColorSlider({
         Name = "Fill Color",
+        Description = "Sets the fill color of the ESP box",
         Flag = "ESPFillColor",
         Default = Color3.fromRGB(0, 0, 0),
         CallingFunction = function(self, color: Color3)
@@ -1539,7 +1542,7 @@ end)();
 
     ESP:MiniToggle({
         Name = "Team Color",
-        Description = "Customize RGB color theme for this visual component.",
+        Description = "Colors each player's ESP based on their team color",
         Flag = "ESPTeamColor",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.TeamColor = value
@@ -1548,7 +1551,7 @@ end)();
 
     ESP:MiniToggle({
         Name = "Team Check",
-        Description = "Filter out friendly teammates and allies from targeting.",
+        Description = "Hides ESP for players on your own team",
         Flag = "ESPTeamCheck",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.TeamCheck = value
@@ -1557,7 +1560,7 @@ end)();
 
     Box = ESP:MiniToggle({
         Name = "Box",
-        Description = "Render 2D bounding boxes surrounding player character models.",
+        Description = "Draws a box around each visible player",
         Flag = "ESPBox",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -1567,7 +1570,7 @@ end)();
 
     Fill = ESP:MiniToggle({
         Name = "Fill",
-        Description = "Enable or disable fill functionality.",
+        Description = "Fills the ESP box with a semi-transparent color",
         Flag = "ESPFill",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.FillBoxes = value
@@ -1577,7 +1580,7 @@ end)();
 
     Healthbar = ESP:MiniToggle({
         Name = "Healthbar",
-        Description = "Render health indicators showing player remaining HP.",
+        Description = "Shows a health bar above each player's ESP box",
         Flag = "ESPHealthbar",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.Health = value
@@ -1586,7 +1589,7 @@ end)();
 
     Name = ESP:MiniToggle({
         Name = "Name",
-        Description = "Display player display names above their characters.",
+        Description = "Shows each player's username above their ESP box",
         Flag = "ESPName",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.Name = value
@@ -1634,7 +1637,7 @@ end)();
 
     SpinBot:Dropdown({
         Name = "Mode",
-        Description = "Select character yaw rotation pattern.",
+        Description = "Chooses how the spin movement is applied (velocity or CFrame based)",
         Flag = "SpinBotMode",
         Default = "CFrame",
         Options = {"CFrame", "Angular"},
@@ -1651,7 +1654,7 @@ end)();
 
     SpinBot:Slider({
         Name = "Speed",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets how fast your character spins",
         Flag = "SpinBotSpeed",
         Default = 30,
         Min = 1,
@@ -1712,7 +1715,7 @@ end)();
     local LerpSpeed, TweenSpeed
     MouseTP:Dropdown({
         Name = "Mode",
-        Description = "Select operating mode mode for this module.",
+        Description = "Chooses how the mouse teleport movement is applied",
         Flag = "MouseTPMode",
         Default = "CFrame",
         Options = {"CFrame", "Lerp", "Tween"},
@@ -1725,7 +1728,7 @@ end)();
 
     LerpSpeed = MouseTP:Slider({
         Name = "Speed",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets how fast your character moves toward the mouse position",
         Flag = "MouseTPLerpSpeed",
         Default = 10,
         Min = 1,
@@ -1738,7 +1741,7 @@ end)();
 
     TweenSpeed = MouseTP:Slider({
         Name = "Speed",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets how fast your character moves toward the mouse position",
         Flag = "MouseTPTweenSpeed",
         Default = 8,
         Min = 1,
@@ -1789,7 +1792,7 @@ end)();
     
     WallClimb:Slider({
         Name = "Speed",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets how fast your character climbs while against a wall",
         Flag = "UniversalWallClimbSpeed",
         Min = 1,
         Max = 120,
@@ -1801,7 +1804,7 @@ end)();
 
     WallClimb:Slider({
         Name = "Distance",
-        Description = "Maximum detection and interaction distance in studs.",
+        Description = "Sets the maximum distance from a wall at which climbing is triggered",
         Flag = "UniversalWallClimbDistance",
         Min = 1,
         Max = 10,
@@ -1902,7 +1905,7 @@ end)();
     local Studs, Slide
     NoClip:Dropdown({
         Name = "Mode",
-        Description = "Select operating mode mode for this module.",
+        Description = "Chooses how noclip movement is applied (e.g. CFrame or teleport)",
         Flag = "NoClipMode",
         Default = "Teleport",
         Options = {"Teleport", "Slide", "Collide"},
@@ -1915,7 +1918,7 @@ end)();
 
     NoClip:Slider({
         Name = "Distance",
-        Description = "Maximum detection and interaction distance in studs.",
+        Description = "Sets the maximum distance noclip will move you per step",
         Flag = "UniversalNoClipDistance",
         Min = 1,
         Max = 5,
@@ -1927,7 +1930,7 @@ end)();
 
     Studs = NoClip:Slider({
         Name = "TP Studs",
-        Description = "Adjust the tp studs value setting.",
+        Description = "Sets the distance covered per teleport step while noclipping",
         Flag = "UniversalNoClipStuds",
         Min = 1,
         Max = 10,
@@ -1939,7 +1942,7 @@ end)();
 
     Slide = NoClip:Slider({
         Name = "Slide Speed",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets how fast you slide through walls while noclipping",
         Flag = "UniversalNoClipSlideSpeed",
         Min = 0.01,
         Max = 0.5,
@@ -2077,7 +2080,7 @@ end)();
 
     AntiIPLogger:TextBox({
         Name = "IP",
-        Description = "Enter custom text value for ip.",
+        Description = "Sets a custom IP address string used to spoof network requests",
         Flag = "AntiIPLoggerIPValue",
         Default = "127.0.0.1",
         CallingFunction = function(self, value: string)
@@ -2115,7 +2118,7 @@ end)();
     
     HighJump:Slider({
         Name = "Power",
-        Description = "Adjust the power value setting.",
+        Description = "Sets how high your character jumps",
         Flag = "UniversalHighJumpPower",
         Min = 10,
         Max = 400,
@@ -2127,7 +2130,7 @@ end)();
 
     HighJump:Dropdown({
         Name = "Mode",
-        Description = "Select operating mode mode for this module.",
+        Description = "Chooses how the jump boost is applied (e.g. velocity or power)",
         Flag = "HighJumpMode",
         Default = "Button",
         Options = {"Button", "Jump"},
@@ -2190,7 +2193,7 @@ end)();
 
     local UsernameTextBox = IdentityChanger:TextBox({
         Name = "Username",
-        Description = "Display player display names above their characters.",
+        Description = "Sets a custom username to display in place of your real one",
         Flag = "IdentityChangerUsernameValue",
         Default = "night.gg",
         CallingFunction = function(self, value: string)
@@ -2204,7 +2207,7 @@ end)();
 
     local DisplayNameTextBox = IdentityChanger:TextBox({
         Name = "Display Name",
-        Description = "Display player display names above their characters.",
+        Description = "Sets a custom display name to show in place of your real one",
         Flag = "IdentityChangerDisplayNameValue",
         Default = "night.gg",
         CallingFunction = function(self, value: string)
@@ -2222,7 +2225,7 @@ end)();
 
     IdentityChanger:MiniToggle({
         Name = "Username",
-        Description = "Display player display names above their characters.",
+        Description = "Overrides your visible username with the custom value above",
         Flag = "IdentityChangerUsernameEnabled",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2239,7 +2242,7 @@ end)();
 
     IdentityChanger:MiniToggle({
         Name = "Display Name",
-        Description = "Display player display names above their characters.",
+        Description = "Overrides your visible display name with the custom value above",
         Flag = "IdentityChangerDisplayNameEnabled",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2438,7 +2441,7 @@ end)();
     local Width, Size
     Trails:Dropdown({
         Name = "Shape",
-        Description = "Select preferred option for shape.",
+        Description = "Chooses the shape of the trail attached to your character",
         Flag = "UniversalTrailShape",
         Default = "Trail",
         Options = {"Trail", "Plate", "Sphere", "Cube", "Circle", "Triangle"},
@@ -2459,7 +2462,7 @@ end)();
 
     Trails:Slider({
         Name = "Lifetime",
-        Description = "Adjust the lifetime value setting.",
+        Description = "Sets how long each trail segment stays visible before fading",
         Flag = "UniversalTrailLifetime",
         Min = 1,
         Max = 5,
@@ -2474,7 +2477,7 @@ end)();
 
     Trails:Slider({
         Name = "Spawn Speed",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets how quickly new trail segments are spawned",
         Flag = "UniversalTrailSpawnSpeed",
         Min = 0.01,
         Max = 0.3,
@@ -2487,7 +2490,7 @@ end)();
 
     Width = Trails:Slider({
         Name = "Width",
-        Description = "Adjust the width value setting.",
+        Description = "Sets the width of the trail",
         Flag = "UniversalTrailWidth",
         Min = 1,
         Max = 7,
@@ -2502,7 +2505,7 @@ end)();
 
     Size = Trails:Slider({
         Name = "Size",
-        Description = "Adjust dimensions and scale of the visual element.",
+        Description = "Sets the overall size of the trail effect",
         Flag = "UniversalTrailSize",
         Min = 1,
         Max = 5,
@@ -2517,6 +2520,7 @@ end)();
 
     Trails:ColorSlider({
         Name = "Color",
+        Description = "Sets the color of the trail",
         Flag = "UniversalTrailColor",
         Default = Color3.fromRGB(255, 0, 0),
         CallingFunction = function(self, value: Color3)
@@ -2603,7 +2607,7 @@ end)();
     
     ChinaHat:Dropdown({
         Name = "Material",
-        Description = "Select preferred option for material.",
+        Description = "Sets the material used for the hat accessory",
         Flag = "UniversalChinaHatMaterial",
         Default = "Neon",
         Options = Materials,
@@ -2615,6 +2619,7 @@ end)();
 
     ChinaHat:ColorSlider({
         Name = "Color",
+        Description = "Sets the color of the hat accessory",
         Flag = "UniversalChinaHatColor",
         Default = Color3.fromRGB(255, 0, 0),
         CallingFunction = function(self, value: Color3)
@@ -2625,7 +2630,7 @@ end)();
 
     ChinaHat:Slider({
         Name = "Size",
-        Description = "Adjust dimensions and scale of the visual element.",
+        Description = "Sets the size of the hat accessory",
         Flag = "UniversalChinaHatSize",
         Min = 1,
         Max = 5,
@@ -2639,7 +2644,7 @@ end)();
 
     ChinaHat:Slider({
         Name = "Transparency",
-        Description = "Adjust visual opacity of rendered overlays and effects.",
+        Description = "Sets the transparency of the hat accessory",
         Flag = "UniversalChinaHatTransparency",
         Min = 0,
         Max = 1,
@@ -2831,7 +2836,7 @@ end)();
 
     Cape:Dropdown({
         Name = "Material",
-        Description = "Select preferred option for material.",
+        Description = "Sets the material used for the cape accessory",
         Flag = "UniversalCapeMaterial",
         Default = "SmoothPlastic",
         Options = Materials,
@@ -2843,6 +2848,7 @@ end)();
 
     Cape:ColorSlider({
         Name = "Color",
+        Description = "Sets the color of the cape accessory",
         Flag = "UniversalCapeColor",
         Default = Color3.fromRGB(15, 15, 15),
         CallingFunction = function(Self, Value: Color3)
@@ -2853,7 +2859,7 @@ end)();
 
     Cape:Slider({
         Name = "Length",
-        Description = "Adjust the length value setting.",
+        Description = "Sets how long the cape hangs from your character",
         Flag = "UniversalCapeLength",
         Min = 2,
         Max = 10,
@@ -2867,7 +2873,7 @@ end)();
 
     Cape:Slider({
         Name = "Width",
-        Description = "Adjust the width value setting.",
+        Description = "Sets how wide the cape is",
         Flag = "UniversalCapeWidth",
         Min = 1,
         Max = 5,
@@ -2881,7 +2887,7 @@ end)();
 
     Cape:Slider({
         Name = "Transparency",
-        Description = "Adjust visual opacity of rendered overlays and effects.",
+        Description = "Sets the transparency of the cape accessory",
         Flag = "UniversalCapeTransparency",
         Min = 0,
         Max = 1,
@@ -2895,7 +2901,7 @@ end)();
 
     Cape:Slider({
         Name = "Physics Strength",
-        Description = "Adjust the physics strength value setting.",
+        Description = "Sets how rigid or floaty the cape's cloth physics behaves",
         Flag = "UniversalCapePhysics",
         Min = 0.1,
         Max = 1,
@@ -2908,7 +2914,7 @@ end)();
 
     Cape:Slider({
         Name = "Wind Strength",
-        Description = "Adjust the wind strength value setting.",
+        Description = "Sets how strongly wind pushes and animates the cape",
         Flag = "UniversalCapeWind",
         Min = 0,
         Max = 1,
@@ -2955,7 +2961,7 @@ end)();
     local Delay
     InfiniteJump:Dropdown({
         Name = "Mode",
-        Description = "Select operating mode mode for this module.",
+        Description = "Chooses how infinite jump is triggered (e.g. on jump input)",
         Flag = "UniversalInfiniteJumpMode",
         Default = "Hold",
         Options = {"Hold", "Tap"},
@@ -2967,7 +2973,7 @@ end)();
 
     Delay = InfiniteJump:Slider({
         Name = "Jump Delay",
-        Description = "Set the minimum cooldown time between consecutive jumps.",
+        Description = "Sets the delay in seconds between each extra jump",
         Flag = "UniversalInfiniteJumpDelay",
         Min = 0,
         Max = 0.5,
@@ -3002,7 +3008,7 @@ end)();
 
     AutoClicker:Dropdown({
         Name = "Click Type",
-        Description = "Select operating click type mode for this module.",
+        Description = "Chooses how each click is simulated (e.g. single or hold)",
         Flag = "UniversalAutoClickerClickType",
         Default = "Left",
         Options = {"Left", "Right"},
@@ -3013,7 +3019,7 @@ end)();
 
     AutoClicker:Slider({
         Name = "CPS",
-        Description = "Frequency of simulated clicks generated per second.",
+        Description = "Sets how many clicks per second the auto clicker performs",
         Flag = "UniversalAutoClickerCPS",
         Min = 1,
         Max = 20,
@@ -3102,7 +3108,7 @@ end)();
 
     TargetHud:Slider({
         Name = "Distance",
-        Description = "Maximum detection and interaction distance in studs.",
+        Description = "Sets the maximum distance at which the target HUD is shown for a player",
         Flag = "TargetHUDDistance",
         Min = 1,
         Max = 100,
@@ -3114,7 +3120,7 @@ end)();
 
     TargetHud:MiniToggle({
         Name = "Team Check",
-        Description = "Filter out friendly teammates and allies from targeting.",
+        Description = "Hides the target HUD for players on your own team",
         Flag = "TargetHUDTeamCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -3275,7 +3281,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Particles",
-        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
+        Description = "Disables particle emitters to improve performance",
         Flag = "FPSBoostRemoveParticles",
         Default = true,
         CallingFunction = function(self, value)
@@ -3285,7 +3291,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Trails",
-        Description = "Enable or disable trails functionality.",
+        Description = "Disables trail effects to improve performance",
         Flag = "FPSBoostRemoveTrails",
         Default = true,
         CallingFunction = function(self, value)
@@ -3295,7 +3301,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Smoke",
-        Description = "Enable or disable smoke functionality.",
+        Description = "Disables smoke effects to improve performance",
         Flag = "FPSBoostRemoveSmoke",
         Default = true,
         CallingFunction = function(self, value)
@@ -3305,7 +3311,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Fire",
-        Description = "Enable or disable fire functionality.",
+        Description = "Disables fire effects to improve performance",
         Flag = "FPSBoostRemoveFire",
         Default = true,
         CallingFunction = function(self, value)
@@ -3315,7 +3321,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Sparkles",
-        Description = "Enable or disable sparkles functionality.",
+        Description = "Disables sparkle effects to improve performance",
         Flag = "FPSBoostRemoveSparkles",
         Default = true,
         CallingFunction = function(self, value)
@@ -3325,7 +3331,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Beams",
-        Description = "Enable or disable beams functionality.",
+        Description = "Disables beam effects to improve performance",
         Flag = "FPSBoostRemoveBeams",
         Default = true,
         CallingFunction = function(self, value)
@@ -3335,7 +3341,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Textures",
-        Description = "Enable or disable textures functionality.",
+        Description = "Disables textures and replaces them with plain colors to improve performance",
         Flag = "FPSBoostRemoveTextures",
         Default = true,
         CallingFunction = function(self, value)
@@ -3345,7 +3351,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Surface Appearance",
-        Description = "Enable or disable surface appearance functionality.",
+        Description = "Disables surface appearance materials to improve performance",
         Flag = "FPSBoostRemoveSurfaceAppearance",
         Default = true,
         CallingFunction = function(self, value)
@@ -3355,7 +3361,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Character Meshes",
-        Description = "Enable or disable character meshes functionality.",
+        Description = "Simplifies character meshes to improve performance",
         Flag = "FPSBoostRemoveCharacterMeshes",
         Default = true,
         CallingFunction = function(self, value)
@@ -3365,7 +3371,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Simplify Parts",
-        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
+        Description = "Reduces part detail/complexity to improve performance",
         Flag = "FPSBoostSimplifyParts",
         Default = true,
         CallingFunction = function(self, value)
@@ -3375,7 +3381,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Lower Lighting",
-        Description = "Enable or disable lower lighting functionality.",
+        Description = "Lowers lighting quality to improve performance",
         Flag = "FPSBoostLowerLighting",
         Default = true,
         CallingFunction = function(self, value)
@@ -3385,7 +3391,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Terrain Effects",
-        Description = "Enable or disable terrain effects functionality.",
+        Description = "Disables terrain visual effects to improve performance",
         Flag = "FPSBoostRemoveTerrainEffects",
         Default = true,
         CallingFunction = function(self, value)
@@ -3395,7 +3401,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Auto Clean",
-        Description = "Enable or disable auto clean functionality.",
+        Description = "Automatically cleans up leftover effects periodically",
         Flag = "FPSBoostAutoClean",
         Default = true,
         CallingFunction = function(self, value)
@@ -3460,7 +3466,7 @@ end)();
 
     TriggerBot:Dropdown({
         Name = "Click Type",
-        Description = "Select operating click type mode for this module.",
+        Description = "Chooses how each click is simulated (e.g. single or hold)",
         Flag = "TriggerBotClickType",
         Default = "Left",
         Options = {"Left", "Right"},
@@ -3471,7 +3477,7 @@ end)();
 
     TriggerBot:Slider({
         Name = "CPS",
-        Description = "Frequency of simulated clicks generated per second.",
+        Description = "Sets how many clicks per second the trigger bot performs",
         Flag = "TriggerBotCPS",
         Min = 1,
         Max = 50,
@@ -3484,7 +3490,7 @@ end)();
 
     TriggerBot:MiniToggle({
         Name = "Team Check",
-        Description = "Filter out friendly teammates and allies from targeting.",
+        Description = "Prevents the trigger bot from firing on players on your own team",
         Flag = "TriggerBotTeamCheck",
         CallingFunction = function(self, value: boolean)
             TriggerBotData.TeamCheck = value
@@ -3494,7 +3500,7 @@ end)();
     local TriggerRange
     TriggerBot:MiniToggle({
         Name = "Distance Check",
-        Description = "Ignore players located beyond the configured reach range.",
+        Description = "Prevents the trigger bot from firing on players outside the Range",
         Flag = "TriggerBotCheck",
         CallingFunction = function(self, value: boolean)
             TriggerBotData.DistanceCheck = value
@@ -3504,7 +3510,7 @@ end)();
 
     TriggerRange = TriggerBot:Slider({
         Name = "Range",
-        Description = "Maximum detection and interaction distance in studs.",
+        Description = "Sets the maximum distance at which the trigger bot will fire",
         Flag = "TriggerBotRange",
         Min = 1,
         Max = 100,
@@ -3723,7 +3729,7 @@ end)();
     local Custom = {}
     GameAtmosphere:Dropdown({
         Name = "Theme",
-        Description = "Select preferred option for theme.",
+        Description = "Applies a preset lighting theme to the game",
         Flag = "AtmosphereTheme",
         Default = "Comet",
         Options = {"Winter", "Comet", "Calm", "Ocean", "Custom"},
@@ -3737,6 +3743,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:ColorSlider({
         Name = "Ambient Color",
+        Description = "Sets the ambient lighting color",
         Flag = "AtmosphereAmbient",
         Default = Color3.fromRGB(100, 100, 100),
         CallingFunction = function(self, Color: Color3)
@@ -3746,7 +3753,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "Brightness",
-        Description = "Adjust the brightness value setting.",
+        Description = "Sets the overall scene brightness",
         Flag = "AtmosphereBrightness",
         Min = 0,
         Max = 5,
@@ -3759,7 +3766,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "Time",
-        Description = "Adjust the time value setting.",
+        Description = "Sets the in-game time of day",
         Flag = "AtmosphereTime",
         Min = 1,
         Max = 24,
@@ -3772,7 +3779,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "ATMSPH Density",
-        Description = "Adjust the atmsph density value setting.",
+        Description = "Sets the density of the atmosphere fog effect",
         Flag = "AtmosphereDensity",
         Min = 0,
         Max = 2,
@@ -3785,6 +3792,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:ColorSlider({
         Name = "CC Color",
+        Description = "Sets the color tint applied by the color correction effect",
         Flag = "AtmosphereCCColor",
         Default = Color3.fromRGB(255, 255, 255),
         CallingFunction = function(self, Color: Color3)
@@ -3794,7 +3802,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "CC Brightness",
-        Description = "Adjust the cc brightness value setting.",
+        Description = "Sets the brightness applied by the color correction effect",
         Flag = "AtmosphereCCBrightness",
         Min = 0,
         Max = 0.5,
@@ -3807,7 +3815,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "CC Contrast",
-        Description = "Adjust the cc contrast value setting.",
+        Description = "Sets the contrast applied by the color correction effect",
         Flag = "AtmosphereCCContrast",
         Min = 1,
         Max = 0.1,
@@ -3820,7 +3828,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "CC Saturation",
-        Description = "Adjust the cc saturation value setting.",
+        Description = "Sets the color saturation applied by the color correction effect",
         Flag = "AtmosphereCCSaturation",
         Min = -2,
         Max = 2,
@@ -3833,7 +3841,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Back ID",
-        Description = "Render 2D bounding boxes surrounding player character models.",
+        Description = "Sets a custom asset ID for the skybox's back face",
         Flag = "AtmosphereSkyboxBk",
         Default = "Skybox Back ID",
         CallingFunction = function(self, value: string)
@@ -3843,7 +3851,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Down ID",
-        Description = "Render 2D bounding boxes surrounding player character models.",
+        Description = "Sets a custom asset ID for the skybox's bottom face",
         Flag = "AtmosphereSkyboxDn",
         Default = "Skybox Down ID",
         CallingFunction = function(self, value: string)
@@ -3853,7 +3861,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Front ID",
-        Description = "Render 2D bounding boxes surrounding player character models.",
+        Description = "Sets a custom asset ID for the skybox's front face",
         Flag = "AtmosphereSkyboxFt",
         Default = "Skybox Front ID",
         CallingFunction = function(self, value: string)
@@ -3863,7 +3871,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Left ID",
-        Description = "Render 2D bounding boxes surrounding player character models.",
+        Description = "Sets a custom asset ID for the skybox's left face",
         Flag = "AtmosphereSkyboxLf",
         Default = "Skybox Left ID",
         CallingFunction = function(self, value: string)
@@ -3873,7 +3881,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Right ID",
-        Description = "Render 2D bounding boxes surrounding player character models.",
+        Description = "Sets a custom asset ID for the skybox's right face",
         Flag = "AtmosphereSkyboxRt",
         Default = "Skybox Right ID",
         CallingFunction = function(self, value: string)
@@ -3883,7 +3891,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Up ID",
-        Description = "Render 2D bounding boxes surrounding player character models.",
+        Description = "Sets a custom asset ID for the skybox's top face",
         Flag = "AtmosphereSkyboxUp",
         Default = "Skybox Up ID",
         CallingFunction = function(self, value: string)
@@ -3950,7 +3958,7 @@ end)();
 
     Desync:KeyBind({
         Name = "Resync",
-        Description = "Set custom keybind trigger for resync.",
+        Description = "Sets the key that manually resyncs your character's position",
         Flag = "DesyncResync",
         Default = Enum.KeyCode.L,
         Events = {
@@ -3965,7 +3973,7 @@ end)();
 
     Desync:MiniToggle({
         Name = "Reset",
-        Description = "Enable or disable reset functionality.",
+        Description = "Resets the desync offset back to your character's real position",
         Flag = "DesyncReset",
         CallingFunction = function(self, value: boolean)
             Reset = value
@@ -4111,7 +4119,7 @@ end)();
     local Jitter
     FakeLag:MiniToggle({
         Name = "Randomize",
-        Description = "Enable or disable randomize functionality.",
+        Description = "Randomizes fake lag timing values within their configured ranges",
         Flag = "FakeLagRandomize",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -4122,7 +4130,7 @@ end)();
 
     Jitter = FakeLag:Slider({
         Name = "Jitter",
-        Description = "Intensity of randomized aim offset.",
+        Description = "Adds random variation to the fake lag timing",
         Flag = "FakeLagJitter",
         Min = 0,
         Max = 1,
@@ -4135,7 +4143,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Anchor Time",
-        Description = "Adjust the anchor time value setting.",
+        Description = "Sets how long your character's position is anchored (frozen)",
         Flag = "FakeLagAnchorTime",
         Min = 0.01,
         Max = 2,
@@ -4148,7 +4156,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Unanchor Time",
-        Description = "Adjust the unanchor time value setting.",
+        Description = "Sets how long your character's position is unanchored (moving normally)",
         Flag = "FakeLagUnanchorTime",
         Min = 0.01,
         Max = 2,
@@ -4161,7 +4169,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Pause",
-        Description = "Adjust the pause value setting.",
+        Description = "Sets the pause duration between anchor/unanchor cycles",
         Flag = "FakeLagPause",
         Min = 0,
         Max = 3,
@@ -4174,7 +4182,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Chance",
-        Description = "Adjust the burst chance value setting.",
+        Description = "Sets the chance of a burst cycle occurring instead of a normal cycle",
         Flag = "FakeLagBurstChance",
         Min = 0,
         Max = 1,
@@ -4187,7 +4195,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Count Min",
-        Description = "Adjust the burst count min value setting.",
+        Description = "Sets the minimum number of anchor/unanchor cycles in a burst",
         Flag = "FakeLagBurstCountMin",
         Min = 1,
         Max = 10,
@@ -4199,7 +4207,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Count Max",
-        Description = "Adjust the burst count max value setting.",
+        Description = "Sets the maximum number of anchor/unanchor cycles in a burst",
         Flag = "FakeLagBurstCountMax",
         Min = 1,
         Max = 10,
@@ -4211,7 +4219,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Speed Min",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets the minimum cycle speed during a burst",
         Flag = "FakeLagBurstSpeedMin",
         Min = 0.01,
         Max = 0.2,
@@ -4224,7 +4232,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Speed Max",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets the maximum cycle speed during a burst",
         Flag = "FakeLagBurstSpeedMax",
         Min = 0.01,
         Max = 0.2,
@@ -4260,7 +4268,7 @@ end)();
     
     Module:Slider({
         Name = "Gravity",
-        Description = "Adjust the gravity value setting.",
+        Description = "Sets the gravity multiplier applied to your character",
         Flag = "GravityValue",
         Min = 0,
         Max = 192,
@@ -4496,7 +4504,7 @@ end)();
 
     Arrows:Slider({
         Name = "Size",
-        Description = "Adjust dimensions and scale of the visual element.",
+        Description = "Sets the size of the directional arrow shown for off-screen players",
         Flag = "ArrowsSize",
         Default = 14,
         Min = 6,
@@ -4508,7 +4516,7 @@ end)();
 
     Arrows:Slider({
         Name = "Radius",
-        Description = "Adjust the radius value setting.",
+        Description = "Sets how far from the screen edge the arrow is positioned",
         Flag = "ArrowsRadius",
         Default = 0.2,
         Min = 0.1,
@@ -4521,6 +4529,7 @@ end)();
 
     Arrows:ColorSlider({
         Name = "Color",
+        Description = "Sets the color of the directional arrow",
         Flag = "ArrowsColor",
         Default = Color3.fromRGB(255, 255, 255),
         CallingFunction = function(self, value: Color3)
@@ -4530,7 +4539,7 @@ end)();
 
     Arrows:MiniToggle({
         Name = "Team Check",
-        Description = "Filter out friendly teammates and allies from targeting.",
+        Description = "Hides arrows for players on your own team",
         Flag = "ArrowsTeamCheck",
         Default = false,
         CallingFunction = function(self, value: boolean)
@@ -4658,6 +4667,7 @@ end)();
 
     Chams:ColorSlider({
         Name = "Outline Color",
+        Description = "Sets the outline color for the chams effect",
         Flag = "ChamsOutlineColor",
         Default = Color3.fromRGB(255, 255, 255),
         CallingFunction = function(self, value: Color3)
@@ -4670,6 +4680,7 @@ end)();
 
     Chams:ColorSlider({
         Name = "Fill Color",
+        Description = "Sets the fill color for the chams effect",
         Flag = "ChamsFillColor",
         Default = Color3.fromRGB(255, 255, 255),
         CallingFunction = function(self, value: Color3)
@@ -4682,7 +4693,7 @@ end)();
 
     Chams:Slider({
         Name = "Fill Transparency",
-        Description = "Adjust visual opacity of rendered overlays and effects.",
+        Description = "Sets the transparency of the chams fill",
         Flag = "ChamsFillTransparency",
         Default = 0.5,
         Min = 0,
@@ -4698,7 +4709,7 @@ end)();
 
     Chams:Slider({
         Name = "Outline Transparency",
-        Description = "Adjust visual opacity of rendered overlays and effects.",
+        Description = "Sets the transparency of the chams outline",
         Flag = "ChamsOutlineTransparency",
         Default = 0,
         Min = 0,
@@ -4714,7 +4725,7 @@ end)();
 
     Chams:MiniToggle({
         Name = "Team Check",
-        Description = "Filter out friendly teammates and allies from targeting.",
+        Description = "Skips applying chams to players on your own team",
         Flag = "ChamsTeamCheck",
         Default = false,
         CallingFunction = function(self, value: boolean)
@@ -4794,7 +4805,7 @@ end)();
 
     Hitboxes:Slider({
         Name = "Parts Size",
-        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
+        Description = "Sets the size player hitboxes are resized to",
         Flag = "HitboxesPartsSize",
         Min = 2,
         Max = 15,
@@ -5074,7 +5085,7 @@ end)();
 
     Health:Dropdown({
         Name = "Position",
-        Description = "Select preferred option for position.",
+        Description = "Chooses where on screen the health HUD is positioned",
         Flag = "HealthPosition",
         Default = "Bottom Center",
         Options = {"Bottom Center", "Top Center", "Center", "Bottom Left", "Bottom Right", "Top Left", "Top Right"},
@@ -5085,7 +5096,7 @@ end)();
 
     Health:Slider({
         Name = "Text Size",
-        Description = "Adjust dimensions and scale of the visual element.",
+        Description = "Sets the font size of the health text",
         Flag = "HealthTextSize",
         Min = 16,
         Max = 80,
@@ -5100,7 +5111,7 @@ end)();
 
     Health:Slider({
         Name = "Offset X",
-        Description = "Adjust the offset x value setting.",
+        Description = "Sets the horizontal offset of the health HUD",
         Flag = "HealthOffsetX",
         Min = -500,
         Max = 500,
@@ -5112,7 +5123,7 @@ end)();
 
     Health:Slider({
         Name = "Offset Y",
-        Description = "Adjust the offset y value setting.",
+        Description = "Sets the vertical offset of the health HUD",
         Flag = "HealthOffsetY",
         Min = -500,
         Max = 500,
@@ -5124,7 +5135,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Show Max Health",
-        Description = "Render health indicators showing player remaining HP.",
+        Description = "Shows the player's maximum health alongside current health",
         Flag = "HealthShowMax",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5134,7 +5145,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Show Percentage",
-        Description = "Enable or disable show percentage functionality.",
+        Description = "Shows health as a percentage instead of a raw number",
         Flag = "HealthShowPercent",
         Default = false,
         CallingFunction = function(self, value: boolean)
@@ -5144,7 +5155,7 @@ end)();
 
     Health:Slider({
         Name = "Decimal Places",
-        Description = "Adjust the decimal places value setting.",
+        Description = "Sets how many decimal places are shown for health values",
         Flag = "HealthDecimals",
         Min = 0,
         Max = 2,
@@ -5156,7 +5167,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Glow Effect",
-        Description = "Enable or disable glow effect functionality.",
+        Description = "Adds a glowing effect around the health text",
         Flag = "HealthGlow",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5166,7 +5177,7 @@ end)();
 
     Health:Slider({
         Name = "Glow Intensity",
-        Description = "Adjust the glow intensity value setting.",
+        Description = "Sets the strength of the glow effect",
         Flag = "HealthGlowIntensity",
         Min = 1,
         Max = 15,
@@ -5178,7 +5189,7 @@ end)();
 
     Health:Slider({
         Name = "Glow Transparency",
-        Description = "Adjust visual opacity of rendered overlays and effects.",
+        Description = "Sets the transparency of the glow effect",
         Flag = "HealthGlowTransparency",
         Min = 10,
         Max = 90,
@@ -5190,7 +5201,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Pulse On Low HP",
-        Description = "Apply movement velocity in periodic burst pulses.",
+        Description = "Pulses the health text when a player's health drops below the threshold",
         Flag = "HealthPulse",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5200,7 +5211,7 @@ end)();
 
     Health:Slider({
         Name = "Pulse Threshold %",
-        Description = "Apply movement velocity in periodic burst pulses.",
+        Description = "Sets the health percentage that triggers the low-HP pulse effect",
         Flag = "HealthPulseThreshold",
         Min = 5,
         Max = 50,
@@ -5212,7 +5223,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Text Outline",
-        Description = "Enable or disable text outline functionality.",
+        Description = "Adds an outline around the health text for better readability",
         Flag = "HealthOutline",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5222,7 +5233,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Shadow",
-        Description = "Enable or disable shadow functionality.",
+        Description = "Adds a drop shadow behind the health text",
         Flag = "HealthShadow",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5232,7 +5243,7 @@ end)();
 
     Health:Slider({
         Name = "Shadow Offset",
-        Description = "Adjust the shadow offset value setting.",
+        Description = "Sets how far the shadow is offset from the text",
         Flag = "HealthShadowOffset",
         Min = 1,
         Max = 6,
@@ -5244,7 +5255,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Animate Changes",
-        Description = "Enable or disable animate changes functionality.",
+        Description = "Smoothly animates health text changes instead of updating instantly",
         Flag = "HealthAnimate",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5254,7 +5265,7 @@ end)();
 
     Health:Slider({
         Name = "Animation Speed",
-        Description = "Configure the movement speed multiplier.",
+        Description = "Sets how fast the health change animation plays",
         Flag = "HealthAnimSpeed",
         Min = 1,
         Max = 20,
@@ -5266,6 +5277,7 @@ end)();
 
     Health:ColorSlider({
         Name = "Full HP Color",
+        Description = "Sets the color used when a player is at full health",
         Flag = "HealthFullColor",
         Default = Color3.fromRGB(0, 255, 130),
         CallingFunction = function(self, value: Color3)
@@ -5275,6 +5287,7 @@ end)();
 
     Health:ColorSlider({
         Name = "Mid HP Color",
+        Description = "Sets the color used when a player is at medium health",
         Flag = "HealthMidColor",
         Default = Color3.fromRGB(255, 200, 0),
         CallingFunction = function(self, value: Color3)
@@ -5284,6 +5297,7 @@ end)();
 
     Health:ColorSlider({
         Name = "Low HP Color",
+        Description = "Sets the color used when a player is at low health",
         Flag = "HealthLowColor",
         Default = Color3.fromRGB(255, 50, 50),
         CallingFunction = function(self, value: Color3)
@@ -5293,6 +5307,7 @@ end)();
 
     Health:ColorSlider({
         Name = "Critical HP Color",
+        Description = "Sets the color used when a player is at critical health",
         Flag = "HealthCritColor",
         Default = Color3.fromRGB(200, 0, 0),
         CallingFunction = function(self, value: Color3)

@@ -127,7 +127,7 @@ local XRay = Windows.Utility:CreateModule({
 
 XRay:Slider({
 	Name = "Transparency",
-	Description = "Adjust visual opacity of rendered overlays and effects.",
+	Description = "Adjusts how see-through walls and objects become when XRay is enabled",
 	Flag = "",
 	Default = 0,
 	Max = 1,
@@ -196,7 +196,7 @@ local HitboxAlterator = Windows.Combat:CreateModule({
 
 HitboxAlterator:Slider({
 	Name = "Hitbox Size",
-	Description = "Render 2D bounding boxes surrounding player character models.",
+	Description = "Sets how large enemy hitboxes are resized to, making them easier to hit",
 	Flag = "",
 	Default = 6,
 	Max = 50,
@@ -261,7 +261,7 @@ local AntiParticleModule = Windows.Render:CreateModule({
 
 AntiParticleModule:MiniToggle({
 	Name = "Smoke",
-	Description = "Enable or disable smoke functionality.",
+	Description = "Removes smoke particle effects that block your view",
 	Default = true,
 	Flag = "",
 	CallingFunction = function(self, value)
@@ -271,7 +271,7 @@ AntiParticleModule:MiniToggle({
 
 AntiParticleModule:MiniToggle({
 	Name = "Flashbang",
-	Description = "Enable or disable flashbang functionality.",
+	Description = "Removes flashbang particle effects that whiten your screen",
 	Flag = "",
 	Default = true,
 	CallingFunction = function(self, value)
@@ -309,7 +309,7 @@ local StaffDetector = Windows.Utility:CreateModule({
 
 StaffDetector:Dropdown({
 	Name = "Respond Option",
-	Description = "Choose visual render style for highlighted players.",
+	Description = "Chooses what action to take when a staff member is detected in the server",
 	Flag = "",
 	Default = {"Kick"},
 	Options = {"Kick"},
@@ -322,7 +322,7 @@ StaffDetector:Dropdown({
 
 StaffDetector:Dropdown({
 	Name = "Rank",
-	Description = "Filter detected moderators by permission rank tier.",
+	Description = "Selects which staff rank in the group triggers the detector",
 	Flag = "",
 	Default = {"Community Staff"},
 	Options = {"Community Staff", "Tester", "Moderator", "Contributor", "Scripter", "Builder"},
@@ -465,7 +465,7 @@ local ACBypass = Windows.Utility:CreateModule({
 
 ACBypass:Dropdown({
 	Name = "Method",
-	Description = "Select anticheat mitigation and bypass technique.",
+	Description = "Selects which technique is used to bypass the anticheat's movement detection",
 	Flag = "",
 	Default = {"Universal"},
 	Options = {"Universal", "Old-Bypass"},
