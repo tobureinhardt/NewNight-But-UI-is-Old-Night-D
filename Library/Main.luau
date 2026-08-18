@@ -889,7 +889,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v)
+                        function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -897,11 +897,6 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
-                end
-            end
-            function Wrapper:SetDescription(v)
-                if Setting and Setting.Functions and Setting.Functions.SetDescription then
-                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
@@ -921,7 +916,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v)
+                        function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -929,11 +924,6 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
-                end
-            end
-            function Wrapper:SetDescription(v)
-                if Setting and Setting.Functions and Setting.Functions.SetDescription then
-                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
@@ -952,7 +942,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v)
+                        function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -960,11 +950,6 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
-                end
-            end
-            function Wrapper:SetDescription(v)
-                if Setting and Setting.Functions and Setting.Functions.SetDescription then
-                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
@@ -975,16 +960,20 @@ function Assets.Functions:CreateTab(Data)
         end
         
         function Module:ColorSlider(SData)
-            local Setting = SModule.Functions.Settings.TextBox({
+            local Setting = SModule.Functions.Settings.ColorPicker({
                 Name = SData.Name,
                 Description = SData.Description,
                 Flag = SData.Flag,
-                Default = "255, 255, 255",
-                Callback = function(self, val)
+                Default = SData.Default or Color3.fromRGB(255, 255, 255),
+                Hide = SData.Hide or false,
+                Callback = function(self, colorValue, rgbTable)
+                    if SData.CallingFunction then
+                        SData.CallingFunction(self, colorValue, rgbTable)
+                    end
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v)
+                        function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -992,11 +981,6 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
-                end
-            end
-            function Wrapper:SetDescription(v)
-                if Setting and Setting.Functions and Setting.Functions.SetDescription then
-                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
@@ -1018,7 +1002,7 @@ function Assets.Functions:CreateTab(Data)
                 }
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v)
+                        function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -1026,11 +1010,6 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
-                end
-            end
-            function Wrapper:SetDescription(v)
-                if Setting and Setting.Functions and Setting.Functions.SetDescription then
-                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
@@ -1054,7 +1033,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-            function Wrapper:SetVisiblity(v)
+                        function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -1062,11 +1041,6 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
-                end
-            end
-            function Wrapper:SetDescription(v)
-                if Setting and Setting.Functions and Setting.Functions.SetDescription then
-                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
