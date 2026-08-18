@@ -908,6 +908,9 @@ function Assets.Functions:CreateTab(Data)
                 Description = SData.Description,
                 Flag = SData.Flag,
                 Default = SData.Default,
+                MultiSelect = SData.MultiSelect or (SData.MaxLimit and SData.MaxLimit > 1) or (SData.SelectLimit and SData.SelectLimit > 1) or (typeof(SData.Default) == "table"),
+                SelectLimit = SData.SelectLimit or SData.MaxLimit,
+                MaxLimit = SData.MaxLimit,
                 Options = SData.Options,
                 Callback = function(self, val)
                     if SData.CallingFunction then
@@ -916,7 +919,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-                        function Wrapper:SetVisiblity(v)
+            function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -924,6 +927,16 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
+                end
+            end
+            function Wrapper:GetValue()
+                if Setting and Setting.Functions and Setting.Functions.GetValue then
+                    return Setting.Functions.GetValue()
+                end
+            end
+            function Wrapper:SetDescription(v)
+                if Setting and Setting.Functions and Setting.Functions.SetDescription then
+                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
