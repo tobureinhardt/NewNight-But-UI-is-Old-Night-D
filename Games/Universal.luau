@@ -157,6 +157,7 @@ pcall(setthreadidentity, 8);
 
     Speed:Dropdown({
         Name = "Mode",
+        Description = "Choose how speed and velocity calculations are applied to the character.",
         Flag = "UniversalSpeedMode",
         Default = "Velocity",
         Options = {"Velocity", "CFrame", "TP", "Walkspeed"},
@@ -167,6 +168,7 @@ pcall(setthreadidentity, 8);
 
     Speed:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "UniversalSpeedValue",
         Default = 50,
         Min = 0,
@@ -178,6 +180,7 @@ pcall(setthreadidentity, 8);
 
     local PulseDelay = Speed:Slider({
         Name = "Pulse Delay",
+        Description = "Configure waiting interval between speed burst pulses.",
         Flag = "UniversalPulseDelay",
         Default = 2,
         Min = 1,
@@ -190,6 +193,7 @@ pcall(setthreadidentity, 8);
 
     local PulseTime = Speed:Slider({
         Name = "Pulse Time",
+        Description = "Set the active duration for each speed pulse.",
         Flag = "UniversalPulseTime",
         Default = 2,
         Min = 1,
@@ -202,6 +206,7 @@ pcall(setthreadidentity, 8);
 
     local JumpDelay = Speed:Slider({
         Name = "Jump Delay",
+        Description = "Set the minimum cooldown time between consecutive jumps.",
         Flag = "UniversalSpeedAutoJumpDelay",
         Default = 0,
         Min = 0,
@@ -213,6 +218,7 @@ pcall(setthreadidentity, 8);
     
     Speed:MiniToggle({
         Name = "Auto Jump",
+        Description = "Automatically jump while moving to maintain momentum.",
         Flag = "UniversalSpeedAutoJump",
         CallingFunction = function(self, value: boolean)
             SpeedData.Settings.AutoJump = value
@@ -222,6 +228,7 @@ pcall(setthreadidentity, 8);
 
     Speed:MiniToggle({
         Name = "Pulse",
+        Description = "Apply movement velocity in periodic burst pulses.",
         Flag = "UniversalSpeedPulse",
         CallingFunction = function(self, value: boolean)
             SpeedData.Settings.Pulse = value
@@ -233,6 +240,7 @@ pcall(setthreadidentity, 8);
 
     local IgnoreTerrain = Speed:MiniToggle({
         Name = "Ignore Terrain",
+        Description = "Exclude map terrain geometry from wall collision checks.",
         Flag = "UniversalSpeedWallCheckIgnoreTerrain",
         CallingFunction = function(self, value: boolean)
             SpeedData.Settings.IgnoreTerrain = value
@@ -241,6 +249,7 @@ pcall(setthreadidentity, 8);
 
     Speed:MiniToggle({
         Name = "Wall Check",
+        Description = "Verify direct line of sight to avoid targeting through obstacles.",
         Flag = "UniveralSpeedWallCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -342,6 +351,7 @@ end)();
 
     Fly.Functions:KeyBind({
         Name = "Fly Up",
+        Description = "Keybind to ascend vertically while flying.",
         MobileText = "Fly Up",
         Flag = "UniversalFlyUpKyebind",
         DestroyMobileButtonOnDisable = true,
@@ -358,6 +368,7 @@ end)();
 
     Fly.Functions:KeyBind({
         Name = "Fly Down",
+        Description = "Keybind to descend vertically while flying.",
         MobileText = "Fly Down",
         Flag = "UniversalFlyDownKyebind",
         DestroyMobileButtonOnDisable = true,
@@ -374,6 +385,7 @@ end)();
 
     Fly:Slider({
         Name = "Speed",
+        Description = "Horizontal flight movement speed.",
         Flag = "UniversalFlySpeed",
         Default = 50,
         Min = 0,
@@ -385,6 +397,7 @@ end)();
 
     Fly:Slider({
         Name = "Vertical Speed",
+        Description = "Adjust ascent and descent velocity during flight.",
         Flag = "UniversalVerticalFlySpeed",
         Default = 70,
         Min = 0,
@@ -396,6 +409,7 @@ end)();
 
     local FlyPulseDelay = Fly:Slider({
         Name = "Pulse Delay",
+        Description = "Configure waiting interval between speed burst pulses.",
         Flag = "UniversaFlylPulseDelay",
         Default = 2,
         Min = 1,
@@ -408,6 +422,7 @@ end)();
 
     local FlyPulseTime = Fly:Slider({
         Name = "Pulse Time",
+        Description = "Set the active duration for each speed pulse.",
         Flag = "UniversalFlyPulseTime",
         Default = 2,
         Min = 1,
@@ -420,6 +435,7 @@ end)();
 
     Fly:Dropdown({
         Name = "Speed Mode",
+        Description = "Choose how speed and velocity calculations are applied to the character.",
         Flag = "UniversalFlySpeedMode",
         Default = "Velocity",
         Options = {"Velocity", "CFrame", "TP"},
@@ -430,6 +446,7 @@ end)();
 
     Fly:MiniToggle({
         Name = "Pulse",
+        Description = "Apply movement velocity in periodic burst pulses.",
         Flag = "UniversalFlySpeedPulse",
         CallingFunction = function(self, value: boolean)
             FlyData.Settings.Pulse = value
@@ -464,6 +481,7 @@ end)();
     
     FovChanger:Slider({
         Name = "FOV",
+        Description = "Adjust camera field of view zoom level.",
         Flag = "UniversalFOVValue",
         Default = 120,
         Min = 0,
@@ -659,6 +677,7 @@ end)();
 
     local KeyTrigger = Aimbot.Functions:KeyBind({
         Name = "Trigger",
+        Description = "Button or keybind used to activate target tracking.",
         MobileText = "Trigger",
         Flag = "UniversalAimbotTrigger",
         DestroyMobileButtonOnDisable = true,
@@ -684,6 +703,7 @@ end)();
 
     Aimbot:Dropdown({
         Name = "Part",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "AimbotPart",
         Default = "Head",
         Options = AimParts,
@@ -694,6 +714,7 @@ end)();
 
     Aimbot:Dropdown({
         Name = "Mode",
+        Description = "Select target tracking mode between Camera, Mouse, or Silent.",
         Flag = "AimbotMode",
         Default = "Smooth",
         Options = {"Smooth", "Snap", "Humanized"},
@@ -704,6 +725,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Aim Speed",
+        Description = "Smoothness and tracking speed of camera rotation.",
         Flag = "AimbotSpeed",
         Default = 50,
         Min = 1,
@@ -715,6 +737,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Deadzone",
+        Description = "Inner deadzone radius where tracking adjustments pause.",
         Flag = "AimbotDeadzone",
         Default = 20,
         Min = 0,
@@ -726,6 +749,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Prediction",
+        Description = "Amount of target movement compensation based on velocity.",
         Flag = "AimbotPredictionAmount",
         Default = 0.12,
         Min = 0,
@@ -738,6 +762,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Jitter",
+        Description = "Intensity of randomized aim offset.",
         Flag = "AimbotJitterAmount",
         Default = 5,
         Min = 1,
@@ -749,6 +774,7 @@ end)();
 
     local FovSize = Aimbot:Slider({
         Name = "FOV Size",
+        Description = "Maximum angular radius around crosshair for targeting.",
         Flag = "AimbotFOVSize",
         Default = 80,
         Min = 1,
@@ -763,6 +789,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "AimbotDistance",
         Default = 50,
         Min = 1,
@@ -786,6 +813,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "FOV",
+        Description = "Draw a visible circle indicating the targeting area.",
         Flag = "AimbotFOV",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -815,6 +843,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "AimbotTeamCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -824,6 +853,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Distance Check",
+        Description = "Ignore players located beyond the configured reach range.",
         Flag = "AimbotDistanceCheck",
         CallingFunction = function(self, value: number)
             AimbotData.Settings.TriggerDistance = value
@@ -832,6 +862,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Wall Check",
+        Description = "Verify direct line of sight to avoid targeting through obstacles.",
         Flag = "AimbotWallCheck",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.WallCheck = value
@@ -840,6 +871,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Prediction",
+        Description = "Predict future enemy positions to compensate for latency.",
         Flag = "AimbotPrediction",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.Prediction = value
@@ -848,6 +880,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Jitter",
+        Description = "Add subtle random jitter to simulate human aim.",
         Flag = "AimbotJitter",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.Jitter = value
@@ -856,6 +889,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Trigger Button",
+        Description = "Button or keybind used to activate target tracking.",
         Flag = "UniversalAimbotTriggerButton",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.UseTriggerButton = value
@@ -1452,6 +1486,7 @@ end)();
     local Fill, FillColor, Healthbar, Name, Box
     ESP:Dropdown({
         Name = "Mode",
+        Description = "Choose visual render style for highlighted players.",
         Flag = "ESPMode",
         Default = "Dynamic",
         Options = {"Dynamic", "Classic", "Locked", "Skeleton", "3D Box"},
@@ -1475,6 +1510,7 @@ end)();
 
     ESP:Dropdown({
         Name = "Box Type",
+        Description = "Choose visual render style for highlighted players.",
         Flag = "ESPBoxType",
         Default = "Box",
         Options = {"Box", "Cornered"},
@@ -1503,6 +1539,7 @@ end)();
 
     ESP:MiniToggle({
         Name = "Team Color",
+        Description = "Customize RGB color theme for this visual component.",
         Flag = "ESPTeamColor",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.TeamColor = value
@@ -1511,6 +1548,7 @@ end)();
 
     ESP:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "ESPTeamCheck",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.TeamCheck = value
@@ -1519,6 +1557,7 @@ end)();
 
     Box = ESP:MiniToggle({
         Name = "Box",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "ESPBox",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -1528,6 +1567,7 @@ end)();
 
     Fill = ESP:MiniToggle({
         Name = "Fill",
+        Description = "Enable or disable fill functionality.",
         Flag = "ESPFill",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.FillBoxes = value
@@ -1537,6 +1577,7 @@ end)();
 
     Healthbar = ESP:MiniToggle({
         Name = "Healthbar",
+        Description = "Render health indicators showing player remaining HP.",
         Flag = "ESPHealthbar",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.Health = value
@@ -1545,6 +1586,7 @@ end)();
 
     Name = ESP:MiniToggle({
         Name = "Name",
+        Description = "Display player display names above their characters.",
         Flag = "ESPName",
         CallingFunction = function(self, value: boolean)
             ESPData.Settings.Name = value
@@ -1592,6 +1634,7 @@ end)();
 
     SpinBot:Dropdown({
         Name = "Mode",
+        Description = "Select character yaw rotation pattern.",
         Flag = "SpinBotMode",
         Default = "CFrame",
         Options = {"CFrame", "Angular"},
@@ -1608,6 +1651,7 @@ end)();
 
     SpinBot:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "SpinBotSpeed",
         Default = 30,
         Min = 1,
@@ -1668,6 +1712,7 @@ end)();
     local LerpSpeed, TweenSpeed
     MouseTP:Dropdown({
         Name = "Mode",
+        Description = "Select operating mode mode for this module.",
         Flag = "MouseTPMode",
         Default = "CFrame",
         Options = {"CFrame", "Lerp", "Tween"},
@@ -1680,6 +1725,7 @@ end)();
 
     LerpSpeed = MouseTP:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "MouseTPLerpSpeed",
         Default = 10,
         Min = 1,
@@ -1692,6 +1738,7 @@ end)();
 
     TweenSpeed = MouseTP:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "MouseTPTweenSpeed",
         Default = 8,
         Min = 1,
@@ -1742,6 +1789,7 @@ end)();
     
     WallClimb:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "UniversalWallClimbSpeed",
         Min = 1,
         Max = 120,
@@ -1753,6 +1801,7 @@ end)();
 
     WallClimb:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "UniversalWallClimbDistance",
         Min = 1,
         Max = 10,
@@ -1853,6 +1902,7 @@ end)();
     local Studs, Slide
     NoClip:Dropdown({
         Name = "Mode",
+        Description = "Select operating mode mode for this module.",
         Flag = "NoClipMode",
         Default = "Teleport",
         Options = {"Teleport", "Slide", "Collide"},
@@ -1865,6 +1915,7 @@ end)();
 
     NoClip:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "UniversalNoClipDistance",
         Min = 1,
         Max = 5,
@@ -1876,6 +1927,7 @@ end)();
 
     Studs = NoClip:Slider({
         Name = "TP Studs",
+        Description = "Adjust the tp studs value setting.",
         Flag = "UniversalNoClipStuds",
         Min = 1,
         Max = 10,
@@ -1887,6 +1939,7 @@ end)();
 
     Slide = NoClip:Slider({
         Name = "Slide Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "UniversalNoClipSlideSpeed",
         Min = 0.01,
         Max = 0.5,
@@ -2024,6 +2077,7 @@ end)();
 
     AntiIPLogger:TextBox({
         Name = "IP",
+        Description = "Enter custom text value for ip.",
         Flag = "AntiIPLoggerIPValue",
         Default = "127.0.0.1",
         CallingFunction = function(self, value: string)
@@ -2061,6 +2115,7 @@ end)();
     
     HighJump:Slider({
         Name = "Power",
+        Description = "Adjust the power value setting.",
         Flag = "UniversalHighJumpPower",
         Min = 10,
         Max = 400,
@@ -2072,6 +2127,7 @@ end)();
 
     HighJump:Dropdown({
         Name = "Mode",
+        Description = "Select operating mode mode for this module.",
         Flag = "HighJumpMode",
         Default = "Button",
         Options = {"Button", "Jump"},
@@ -2134,6 +2190,7 @@ end)();
 
     local UsernameTextBox = IdentityChanger:TextBox({
         Name = "Username",
+        Description = "Display player display names above their characters.",
         Flag = "IdentityChangerUsernameValue",
         Default = "night.gg",
         CallingFunction = function(self, value: string)
@@ -2147,6 +2204,7 @@ end)();
 
     local DisplayNameTextBox = IdentityChanger:TextBox({
         Name = "Display Name",
+        Description = "Display player display names above their characters.",
         Flag = "IdentityChangerDisplayNameValue",
         Default = "night.gg",
         CallingFunction = function(self, value: string)
@@ -2164,6 +2222,7 @@ end)();
 
     IdentityChanger:MiniToggle({
         Name = "Username",
+        Description = "Display player display names above their characters.",
         Flag = "IdentityChangerUsernameEnabled",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2180,6 +2239,7 @@ end)();
 
     IdentityChanger:MiniToggle({
         Name = "Display Name",
+        Description = "Display player display names above their characters.",
         Flag = "IdentityChangerDisplayNameEnabled",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2378,6 +2438,7 @@ end)();
     local Width, Size
     Trails:Dropdown({
         Name = "Shape",
+        Description = "Select preferred option for shape.",
         Flag = "UniversalTrailShape",
         Default = "Trail",
         Options = {"Trail", "Plate", "Sphere", "Cube", "Circle", "Triangle"},
@@ -2398,6 +2459,7 @@ end)();
 
     Trails:Slider({
         Name = "Lifetime",
+        Description = "Adjust the lifetime value setting.",
         Flag = "UniversalTrailLifetime",
         Min = 1,
         Max = 5,
@@ -2412,6 +2474,7 @@ end)();
 
     Trails:Slider({
         Name = "Spawn Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "UniversalTrailSpawnSpeed",
         Min = 0.01,
         Max = 0.3,
@@ -2424,6 +2487,7 @@ end)();
 
     Width = Trails:Slider({
         Name = "Width",
+        Description = "Adjust the width value setting.",
         Flag = "UniversalTrailWidth",
         Min = 1,
         Max = 7,
@@ -2438,6 +2502,7 @@ end)();
 
     Size = Trails:Slider({
         Name = "Size",
+        Description = "Adjust dimensions and scale of the visual element.",
         Flag = "UniversalTrailSize",
         Min = 1,
         Max = 5,
@@ -2538,6 +2603,7 @@ end)();
     
     ChinaHat:Dropdown({
         Name = "Material",
+        Description = "Select preferred option for material.",
         Flag = "UniversalChinaHatMaterial",
         Default = "Neon",
         Options = Materials,
@@ -2559,6 +2625,7 @@ end)();
 
     ChinaHat:Slider({
         Name = "Size",
+        Description = "Adjust dimensions and scale of the visual element.",
         Flag = "UniversalChinaHatSize",
         Min = 1,
         Max = 5,
@@ -2572,6 +2639,7 @@ end)();
 
     ChinaHat:Slider({
         Name = "Transparency",
+        Description = "Adjust visual opacity of rendered overlays and effects.",
         Flag = "UniversalChinaHatTransparency",
         Min = 0,
         Max = 1,
@@ -2763,6 +2831,7 @@ end)();
 
     Cape:Dropdown({
         Name = "Material",
+        Description = "Select preferred option for material.",
         Flag = "UniversalCapeMaterial",
         Default = "SmoothPlastic",
         Options = Materials,
@@ -2784,6 +2853,7 @@ end)();
 
     Cape:Slider({
         Name = "Length",
+        Description = "Adjust the length value setting.",
         Flag = "UniversalCapeLength",
         Min = 2,
         Max = 10,
@@ -2797,6 +2867,7 @@ end)();
 
     Cape:Slider({
         Name = "Width",
+        Description = "Adjust the width value setting.",
         Flag = "UniversalCapeWidth",
         Min = 1,
         Max = 5,
@@ -2810,6 +2881,7 @@ end)();
 
     Cape:Slider({
         Name = "Transparency",
+        Description = "Adjust visual opacity of rendered overlays and effects.",
         Flag = "UniversalCapeTransparency",
         Min = 0,
         Max = 1,
@@ -2823,6 +2895,7 @@ end)();
 
     Cape:Slider({
         Name = "Physics Strength",
+        Description = "Adjust the physics strength value setting.",
         Flag = "UniversalCapePhysics",
         Min = 0.1,
         Max = 1,
@@ -2835,6 +2908,7 @@ end)();
 
     Cape:Slider({
         Name = "Wind Strength",
+        Description = "Adjust the wind strength value setting.",
         Flag = "UniversalCapeWind",
         Min = 0,
         Max = 1,
@@ -2881,6 +2955,7 @@ end)();
     local Delay
     InfiniteJump:Dropdown({
         Name = "Mode",
+        Description = "Select operating mode mode for this module.",
         Flag = "UniversalInfiniteJumpMode",
         Default = "Hold",
         Options = {"Hold", "Tap"},
@@ -2892,6 +2967,7 @@ end)();
 
     Delay = InfiniteJump:Slider({
         Name = "Jump Delay",
+        Description = "Set the minimum cooldown time between consecutive jumps.",
         Flag = "UniversalInfiniteJumpDelay",
         Min = 0,
         Max = 0.5,
@@ -2926,6 +3002,7 @@ end)();
 
     AutoClicker:Dropdown({
         Name = "Click Type",
+        Description = "Select operating click type mode for this module.",
         Flag = "UniversalAutoClickerClickType",
         Default = "Left",
         Options = {"Left", "Right"},
@@ -2936,6 +3013,7 @@ end)();
 
     AutoClicker:Slider({
         Name = "CPS",
+        Description = "Frequency of simulated clicks generated per second.",
         Flag = "UniversalAutoClickerCPS",
         Min = 1,
         Max = 20,
@@ -3024,6 +3102,7 @@ end)();
 
     TargetHud:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "TargetHUDDistance",
         Min = 1,
         Max = 100,
@@ -3035,6 +3114,7 @@ end)();
 
     TargetHud:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "TargetHUDTeamCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -3195,6 +3275,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Particles",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "FPSBoostRemoveParticles",
         Default = true,
         CallingFunction = function(self, value)
@@ -3204,6 +3285,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Trails",
+        Description = "Enable or disable trails functionality.",
         Flag = "FPSBoostRemoveTrails",
         Default = true,
         CallingFunction = function(self, value)
@@ -3213,6 +3295,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Smoke",
+        Description = "Enable or disable smoke functionality.",
         Flag = "FPSBoostRemoveSmoke",
         Default = true,
         CallingFunction = function(self, value)
@@ -3222,6 +3305,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Fire",
+        Description = "Enable or disable fire functionality.",
         Flag = "FPSBoostRemoveFire",
         Default = true,
         CallingFunction = function(self, value)
@@ -3231,6 +3315,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Sparkles",
+        Description = "Enable or disable sparkles functionality.",
         Flag = "FPSBoostRemoveSparkles",
         Default = true,
         CallingFunction = function(self, value)
@@ -3240,6 +3325,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Beams",
+        Description = "Enable or disable beams functionality.",
         Flag = "FPSBoostRemoveBeams",
         Default = true,
         CallingFunction = function(self, value)
@@ -3249,6 +3335,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Textures",
+        Description = "Enable or disable textures functionality.",
         Flag = "FPSBoostRemoveTextures",
         Default = true,
         CallingFunction = function(self, value)
@@ -3258,6 +3345,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Surface Appearance",
+        Description = "Enable or disable surface appearance functionality.",
         Flag = "FPSBoostRemoveSurfaceAppearance",
         Default = true,
         CallingFunction = function(self, value)
@@ -3267,6 +3355,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Character Meshes",
+        Description = "Enable or disable character meshes functionality.",
         Flag = "FPSBoostRemoveCharacterMeshes",
         Default = true,
         CallingFunction = function(self, value)
@@ -3276,6 +3365,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Simplify Parts",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "FPSBoostSimplifyParts",
         Default = true,
         CallingFunction = function(self, value)
@@ -3285,6 +3375,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Lower Lighting",
+        Description = "Enable or disable lower lighting functionality.",
         Flag = "FPSBoostLowerLighting",
         Default = true,
         CallingFunction = function(self, value)
@@ -3294,6 +3385,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Terrain Effects",
+        Description = "Enable or disable terrain effects functionality.",
         Flag = "FPSBoostRemoveTerrainEffects",
         Default = true,
         CallingFunction = function(self, value)
@@ -3303,6 +3395,7 @@ end)();
 
     FPSBoost:MiniToggle({
         Name = "Auto Clean",
+        Description = "Enable or disable auto clean functionality.",
         Flag = "FPSBoostAutoClean",
         Default = true,
         CallingFunction = function(self, value)
@@ -3367,6 +3460,7 @@ end)();
 
     TriggerBot:Dropdown({
         Name = "Click Type",
+        Description = "Select operating click type mode for this module.",
         Flag = "TriggerBotClickType",
         Default = "Left",
         Options = {"Left", "Right"},
@@ -3377,6 +3471,7 @@ end)();
 
     TriggerBot:Slider({
         Name = "CPS",
+        Description = "Frequency of simulated clicks generated per second.",
         Flag = "TriggerBotCPS",
         Min = 1,
         Max = 50,
@@ -3389,6 +3484,7 @@ end)();
 
     TriggerBot:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "TriggerBotTeamCheck",
         CallingFunction = function(self, value: boolean)
             TriggerBotData.TeamCheck = value
@@ -3398,6 +3494,7 @@ end)();
     local TriggerRange
     TriggerBot:MiniToggle({
         Name = "Distance Check",
+        Description = "Ignore players located beyond the configured reach range.",
         Flag = "TriggerBotCheck",
         CallingFunction = function(self, value: boolean)
             TriggerBotData.DistanceCheck = value
@@ -3407,6 +3504,7 @@ end)();
 
     TriggerRange = TriggerBot:Slider({
         Name = "Range",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "TriggerBotRange",
         Min = 1,
         Max = 100,
@@ -3625,6 +3723,7 @@ end)();
     local Custom = {}
     GameAtmosphere:Dropdown({
         Name = "Theme",
+        Description = "Select preferred option for theme.",
         Flag = "AtmosphereTheme",
         Default = "Comet",
         Options = {"Winter", "Comet", "Calm", "Ocean", "Custom"},
@@ -3647,6 +3746,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "Brightness",
+        Description = "Adjust the brightness value setting.",
         Flag = "AtmosphereBrightness",
         Min = 0,
         Max = 5,
@@ -3659,6 +3759,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "Time",
+        Description = "Adjust the time value setting.",
         Flag = "AtmosphereTime",
         Min = 1,
         Max = 24,
@@ -3671,6 +3772,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "ATMSPH Density",
+        Description = "Adjust the atmsph density value setting.",
         Flag = "AtmosphereDensity",
         Min = 0,
         Max = 2,
@@ -3692,6 +3794,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "CC Brightness",
+        Description = "Adjust the cc brightness value setting.",
         Flag = "AtmosphereCCBrightness",
         Min = 0,
         Max = 0.5,
@@ -3704,6 +3807,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "CC Contrast",
+        Description = "Adjust the cc contrast value setting.",
         Flag = "AtmosphereCCContrast",
         Min = 1,
         Max = 0.1,
@@ -3716,6 +3820,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:Slider({
         Name = "CC Saturation",
+        Description = "Adjust the cc saturation value setting.",
         Flag = "AtmosphereCCSaturation",
         Min = -2,
         Max = 2,
@@ -3728,6 +3833,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Back ID",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "AtmosphereSkyboxBk",
         Default = "Skybox Back ID",
         CallingFunction = function(self, value: string)
@@ -3737,6 +3843,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Down ID",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "AtmosphereSkyboxDn",
         Default = "Skybox Down ID",
         CallingFunction = function(self, value: string)
@@ -3746,6 +3853,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Front ID",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "AtmosphereSkyboxFt",
         Default = "Skybox Front ID",
         CallingFunction = function(self, value: string)
@@ -3755,6 +3863,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Left ID",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "AtmosphereSkyboxLf",
         Default = "Skybox Left ID",
         CallingFunction = function(self, value: string)
@@ -3764,6 +3873,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Right ID",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "AtmosphereSkyboxRt",
         Default = "Skybox Right ID",
         CallingFunction = function(self, value: string)
@@ -3773,6 +3883,7 @@ end)();
 
     table.insert(Custom, GameAtmosphere:TextBox({
         Name = "Skybox Up ID",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "AtmosphereSkyboxUp",
         Default = "Skybox Up ID",
         CallingFunction = function(self, value: string)
@@ -3839,6 +3950,7 @@ end)();
 
     Desync:KeyBind({
         Name = "Resync",
+        Description = "Set custom keybind trigger for resync.",
         Flag = "DesyncResync",
         Default = Enum.KeyCode.L,
         Events = {
@@ -3853,6 +3965,7 @@ end)();
 
     Desync:MiniToggle({
         Name = "Reset",
+        Description = "Enable or disable reset functionality.",
         Flag = "DesyncReset",
         CallingFunction = function(self, value: boolean)
             Reset = value
@@ -3998,6 +4111,7 @@ end)();
     local Jitter
     FakeLag:MiniToggle({
         Name = "Randomize",
+        Description = "Enable or disable randomize functionality.",
         Flag = "FakeLagRandomize",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -4008,6 +4122,7 @@ end)();
 
     Jitter = FakeLag:Slider({
         Name = "Jitter",
+        Description = "Intensity of randomized aim offset.",
         Flag = "FakeLagJitter",
         Min = 0,
         Max = 1,
@@ -4020,6 +4135,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Anchor Time",
+        Description = "Adjust the anchor time value setting.",
         Flag = "FakeLagAnchorTime",
         Min = 0.01,
         Max = 2,
@@ -4032,6 +4148,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Unanchor Time",
+        Description = "Adjust the unanchor time value setting.",
         Flag = "FakeLagUnanchorTime",
         Min = 0.01,
         Max = 2,
@@ -4044,6 +4161,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Pause",
+        Description = "Adjust the pause value setting.",
         Flag = "FakeLagPause",
         Min = 0,
         Max = 3,
@@ -4056,6 +4174,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Chance",
+        Description = "Adjust the burst chance value setting.",
         Flag = "FakeLagBurstChance",
         Min = 0,
         Max = 1,
@@ -4068,6 +4187,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Count Min",
+        Description = "Adjust the burst count min value setting.",
         Flag = "FakeLagBurstCountMin",
         Min = 1,
         Max = 10,
@@ -4079,6 +4199,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Count Max",
+        Description = "Adjust the burst count max value setting.",
         Flag = "FakeLagBurstCountMax",
         Min = 1,
         Max = 10,
@@ -4090,6 +4211,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Speed Min",
+        Description = "Configure the movement speed multiplier.",
         Flag = "FakeLagBurstSpeedMin",
         Min = 0.01,
         Max = 0.2,
@@ -4102,6 +4224,7 @@ end)();
 
     FakeLag:Slider({
         Name = "Burst Speed Max",
+        Description = "Configure the movement speed multiplier.",
         Flag = "FakeLagBurstSpeedMax",
         Min = 0.01,
         Max = 0.2,
@@ -4137,6 +4260,7 @@ end)();
     
     Module:Slider({
         Name = "Gravity",
+        Description = "Adjust the gravity value setting.",
         Flag = "GravityValue",
         Min = 0,
         Max = 192,
@@ -4372,6 +4496,7 @@ end)();
 
     Arrows:Slider({
         Name = "Size",
+        Description = "Adjust dimensions and scale of the visual element.",
         Flag = "ArrowsSize",
         Default = 14,
         Min = 6,
@@ -4383,6 +4508,7 @@ end)();
 
     Arrows:Slider({
         Name = "Radius",
+        Description = "Adjust the radius value setting.",
         Flag = "ArrowsRadius",
         Default = 0.2,
         Min = 0.1,
@@ -4404,6 +4530,7 @@ end)();
 
     Arrows:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "ArrowsTeamCheck",
         Default = false,
         CallingFunction = function(self, value: boolean)
@@ -4555,6 +4682,7 @@ end)();
 
     Chams:Slider({
         Name = "Fill Transparency",
+        Description = "Adjust visual opacity of rendered overlays and effects.",
         Flag = "ChamsFillTransparency",
         Default = 0.5,
         Min = 0,
@@ -4570,6 +4698,7 @@ end)();
 
     Chams:Slider({
         Name = "Outline Transparency",
+        Description = "Adjust visual opacity of rendered overlays and effects.",
         Flag = "ChamsOutlineTransparency",
         Default = 0,
         Min = 0,
@@ -4585,6 +4714,7 @@ end)();
 
     Chams:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "ChamsTeamCheck",
         Default = false,
         CallingFunction = function(self, value: boolean)
@@ -4664,6 +4794,7 @@ end)();
 
     Hitboxes:Slider({
         Name = "Parts Size",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "HitboxesPartsSize",
         Min = 2,
         Max = 15,
@@ -4943,6 +5074,7 @@ end)();
 
     Health:Dropdown({
         Name = "Position",
+        Description = "Select preferred option for position.",
         Flag = "HealthPosition",
         Default = "Bottom Center",
         Options = {"Bottom Center", "Top Center", "Center", "Bottom Left", "Bottom Right", "Top Left", "Top Right"},
@@ -4953,6 +5085,7 @@ end)();
 
     Health:Slider({
         Name = "Text Size",
+        Description = "Adjust dimensions and scale of the visual element.",
         Flag = "HealthTextSize",
         Min = 16,
         Max = 80,
@@ -4967,6 +5100,7 @@ end)();
 
     Health:Slider({
         Name = "Offset X",
+        Description = "Adjust the offset x value setting.",
         Flag = "HealthOffsetX",
         Min = -500,
         Max = 500,
@@ -4978,6 +5112,7 @@ end)();
 
     Health:Slider({
         Name = "Offset Y",
+        Description = "Adjust the offset y value setting.",
         Flag = "HealthOffsetY",
         Min = -500,
         Max = 500,
@@ -4989,6 +5124,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Show Max Health",
+        Description = "Render health indicators showing player remaining HP.",
         Flag = "HealthShowMax",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -4998,6 +5134,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Show Percentage",
+        Description = "Enable or disable show percentage functionality.",
         Flag = "HealthShowPercent",
         Default = false,
         CallingFunction = function(self, value: boolean)
@@ -5007,6 +5144,7 @@ end)();
 
     Health:Slider({
         Name = "Decimal Places",
+        Description = "Adjust the decimal places value setting.",
         Flag = "HealthDecimals",
         Min = 0,
         Max = 2,
@@ -5018,6 +5156,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Glow Effect",
+        Description = "Enable or disable glow effect functionality.",
         Flag = "HealthGlow",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5027,6 +5166,7 @@ end)();
 
     Health:Slider({
         Name = "Glow Intensity",
+        Description = "Adjust the glow intensity value setting.",
         Flag = "HealthGlowIntensity",
         Min = 1,
         Max = 15,
@@ -5038,6 +5178,7 @@ end)();
 
     Health:Slider({
         Name = "Glow Transparency",
+        Description = "Adjust visual opacity of rendered overlays and effects.",
         Flag = "HealthGlowTransparency",
         Min = 10,
         Max = 90,
@@ -5049,6 +5190,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Pulse On Low HP",
+        Description = "Apply movement velocity in periodic burst pulses.",
         Flag = "HealthPulse",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5058,6 +5200,7 @@ end)();
 
     Health:Slider({
         Name = "Pulse Threshold %",
+        Description = "Apply movement velocity in periodic burst pulses.",
         Flag = "HealthPulseThreshold",
         Min = 5,
         Max = 50,
@@ -5069,6 +5212,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Text Outline",
+        Description = "Enable or disable text outline functionality.",
         Flag = "HealthOutline",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5078,6 +5222,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Shadow",
+        Description = "Enable or disable shadow functionality.",
         Flag = "HealthShadow",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5087,6 +5232,7 @@ end)();
 
     Health:Slider({
         Name = "Shadow Offset",
+        Description = "Adjust the shadow offset value setting.",
         Flag = "HealthShadowOffset",
         Min = 1,
         Max = 6,
@@ -5098,6 +5244,7 @@ end)();
 
     Health:MiniToggle({
         Name = "Animate Changes",
+        Description = "Enable or disable animate changes functionality.",
         Flag = "HealthAnimate",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5107,6 +5254,7 @@ end)();
 
     Health:Slider({
         Name = "Animation Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "HealthAnimSpeed",
         Min = 1,
         Max = 20,

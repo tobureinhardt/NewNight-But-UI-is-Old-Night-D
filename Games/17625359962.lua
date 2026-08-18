@@ -127,6 +127,7 @@ local XRay = Windows.Utility:CreateModule({
 
 XRay:Slider({
 	Name = "Transparency",
+	Description = "Adjust visual opacity of rendered overlays and effects.",
 	Flag = "",
 	Default = 0,
 	Max = 1,
@@ -195,6 +196,7 @@ local HitboxAlterator = Windows.Combat:CreateModule({
 
 HitboxAlterator:Slider({
 	Name = "Hitbox Size",
+	Description = "Render 2D bounding boxes surrounding player character models.",
 	Flag = "",
 	Default = 6,
 	Max = 50,
@@ -259,6 +261,7 @@ local AntiParticleModule = Windows.Render:CreateModule({
 
 AntiParticleModule:MiniToggle({
 	Name = "Smoke",
+	Description = "Enable or disable smoke functionality.",
 	Default = true,
 	Flag = "",
 	CallingFunction = function(self, value)
@@ -268,6 +271,7 @@ AntiParticleModule:MiniToggle({
 
 AntiParticleModule:MiniToggle({
 	Name = "Flashbang",
+	Description = "Enable or disable flashbang functionality.",
 	Flag = "",
 	Default = true,
 	CallingFunction = function(self, value)
@@ -305,6 +309,7 @@ local StaffDetector = Windows.Utility:CreateModule({
 
 StaffDetector:Dropdown({
 	Name = "Respond Option",
+	Description = "Choose visual render style for highlighted players.",
 	Flag = "",
 	Default = {"Kick"},
 	Options = {"Kick"},
@@ -317,6 +322,7 @@ StaffDetector:Dropdown({
 
 StaffDetector:Dropdown({
 	Name = "Rank",
+	Description = "Filter detected moderators by permission rank tier.",
 	Flag = "",
 	Default = {"Community Staff"},
 	Options = {"Community Staff", "Tester", "Moderator", "Contributor", "Scripter", "Builder"},
@@ -459,6 +465,7 @@ local ACBypass = Windows.Utility:CreateModule({
 
 ACBypass:Dropdown({
 	Name = "Method",
+	Description = "Select anticheat mitigation and bypass technique.",
 	Flag = "",
 	Default = {"Universal"},
 	Options = {"Universal", "Old-Bypass"},

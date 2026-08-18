@@ -1181,6 +1181,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     Speed:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "SpeedValue",
         Default = 23,
         Min = 0,
@@ -1192,6 +1193,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     local DamageBoostSpeed = Speed:Slider({
         Name = "Damage Boost Speed",
+        Description = "Movement speed multiplier applied when taking damage.",
         Flag = "DamageSpeedValue",
         Default = 35,
         Min = 0,
@@ -1203,6 +1205,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     local DamageBoostTime = Speed:Slider({
         Name = "Damage Boost Time",
+        Description = "Duration of the speed boost after receiving damage.",
         Flag = "DamageBoostTimeValue",
         Default = 2,
         Min = 0.1,
@@ -1215,6 +1218,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     local DamageBoostDelay = Speed:Slider({
         Name = "Damage Boost Delay",
+        Description = "Cooldown time before damage boost can trigger again.",
         Flag = "DamageBoostDelayValue",
         Default = 0.8,
         Min = 0.1,
@@ -1227,6 +1231,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     local PulseDelay = Speed:Slider({
         Name = "Pulse Delay",
+        Description = "Configure waiting interval between speed burst pulses.",
         Flag = "SpeedPulseDelay",
         Default = 1.5,
         Min = 1,
@@ -1239,6 +1244,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     local PulseTime = Speed:Slider({
         Name = "Pulse Time",
+        Description = "Set the active duration for each speed pulse.",
         Flag = "SpeedPulseTime",
         Default = 1,
         Min = 0.5,
@@ -1251,6 +1257,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     local JumpDelay = Speed:Slider({
         Name = "Jump Delay",
+        Description = "Set the minimum cooldown time between consecutive jumps.",
         Flag = "SpeedAutoJumpDelay",
         Default = 0,
         Min = 0,
@@ -1262,6 +1269,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     Speed:MiniToggle({
         Name = "Consumable Boost",
+        Description = "Enable speed amplification when eating or using items.",
         Flag = "SpeedConsumableBoost",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -1271,6 +1279,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
     
     Speed:MiniToggle({
         Name = "Daamge Boost",
+        Description = "Gain a temporary speed burst upon receiving combat damage.",
         Flag = "SpeedDamageBoost",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -1283,6 +1292,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
     
     Speed:MiniToggle({
         Name = "Auto Jump",
+        Description = "Automatically jump while moving to maintain momentum.",
         Flag = "SpeedAutoJump",
         CallingFunction = function(self, value: boolean)
             SpeedData.Settings.AutoJump = value
@@ -1292,6 +1302,7 @@ Windows.Utility.Modules.UniversalAntiAFK:Destroy();
 
     Speed:MiniToggle({
         Name = "Pulse",
+        Description = "Apply movement velocity in periodic burst pulses.",
         Flag = "PusleSpeed",
         CallingFunction = function(self, value: boolean)
             SpeedData.Settings.Pulse = value
@@ -1442,6 +1453,7 @@ end)();
 
     Fly.Functions:KeyBind({
         Name = "Fly Up",
+        Description = "Keybind to ascend vertically while flying.",
         MobileText = "Fly Up",
         Flag = "FlyUpKeybind",
         DestroyMobileButtonOnDisable = true,
@@ -1458,6 +1470,7 @@ end)();
 
     Fly.Functions:KeyBind({
         Name = "Fly Down",
+        Description = "Keybind to descend vertically while flying.",
         MobileText = "Fly Down",
         Flag = "FlyDownKeybind",
         DestroyMobileButtonOnDisable = true,
@@ -1474,6 +1487,7 @@ end)();
 
     Fly:Slider({
         Name = "Speed",
+        Description = "Horizontal flight movement speed.",
         Flag = "FlySpeed",
         Default = 23,
         Min = 0,
@@ -1485,6 +1499,7 @@ end)();
 
     Fly:Slider({
         Name = "Vertical Speed",
+        Description = "Adjust ascent and descent velocity during flight.",
         Flag = "FlyVerticalSpeed",
         Default = 70,
         Min = 0,
@@ -1496,6 +1511,7 @@ end)();
 
     local FlyPulseDelay = Fly:Slider({
         Name = "Pulse Delay",
+        Description = "Configure waiting interval between speed burst pulses.",
         Flag = "FlySpeedPulseDelay",
         Default = 1.5,
         Min = 1,
@@ -1508,6 +1524,7 @@ end)();
 
     local FlyPulseTime = Fly:Slider({
         Name = "Pulse Time",
+        Description = "Set the active duration for each speed pulse.",
         Flag = "FlySpeedPulseTime",
         Default = 1,
         Min = 0.5,
@@ -1520,6 +1537,7 @@ end)();
 
     Fly:MiniToggle({
         Name = "Time Bar",
+        Description = "Enable or disable time bar functionality.",
         Flag = "FlyTimeBar",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -1539,6 +1557,7 @@ end)();
 
     Fly:MiniToggle({
         Name = "Time Limit",
+        Description = "Enable or disable time limit functionality.",
         Flag = "FlyTimeLimit",
         CallingFunction = function(self, value: boolean)
             FlyData.Settings.DisableWhenOutOfTime = value
@@ -1547,6 +1566,7 @@ end)();
 
     Fly:MiniToggle({
         Name = "TP Down",
+        Description = "Enable or disable tp down functionality.",
         Flag = "FlyTPDown",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -1556,6 +1576,7 @@ end)();
 
     Fly:MiniToggle({
         Name = "Consumable Boost",
+        Description = "Enable speed amplification when eating or using items.",
         Flag = "FlyConsumableBoost",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -1565,6 +1586,7 @@ end)();
 
     Fly:MiniToggle({
         Name = "Pulse",
+        Description = "Apply movement velocity in periodic burst pulses.",
         Flag = "FlySpeedPulse",
         CallingFunction = function(self, value: boolean)
             FlyData.Settings.Pulse = value
@@ -2262,6 +2284,7 @@ local CanFastHit = false
 
     local Trigger = KillAura:KeyBind({
         Name = "Trigger",
+        Description = "Button or keybind used to activate target tracking.",
         Flag = "KillAuraTrigger",
         Default = Enum.UserInputType.MouseButton1,
         Events = {
@@ -2277,6 +2300,7 @@ local CanFastHit = false
     
     KillAura:Slider({
         Name = "Range",
+        Description = "Maximum distance to automatically hit opponents.",
         Flag = "KillAuraRange",
         Min = 1,
         Max = 22,
@@ -2288,6 +2312,7 @@ local CanFastHit = false
 
     KillAura:Slider({
         Name = "Swing Range",
+        Description = "Maximum distance to automatically hit opponents.",
         Flag = "KillAuraSwingRange",
         Min = 1,
         Max = 30,
@@ -2299,6 +2324,7 @@ local CanFastHit = false
 
     KillAura:Slider({
         Name = "Hitreg",
+        Description = "Adjust the hitreg value setting.",
         Flag = "KillAuraHitreg",
         Min = 1,
         Max = 36,
@@ -2311,6 +2337,7 @@ local CanFastHit = false
 
     KillAura:Slider({
         Name = "Continue Swinging",
+        Description = "Simulate visual weapon swing animations locally.",
         Flag = "KillAuraContinueSwinging",
         Min = 0,
         Max = 2,
@@ -2323,6 +2350,7 @@ local CanFastHit = false
 
     KillAura:Slider({
         Name = "Max Angle",
+        Description = "Adjust the max angle value setting.",
         Flag = "KillAuraMaxAngle",
         Min = 1,
         Max = 360,
@@ -2334,6 +2362,7 @@ local CanFastHit = false
 
     MaxTargets = KillAura:Slider({
         Name = "Max Targets",
+        Description = "Adjust the max targets value setting.",
         Flag = "KillAuraMaxTargets",
         Min = 1,
         Max = 10,
@@ -2345,6 +2374,7 @@ local CanFastHit = false
 
     KillAura:Dropdown({
         Name = "Attack Mode",
+        Description = "Choose attack targeting logic and swing priority.",
         Flag = "KillAuraAttackMode",
         Default = "Switch",
         Options = {"Single", "Multi", "Switch"},
@@ -2358,6 +2388,7 @@ local CanFastHit = false
 
     KillAura:Dropdown({
         Name = "Targets",
+        Description = "Select preferred option for targets.",
         Flag = "KillAuraTargets",
         Default = {"Players", "Npcs"},
         Options = {"Players", "Npcs"},
@@ -2377,6 +2408,7 @@ local CanFastHit = false
     
     KillAura:Dropdown({
         Name = "Target Mode",
+        Description = "Choose attack targeting logic and swing priority.",
         Flag = "KillAuraTargetMode",
         Default = "Distance",
         Options = {"Distance", "Angle", "Lowest Health", "Highest Health"},
@@ -2387,6 +2419,7 @@ local CanFastHit = false
 
     KillAura:Dropdown({
         Name = "Target Priority",
+        Description = "Select preferred option for target priority.",
         Flag = "KillAuraTargetPriority",
         Default = "Players",
         Options = {"Players", "NPCs"},
@@ -2397,6 +2430,7 @@ local CanFastHit = false
 
     KillAura:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "KillAuraDelay",
         Min = 0,
         Max = 3,
@@ -2409,6 +2443,7 @@ local CanFastHit = false
 
     local HitsPerSecond = KillAura:Slider({
         Name = "Hits Per Second",
+        Description = "Adjust the hits per second value setting.",
         Flag = "KillAuraHitsPerSecond",
         Min = 1,
         Max = 100,
@@ -2420,6 +2455,7 @@ local CanFastHit = false
 
     local FastHitsFireRate = KillAura:Slider({
         Name = "Fast Hits Fire Rate",
+        Description = "Adjust the fast hits fire rate value setting.",
         Flag = "KillAuraFastHitsFireRate",
         Min = 0,
         Max = 2,
@@ -2432,6 +2468,7 @@ local CanFastHit = false
 
     local AirHitsChance = KillAura:Slider({
         Name = "Air Hits Chance",
+        Description = "Adjust the air hits chance value setting.",
         Flag = "KillAuraAirHitsChance",
         Min = 0,
         Max = 100,
@@ -2444,6 +2481,7 @@ local CanFastHit = false
 
     local TargetBoxTransparency = KillAura:Slider({
         Name = "Box Transparency",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "KillAuraTargetBoxTransparency",
         Min = 0,
         Max = 1,
@@ -2456,6 +2494,7 @@ local CanFastHit = false
 
     local ParticleRate = KillAura:Slider({
         Name = "Particle Rate",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "KillAuraParticleRate",
         Min = 0,
         Max = 50,
@@ -2467,6 +2506,7 @@ local CanFastHit = false
 
     local ParticleLifeTime = KillAura:Slider({
         Name = "Particle Time",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "KillAuraParticleLifeTime",
         Min = 0,
         Max = 5,
@@ -2497,6 +2537,7 @@ local CanFastHit = false
 
     local AnimationRestoreTime = KillAura:Slider({
         Name = "Animation Restore",
+        Description = "Adjust the animation restore value setting.",
         Flag = "KillAuraAnimationRestoreTime",
         Min = 0,
         Max = 1,
@@ -2509,6 +2550,7 @@ local CanFastHit = false
 
     local AnimationPicker = KillAura:Dropdown({
         Name = "Animation",
+        Description = "Select preferred option for animation.",
         Flag = "KillAuraAnimation",
         Default = "Night",
         Options = {"Night", "Smooth", "Funny", "Stand", "Air", "Hit", "Rise", "Moon", "Lunar"},
@@ -2519,6 +2561,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Custom Hit Reg",
+        Description = "Enable or disable custom hit reg functionality.",
         Flag = "KillAuraCustomHitReg",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.CustomHitReg = value
@@ -2529,6 +2572,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Dynamic Hits",
+        Description = "Enable or disable dynamic hits functionality.",
         Flag = "KillAuraDynamicHits",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2538,6 +2582,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Fast Hits",
+        Description = "Enable or disable fast hits functionality.",
         Flag = "KillAuraFastHits",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.FastHits = value
@@ -2548,6 +2593,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Fast Hits RL",
+        Description = "Enable or disable fast hits rl functionality.",
         Flag = "KillAuraFastHitsLegit",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.FastHitsLegit = value
@@ -2556,6 +2602,7 @@ local CanFastHit = false
 
     KillAura:TextBox({
         Name = "Fast Hits Projectiles",
+        Description = "Enter custom text value for fast hits projectiles.",
         Flag = "KillAuraFastHitsProjectiles",
         Default = "arrow, snowball",
         CallingFunction = function(self, value: string)
@@ -2565,6 +2612,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Sync Hit Time",
+        Description = "Enable or disable sync hit time functionality.",
         Flag = "KillAuraSyncHitTime",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.SyncHitTime = value
@@ -2573,6 +2621,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Air Hits",
+        Description = "Enable or disable air hits functionality.",
         Flag = "KillAuraAirHits",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2583,6 +2632,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Auto Jump",
+        Description = "Automatically jump while moving to maintain momentum.",
         Flag = "KillAuraAutoJump",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.AutoJump = value
@@ -2591,6 +2641,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Target Box",
+        Description = "Render 2D bounding boxes surrounding player character models.",
         Flag = "KillAuraTargetBox",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2602,6 +2653,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Particles",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "KillAuraParticles",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2615,6 +2667,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Auto Switch",
+        Description = "Enable or disable auto switch functionality.",
         Flag = "KillAuraAutoSwitch",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2624,6 +2677,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Hand Check",
+        Description = "Enable or disable hand check functionality.",
         Flag = "KillAuraHandCheck",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.HandCheck = value
@@ -2632,6 +2686,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Wall Check",
+        Description = "Verify direct line of sight to avoid targeting through obstacles.",
         Flag = "KillAuraWallCheck",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.WallCheck = value
@@ -2640,6 +2695,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Attackable Check",
+        Description = "Enable or disable attackable check functionality.",
         Flag = "KillAuraAttackableCheck",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.AttackableCheck = value
@@ -2648,6 +2704,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "No Swing",
+        Description = "Simulate visual weapon swing animations locally.",
         Flag = "KillAuraNoSwing",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.NoSwing = value
@@ -2656,6 +2713,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Trigger",
+        Description = "Button or keybind used to activate target tracking.",
         Flag = "KillAuraTriggerEnabled",
         CallingFunction = function(self, value: boolean)
             KillAuraData.Settings.TriggerButton = value
@@ -2665,6 +2723,7 @@ local CanFastHit = false
 
     KillAura:MiniToggle({
         Name = "Animation",
+        Description = "Enable or disable animation functionality.",
         Flag = "KillAuraUseAnimation",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2823,6 +2882,7 @@ end)();
 
     local KeyTrigger = Aimbot.Functions:KeyBind({
         Name = "Trigger",
+        Description = "Button or keybind used to activate target tracking.",
         MobileText = "Trigger",
         Flag = "AimbotTrigger",
         DestroyMobileButtonOnDisable = true,
@@ -2839,6 +2899,7 @@ end)();
 
     Aimbot:Dropdown({
         Name = "Part",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "AimbotPart",
         Default = "Head",
         Options = AimParts,
@@ -2849,6 +2910,7 @@ end)();
 
     Aimbot:Dropdown({
         Name = "Targets",
+        Description = "Select preferred option for targets.",
         Flag = "AimbotTargets",
         Default = {"Players", "Npcs"},
         Options = {"Players", "Npcs"},
@@ -2861,6 +2923,7 @@ end)();
 
     Aimbot:Dropdown({
         Name = "Mode",
+        Description = "Select target tracking mode between Camera, Mouse, or Silent.",
         Flag = "AimbotMode",
         Default = "Humanized",
         Options = {"Smooth", "Snap", "Humanized"},
@@ -2871,6 +2934,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Aim Speed",
+        Description = "Smoothness and tracking speed of camera rotation.",
         Flag = "AimbotSpeed",
         Default = 15,
         Min = 1,
@@ -2882,6 +2946,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Deadzone",
+        Description = "Inner deadzone radius where tracking adjustments pause.",
         Flag = "AimbotDeadzone",
         Default = 20,
         Min = 0,
@@ -2893,6 +2958,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Prediction",
+        Description = "Amount of target movement compensation based on velocity.",
         Flag = "AimbotPredictionAmount",
         Default = 0.12,
         Min = 0,
@@ -2905,6 +2971,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Jitter",
+        Description = "Intensity of randomized aim offset.",
         Flag = "AimbotJitterAmount",
         Default = 5,
         Min = 1,
@@ -2916,6 +2983,7 @@ end)();
 
     local FovSize = Aimbot:Slider({
         Name = "FOV Size",
+        Description = "Maximum angular radius around crosshair for targeting.",
         Flag = "AimbotFOVSize",
         Default = 80,
         Min = 1,
@@ -2930,6 +2998,7 @@ end)();
 
     Aimbot:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "AimbotDistance",
         Default = 20,
         Min = 1,
@@ -2953,6 +3022,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "FOV",
+        Description = "Draw a visible circle indicating the targeting area.",
         Flag = "AimbotFOV",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.CircleEnabled = value
@@ -2981,6 +3051,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "AimbotTeamCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -2990,6 +3061,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Distance Check",
+        Description = "Ignore players located beyond the configured reach range.",
         Flag = "AimbotDistanceCheck",
         Default = true,
         CallingFunction = function(self, value: number)
@@ -2999,6 +3071,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Wall Check",
+        Description = "Verify direct line of sight to avoid targeting through obstacles.",
         Flag = "AimbotWallCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -3008,6 +3081,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Prediction",
+        Description = "Predict future enemy positions to compensate for latency.",
         Flag = "AimbotPrediction",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.Prediction = value
@@ -3016,6 +3090,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Jitter",
+        Description = "Add subtle random jitter to simulate human aim.",
         Flag = "AimbotJitter",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.Jitter = value
@@ -3024,6 +3099,7 @@ end)();
 
     Aimbot:MiniToggle({
         Name = "Trigger Button",
+        Description = "Button or keybind used to activate target tracking.",
         Flag = "AimbotUseTriggerButton",
         CallingFunction = function(self, value: boolean)
             AimbotData.Settings.UseTriggerButton = value
@@ -3104,6 +3180,7 @@ end)();
 
     TargetHud:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "TargetHUDDistance",
         Min = 1,
         Max = 100,
@@ -3115,6 +3192,7 @@ end)();
 
     TargetHud:Dropdown({
         Name = "Targets",
+        Description = "Select preferred option for targets.",
         Flag = "TargetHUDTargets",
         Default = {"Players", "Npcs"},
         Options = {"Players", "Npcs"},
@@ -3127,6 +3205,7 @@ end)();
 
     TargetHud:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "TargetHUDTeamCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -3202,6 +3281,7 @@ end)();
 
     Nuker:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "NukerDistance",
         Min = 1,
         Max = 28,
@@ -3213,6 +3293,7 @@ end)();
 
     Nuker:MiniToggle({
         Name = "Switch Item",
+        Description = "Enable or disable switch item functionality.",
         Flag = "NukerSwitchItem",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -3222,6 +3303,7 @@ end)();
 
     Nuker:MiniToggle({
         Name = "HandCheck",
+        Description = "Enable or disable handcheck functionality.",
         Flag = "NukerHandCheck",
         CallingFunction = function(self, value: boolean)
             HandCheck = value
@@ -3280,6 +3362,7 @@ end)();
     
     Knockback:Slider({
         Name = "Knockback",
+        Description = "Adjust the knockback value setting.",
         Flag = "KnockbackChangerValue",
         Min = 0,
         Max = 30,
@@ -3421,6 +3504,7 @@ end
 
     Scaffold:KeyBind({
         Name = "Down",
+        Description = "Set custom keybind trigger for down.",
         MobileText = "Scaffold Down",
         Flag = "ScaffoldDownKeybind",
         DestroyMobileButtonOnDisable = true,
@@ -3437,6 +3521,7 @@ end
 
     Scaffold:KeyBind({
         Name = "Up",
+        Description = "Set custom keybind trigger for up.",
         MobileText = "Scaffold Up",
         Flag = "ScaffoldUpKeybind",
         DestroyMobileButtonOnDisable = true,
@@ -3453,6 +3538,7 @@ end
 
     Scaffold:Slider({
         Name = "Extend",
+        Description = "Adjust the extend value setting.",
         Flag = "ScaffoldExtend",
         Min = 1,
         Max = 10,
@@ -3464,6 +3550,7 @@ end
 
     Scaffold:Slider({
         Name = "Down",
+        Description = "Adjust the down value setting.",
         Flag = "ScaffoldDown",
         Min = 1,
         Max = 10,
@@ -3475,6 +3562,7 @@ end
 
     Scaffold:Slider({
         Name = "Up",
+        Description = "Adjust the up value setting.",
         Flag = "ScaffoldUp",
         Min = 1,
         Max = 10,
@@ -3550,6 +3638,7 @@ end)();
 
     local HealthSlider = AutoConsume:Slider({
         Name = "Health",
+        Description = "Render health indicators showing player remaining HP.",
         Flag = "AutoConsumeHealthValue",
         Min = 1,
         Max = 100,
@@ -3561,6 +3650,7 @@ end)();
 
     AutoConsume:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "AutoConsumeDelay",
         Min = 0,
         Max = 10,
@@ -3572,6 +3662,7 @@ end)();
 
     AutoConsume:MiniToggle({
         Name = "Potions",
+        Description = "Enable or disable potions functionality.",
         Flag = "AutoConsumePotions",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -3581,6 +3672,7 @@ end)();
 
     AutoConsume:MiniToggle({
         Name = "Health",
+        Description = "Render health indicators showing player remaining HP.",
         Flag = "AutoConsumeHealth",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -3645,6 +3737,7 @@ end)();
     
     ChestStealer:Slider({
         Name = "Range",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "ChestStealerRange",
         Min = 1,
         Max = 20,
@@ -3656,6 +3749,7 @@ end)();
 
     ChestStealer:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "ChestStealerDelay",
         Min = 0,
         Max = 5,
@@ -3667,6 +3761,7 @@ end)();
 
     ChestStealer:MiniToggle({
         Name = "Only Skywars",
+        Description = "Enable or disable only skywars functionality.",
         Flag = "ChestStealerSkywars",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -3730,6 +3825,7 @@ end)();
     
     WallClimb:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "WallClimbSpeed",
         Min = 1,
         Max = 120,
@@ -3741,6 +3837,7 @@ end)();
 
     WallClimb:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "WallClimbDistance",
         Min = 1,
         Max = 5,
@@ -3906,6 +4003,7 @@ end)();
 
     ProjAimbot:Dropdown({
         Name = "Target Part",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "ProjAimbotPart",
         Default = "HumanoidRootPart",
         Options = AimParts,
@@ -3916,6 +4014,7 @@ end)();
 
     ProjAimbot:Dropdown({
         Name = "Targets",
+        Description = "Select preferred option for targets.",
         Flag = "ProjAimbotTargets",
         Default = {"Players", "Npcs"},
         Options = {"Players", "Npcs"},
@@ -3940,6 +4039,7 @@ end)();
 
     local FovSize = ProjAimbot:Slider({
         Name = "FOV Size",
+        Description = "Maximum angular radius around crosshair for targeting.",
         Flag = "ProjAimbotFOVSize",
         Default = 1000,
         Min = 1,
@@ -3954,6 +4054,7 @@ end)();
 
     local Distance = ProjAimbot:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "ProjAimbotDistance",
         Default = 100,
         Min = 1,
@@ -3965,6 +4066,7 @@ end)();
 
     ProjAimbot:MiniToggle({
         Name = "FOV",
+        Description = "Draw a visible circle indicating the targeting area.",
         Flag = "ProjAimbotFOV",
         CallingFunction = function(self, value: boolean)
             ProjAimbotData.Settings.FOV = value
@@ -3994,6 +4096,7 @@ end)();
 
     ProjAimbot:MiniToggle({
         Name = "Other Projectiles",
+        Description = "Enable or disable other projectiles functionality.",
         Flag = "ProjAimbotOtherProjectiles",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -4003,6 +4106,7 @@ end)();
 
     ProjAimbot:MiniToggle({
         Name = "Distance Check",
+        Description = "Ignore players located beyond the configured reach range.",
         Flag = "ProjAimbotDistanceCheck",
         CallingFunction = function(self, value: number)
             ProjAimbotData.Settings.DistCheck = value
@@ -4012,6 +4116,7 @@ end)();
 
     ProjAimbot:MiniToggle({
         Name = "Wall Check",
+        Description = "Verify direct line of sight to avoid targeting through obstacles.",
         Flag = "ProjAimbotWallCheck",
         CallingFunction = function(self, value: boolean)
             ProjAimbotData.Settings.WallCheck = value
@@ -4020,6 +4125,7 @@ end)();
 
     ProjAimbot:TextBox({
         Name = "Blacklisted Projectiles",
+        Description = "Enter custom text value for blacklisted projectiles.",
         Flag = "ProjAimbotBlacklist",
         Default = "Lowercases, separated by comma",
         CallingFunction = function(self, value: string)
@@ -4285,6 +4391,7 @@ end)();
 
     ProjAura:TextBox({
         Name = "Projectiles",
+        Description = "Enter custom text value for projectiles.",
         Flag = "ProjectileAuraProjectiles",
         Default = "arrow, snowball",
         CallingFunction = function(self, value: string)
@@ -4294,6 +4401,7 @@ end)();
 
     ProjAura:Slider({
         Name = "Range",
+        Description = "Maximum distance to automatically hit opponents.",
         Flag = "ProjectileAuraRange",
         Min = 1,
         Max = 200,
@@ -4305,6 +4413,7 @@ end)();
 
     ProjAura:Slider({
         Name = "Fire Rate",
+        Description = "Adjust the fire rate value setting.",
         Flag = "ProjectileAuraFireRate",
         Min = 0,
         Max = 0.5,
@@ -4317,6 +4426,7 @@ end)();
 
     ProjAura:Slider({
         Name = "Max Angle",
+        Description = "Adjust the max angle value setting.",
         Flag = "ProjectileAuraMaxAngle",
         Min = 1,
         Max = 360,
@@ -4328,6 +4438,7 @@ end)();
 
     ProjAura:Dropdown({
         Name = "Targets",
+        Description = "Select preferred option for targets.",
         Flag = "ProjectileAuraTargets",
         Default = {"Players", "Npcs"},
         Options = {"Players", "Npcs"},
@@ -4347,6 +4458,7 @@ end)();
 
     ProjAura:Dropdown({
         Name = "Target Mode",
+        Description = "Choose attack targeting logic and swing priority.",
         Flag = "ProjectileAuraTargetMode",
         Default = "Distance",
         Options = {"Distance", "Angle", "Lowest Health", "Highest Health"},
@@ -4357,6 +4469,7 @@ end)();
 
     ProjAura:MiniToggle({
         Name = "Wall Check",
+        Description = "Verify direct line of sight to avoid targeting through obstacles.",
         Flag = "ProjectileAuraWallCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -4857,6 +4970,7 @@ end)();
 
     LongJump:Slider({
         Name = "Fireball Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "LongJumpSpeedFireball",
         Min = 1,
         Max = 28,
@@ -4868,6 +4982,7 @@ end)();
 
     LongJump:Slider({
         Name = "Yuzi Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "LongJumpSpeedYuzi",
         Min = 1,
         Max = 150,
@@ -4879,6 +4994,7 @@ end)();
 
     LongJump:Slider({
         Name = "Hammer Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "LongJumpSpeedHammer",
         Min = 1,
         Max = 60,
@@ -4890,6 +5006,7 @@ end)();
 
     LongJump:MiniToggle({
         Name = "Camera Direction",
+        Description = "Enable or disable camera direction functionality.",
         Flag = "LongJumpCameraDirection",
         CallingFunction = function(self, value: boolean)
             Settings.CameraDirection = value
@@ -4927,6 +5044,7 @@ end)();
 
     Phase:KeyBind({
         Name = "Phase Bind",
+        Description = "Set custom keybind trigger for phase bind.",
         MobileText = "Use Phase",
         Flag = "PhaseActualBind",
         DestroyMobileButtonOnDisable = true,
@@ -4943,6 +5061,7 @@ end)();
 
     Phase:Slider({
         Name = "TP Studs",
+        Description = "Adjust the tp studs value setting.",
         Flag = "PhaseStuds",
         Min = 1,
         Max = 10,
@@ -5008,6 +5127,7 @@ end)();
 
     AutoUpgrade:Dropdown({
         Name = "Upgrades",
+        Description = "Select preferred option for upgrades.",
         Flag = "AutoUpgradeUpgrades",
         Default = {"Damage", "Armor"},
         Options = Upgrades,
@@ -5019,6 +5139,7 @@ end)();
 
     AutoUpgrade:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "AutoUpgradeDistance",
         Min = 1,
         Max = 18,
@@ -5030,6 +5151,7 @@ end)();
 
     AutoUpgrade:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "AutoUpgradeDelay",
         Min = 0,
         Max = 5,
@@ -5042,6 +5164,7 @@ end)();
 
     AutoUpgrade:MiniToggle({
         Name = "UI Check",
+        Description = "Enable or disable ui check functionality.",
         Flag = "AutoUpgradeUICheck",
         CallingFunction = function(self, value: boolean)
             UICheck = value
@@ -5110,6 +5233,7 @@ end)();
 
     AutoBuy:Dropdown({
         Name = "Items",
+        Description = "Select preferred option for items.",
         Flag = "AutoBuyItems",
         Default = {"Sword", "Armor"},
         Options = {"Sword", "Armor"},
@@ -5121,6 +5245,7 @@ end)();
 
     AutoBuy:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "AutoBuyDistance",
         Min = 1,
         Max = 18,
@@ -5132,6 +5257,7 @@ end)();
 
     AutoBuy:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "AutoBuyDelay",
         Min = 0,
         Max = 5,
@@ -5144,6 +5270,7 @@ end)();
 
     AutoBuy:MiniToggle({
         Name = "UI Check",
+        Description = "Enable or disable ui check functionality.",
         Flag = "AutoBuyUICheck",
         CallingFunction = function(self, value: boolean)
             UICheck = value
@@ -5184,6 +5311,7 @@ end)();
 
     PickupRange:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "PickupRangeDistance",
         Min = 1,
         Max = 10,
@@ -5195,6 +5323,7 @@ end)();
 
     PickupRange:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "PickupRangeDelay",
         Min = 0,
         Max = 5,
@@ -5350,6 +5479,7 @@ end)();
 
     AntiHit:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "AntiHitDistance",
         Min = 1,
         Max = 30,
@@ -5361,6 +5491,7 @@ end)();
 
     AntiHit:Dropdown({
         Name = "Targets",
+        Description = "Select preferred option for targets.",
         Flag = "AntiHitTargets",
         Default = {"Players", "Npcs"},
         Options = {"Players", "Npcs"},
@@ -5374,6 +5505,7 @@ end)();
     local Dynamic, Up, Down
     AntiHit:MiniToggle({
         Name = "Damage Wait",
+        Description = "Enable or disable damage wait functionality.",
         Flag = "AntiHitDamageWait",
         CallingFunction = function(self, value: boolean)
             AntiHitData.Settings.WaitUntilDamage = value
@@ -5385,6 +5517,7 @@ end)();
 
     Dynamic = AntiHit:MiniToggle({
         Name = "Dynamic",
+        Description = "Enable or disable dynamic functionality.",
         Flag = "AntiHitDynamic",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5396,6 +5529,7 @@ end)();
 
     AntiHit:Slider({
         Name = "Height",
+        Description = "Adjust the height value setting.",
         Flag = "AntiHitHeight",
         Min = 1,
         Max = 200,
@@ -5407,6 +5541,7 @@ end)();
 
     AntiHit:Slider({
         Name = "Stay Up",
+        Description = "Adjust the stay up value setting.",
         Flag = "AntiHitStayUp",
         Min = 0.1,
         Max = 1,
@@ -5419,6 +5554,7 @@ end)();
 
     AntiHit:Slider({
         Name = "Stay Down",
+        Description = "Adjust the stay down value setting.",
         Flag = "AntiHitStayDown",
         Min = 0.1,
         Max = 1,
@@ -5431,6 +5567,7 @@ end)();
 
     Up = AntiHit:Slider({
         Name = "Up Modifier",
+        Description = "Adjust the up modifier value setting.",
         Flag = "AntiHitUpModifier",
         Min = 0,
         Max = 2,
@@ -5443,6 +5580,7 @@ end)();
 
     Down = AntiHit:Slider({
         Name = "Down Modifier",
+        Description = "Adjust the down modifier value setting.",
         Flag = "AntiHitDownModifier",
         Min = 0,
         Max = 2,
@@ -5659,6 +5797,7 @@ end)();
 
     StaffDetector:Dropdown({
         Name = "Mode",
+        Description = "Select operating mode mode for this module.",
         Flag = "StaffDetectorMode",
         Default = "Uninject",
         Options = {"Uninject", "Notify"},
@@ -5669,6 +5808,7 @@ end)();
 
     StaffDetector:MiniToggle({
         Name = "Clans",
+        Description = "Enable or disable clans functionality.",
         Flag = "StaffDetectorClans",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5678,6 +5818,7 @@ end)();
 
     StaffDetector:MiniToggle({
         Name = "YouTubers",
+        Description = "Enable or disable youtubers functionality.",
         Flag = "StaffDetectorYouTubers",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5687,6 +5828,7 @@ end)();
 
     StaffDetector:MiniToggle({
         Name = "Leave Party",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "StaffDetectorParty",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -5764,6 +5906,7 @@ end)();
 
     AutoQueue:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "AutoQueueDelay",
         Min = 0,
         Max = 4,
@@ -5897,6 +6040,7 @@ end
     local AntiVoidLaunch, AntiVoidTP = {}, {}
     AntiVoid:Dropdown({
         Name = "Mode",
+        Description = "Select operating mode mode for this module.",
         Flag = "AntiVoidMode",
         Options = {"Launch", "Teleport", "Jump", "Velocity", "Tween", "Walk"},
         Default = "Launch",
@@ -5912,6 +6056,7 @@ end
 
     AntiVoid:Dropdown({
         Name = "Material",
+        Description = "Select preferred option for material.",
         Flag = "AntiVoidMaterial",
         Options = Materials,
         Default = "Air",
@@ -5923,6 +6068,7 @@ end
     local DebounceTimeSlider
     AntiVoid:MiniToggle({
         Name = "Debounce",
+        Description = "Enable or disable debounce functionality.",
         Flag = "AntiVoidDebounce",
         CallingFunction = function(self, value: boolean)
             AntiVoidData.UseDebounce = value
@@ -5932,6 +6078,7 @@ end
 
     DebounceTimeSlider = AntiVoid:Slider({
         Name = "Debounce",
+        Description = "Adjust the debounce value setting.",
         Flag = "AntiVoidDebounceTime",
         Min = 0,
         Max = 1,
@@ -5944,6 +6091,7 @@ end
 
     table.insert(AntiVoidLaunch, AntiVoid:Slider({
         Name = "Loop",
+        Description = "Adjust the loop value setting.",
         Flag = "AntiVoidLoop",
         Min = 5,
         Max = 4,
@@ -5955,6 +6103,7 @@ end
 
     table.insert(AntiVoidLaunch, AntiVoid:Slider({
         Name = "Height Add",
+        Description = "Adjust the height add value setting.",
         Flag = "AntiVoidAdd",
         Min = 5,
         Max = 15,
@@ -5966,6 +6115,7 @@ end
 
     table.insert(AntiVoidLaunch, AntiVoid:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "AntiVoidDelay",
         Min = 0.1,
         Max = 0.6,
@@ -5978,6 +6128,7 @@ end
 
     table.insert(AntiVoidTP, AntiVoid:Slider({
         Name = "TP Times",
+        Description = "Adjust the tp times value setting.",
         Flag = "AntiVoidTimes",
         Min = 1,
         Max = 5,
@@ -5989,6 +6140,7 @@ end
 
     table.insert(AntiVoidTP, AntiVoid:Slider({
         Name = "Power",
+        Description = "Adjust the power value setting.",
         Flag = "AntiVoidPower",
         Min = 5,
         Max = 15,
@@ -6000,6 +6152,7 @@ end
 
     JumpSlider = AntiVoid:Slider({
         Name = "Jumps",
+        Description = "Adjust the jumps value setting.",
         Flag = "AntiVoidJumps",
         Min = 3,
         Max = 15,
@@ -6011,6 +6164,7 @@ end
 
     PowerSlider = AntiVoid:Slider({
         Name = "Velocity",
+        Description = "Adjust the velocity value setting.",
         Flag = "AntiVoidVelocityPower",
         Min = 50,
         Max = 400,
@@ -6022,6 +6176,7 @@ end
 
     TweenSpeedSlider = AntiVoid:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "AntiVoidTweenSpeed",
         Min = 0.05,
         Max = 0.5,
@@ -6034,6 +6189,7 @@ end
 
     AntiVoid:Slider({
         Name = "Transparency",
+        Description = "Adjust visual opacity of rendered overlays and effects.",
         Flag = "AntiVoidPartTransparency",
         Min = 0,
         Max = 1,
@@ -6159,6 +6315,7 @@ end)();
     local SwitchItemToggle, TargetsOption, MaxAngleOption
     AutoKit:Dropdown({
         Name = "Kit",
+        Description = "Select preferred option for kit.",
         Flag = "AutoKitSelectedKit",
         Options = {"Eldertree", "Star Collector Stella", "Beekeeper Beatrix", "Kaida", "Grim Reaper"},
         Default = "Eldertree",
@@ -6172,6 +6329,7 @@ end)();
 
     TargetsOption = AutoKit:Dropdown({
         Name = "Targets",
+        Description = "Select preferred option for targets.",
         Flag = "AutoKitTargets",
         Default = {"Players", "Npcs"},
         Options = {"Players", "Npcs"},
@@ -6184,6 +6342,7 @@ end)();
 
     SwitchItemToggle = AutoKit:MiniToggle({
         Name = "Switch Item",
+        Description = "Enable or disable switch item functionality.",
         Flag = "AutoKitSwitchItem",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -6193,6 +6352,7 @@ end)();
 
     MaxAngleOption = AutoKit:Slider({
         Name = "Max Angle",
+        Description = "Adjust the max angle value setting.",
         Flag = "AutoKitMaxAngle",
         Min = 1,
         Max = 360,
@@ -6204,6 +6364,7 @@ end)();
 
     AutoKit:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "AutoKitActivationDistance",
         Min = 1,
         Max = 32,
@@ -6215,6 +6376,7 @@ end)();
 
     AutoKit:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "AutoKitActivationDelay",
         Min = 0,
         Max = 5,
@@ -6250,6 +6412,7 @@ end)();
 
     AntiSuffocate:Slider({
         Name = "Boost",
+        Description = "Adjust the boost value setting.",
         Flag = "AntiSuffocateBoost",
         Min = 10,
         Max = 100,
@@ -6360,6 +6523,7 @@ end)();
     local Final
     AutoToxic:MiniToggle({
         Name = "Kill",
+        Description = "Enable or disable kill functionality.",
         Flag = "AutoToxicKill",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -6370,6 +6534,7 @@ end)();
 
     Final = AutoToxic:MiniToggle({
         Name = "Final Kill",
+        Description = "Enable or disable final kill functionality.",
         Flag = "AutoToxicFinalKill",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -6379,6 +6544,7 @@ end)();
 
     AutoToxic:MiniToggle({
         Name = "Bed Break",
+        Description = "Enable or disable bed break functionality.",
         Flag = "AutoToxicBedBreak",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -6388,6 +6554,7 @@ end)();
 
     AutoToxic:MiniToggle({
         Name = "Win",
+        Description = "Enable or disable win functionality.",
         Flag = "AutoToxicWin",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -6398,6 +6565,7 @@ end)();
     local Kill, Bed, Win
     AutoToxic:MiniToggle({
         Name = "Custom",
+        Description = "Enable or disable custom functionality.",
         Flag = "AutoToxicCustom",
         CallingFunction = function(self, value: boolean)
             AutoToxicData.Custom = value
@@ -6415,6 +6583,7 @@ end)();
 
     Kill = AutoToxic:TextBox({
         Name = "Kill Message",
+        Description = "Enter custom text value for kill message.",
         Flag = "AutoToxicKillMessage",
         Default = "Lowercases, separated by comma (use <PLR>)",
         CallingFunction = function(self, value: string)
@@ -6426,6 +6595,7 @@ end)();
 
     Bed = AutoToxic:TextBox({
         Name = "Bed Break Message",
+        Description = "Enter custom text value for bed break message.",
         Flag = "AutoToxicBedBreakMessage",
         Default = "Lowercases, separated by comma (use <TEAM>)",
         CallingFunction = function(self, value: string)
@@ -6437,6 +6607,7 @@ end)();
 
     Win = AutoToxic:TextBox({
         Name = "Win Message",
+        Description = "Enter custom text value for win message.",
         Flag = "AutoToxicWinMessage",
         Default = "Lowercases, separated by comma",
         CallingFunction = function(self, value: string)
@@ -6500,6 +6671,7 @@ end)();
 
     AutoVoidDrop:TextBox({
         Name = "Items",
+        Description = "Enter custom text value for items.",
         Flag = "AutoVoidDropItems",
         Default = "emerald, diamond, iron",
         CallingFunction = function(self, value: string)
@@ -6509,6 +6681,7 @@ end)();
 
     AutoVoidDrop:Slider({
         Name = "Position",
+        Description = "Adjust the position value setting.",
         Flag = "AutoVoidDropPosition",
         Min = 30,
         Max = 100,
@@ -6520,6 +6693,7 @@ end)();
 
     AutoVoidDrop:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "AutoVoidDropDelay",
         Min = 0.1,
         Max = 0.3,
@@ -6532,6 +6706,7 @@ end)();
 
     AutoVoidDrop:MiniToggle({
         Name = "Owl Check",
+        Description = "Enable or disable owl check functionality.",
         Flag = "AutoVoidDropOwl",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -6560,6 +6735,7 @@ end)();
 
     FastBreak:Slider({
         Name = "Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "FastBreakSpeed",
         Min = 0.01,
         Max = 0.3,
@@ -6591,6 +6767,7 @@ end)();
 
     FarBreak:Slider({
         Name = "Distance",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "FarBreakDistance",
         Min = 1,
         Max = 30,
@@ -6792,6 +6969,7 @@ end)();
 
     ChestESP:TextBox({
         Name = "Items",
+        Description = "Enter custom text value for items.",
         Flag = "ChestESPItems",
         Default = "emerald, speed",
         CallingFunction = function(self, value: string)
@@ -6801,6 +6979,7 @@ end)();
 
     ChestESP:Slider({
         Name = "Corner",
+        Description = "Adjust the corner value setting.",
         Flag = "ChestESPCorner",
         Min = 0,
         Max = 10,
@@ -6879,6 +7058,7 @@ end)();
 
     Desync:KeyBind({
         Name = "Resync",
+        Description = "Set custom keybind trigger for resync.",
         Flag = "DesyncResync",
         Default = Enum.KeyCode.L,
         Events = {
@@ -6893,6 +7073,7 @@ end)();
 
     Desync:MiniToggle({
         Name = "No Fall",
+        Description = "Enable or disable no fall functionality.",
         Flag = "DesyncNoFall",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -6902,6 +7083,7 @@ end)();
 
     Desync:MiniToggle({
         Name = "Reset",
+        Description = "Enable or disable reset functionality.",
         Flag = "DesyncReset",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -6955,6 +7137,7 @@ end)();
 
     AutoBalloon:Slider({
         Name = "Height",
+        Description = "Adjust the height value setting.",
         Flag = "AutoBalloonActivationHeight",
         Min = 0,
         Max = 100,
@@ -6966,6 +7149,7 @@ end)();
 
     AutoBalloon:Slider({
         Name = "Amount",
+        Description = "Adjust the amount value setting.",
         Flag = "AutoBalloonUsageAmount",
         Min = 1,
         Max = 3,
@@ -6977,6 +7161,7 @@ end)();
 
     AutoBalloon:MiniToggle({
         Name = "Switch Item",
+        Description = "Enable or disable switch item functionality.",
         Flag = "AutoBalloonSwitchItem",
         CallingFunction = function(self, value: boolean)
             ShouldSwitchItem = value
@@ -7083,6 +7268,7 @@ end)();
 
     BlockIn:Dropdown({
         Name = "Order",
+        Description = "Select preferred option for order.",
         Flag = "BlockInORder",
         Options = {"Low", "High"},
         Default = "Low",
@@ -7093,6 +7279,7 @@ end)();
     
     BlockIn:MiniToggle({
         Name = "Auto Switch",
+        Description = "Enable or disable auto switch functionality.",
         Flag = "BlockInAutoSwitch",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -7102,6 +7289,7 @@ end)();
 
     BlockIn:MiniToggle({
         Name = "Hand Check",
+        Description = "Enable or disable hand check functionality.",
         Flag = "BlockInHandCheck",
         CallingFunction = function(self, value: boolean)
             HandCheck = value
@@ -7110,6 +7298,7 @@ end)();
 
     BlockIn:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "BlockInDelay",
         Min = 0,
         Max = 1,
@@ -7356,6 +7545,7 @@ end)();
 
     SilentAura:Slider({
         Name = "Aim Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "SilentAuraSpeed",
         Default = 15,
         Min = 1,
@@ -7367,6 +7557,7 @@ end)();
 
     SilentAura:Slider({
         Name = "Range",
+        Description = "Maximum distance to automatically hit opponents.",
         Flag = "SilentAuraRange",
         Default = 25,
         Min = 5,
@@ -7378,6 +7569,7 @@ end)();
 
     SilentAura:Slider({
         Name = "Click Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "SilentAuraClickSpeed",
         Default = 16,
         Min = 1,
@@ -7389,6 +7581,7 @@ end)();
 
     SilentAura:Dropdown({
         Name = "Part",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "SilentAuraPart",
         Default = "HumanoidRootPart",
         Options = AimParts,
@@ -7399,6 +7592,7 @@ end)();
 
     SilentAura:Dropdown({
         Name = "Targets",
+        Description = "Select preferred option for targets.",
         Flag = "SilentAuraTargets",
         Default = {"Players", "Npcs"},
         Options = {"Players", "Npcs"},
@@ -7411,6 +7605,7 @@ end)();
 
     SilentAura:MiniToggle({
         Name = "Perfect Hits",
+        Description = "Enable or disable perfect hits functionality.",
         Default = true,
         Flag = "SilentAuraPerfectHits",
         CallingFunction = function(self, value: boolean)
@@ -7420,6 +7615,7 @@ end)();
 
     SilentAura:MiniToggle({
         Name = "Auto Click",
+        Description = "Frequency of simulated clicks generated per second.",
         Default = true,
         Flag = "SilentAuraAutoClick",
         CallingFunction = function(self, value: boolean)
@@ -7429,6 +7625,7 @@ end)();
 
     SilentAura:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Default = true,
         Flag = "SilentAuraTeamCheck",
         CallingFunction = function(self, value: boolean)
@@ -7438,6 +7635,7 @@ end)();
 
     SilentAura:MiniToggle({
         Name = "Wall Check",
+        Description = "Verify direct line of sight to avoid targeting through obstacles.",
         Default = true,
         Flag = "SilentAuraWallCheck",
         CallingFunction = function(self, value: boolean)
@@ -7515,6 +7713,7 @@ end)();
 
     AutoDodge:Slider({
         Name = "Range",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "AutoDodgeRange",
         Default = 15,
         Min = 5,
@@ -7526,6 +7725,7 @@ end)();
 
     AutoDodge:Slider({
         Name = "Delay",
+        Description = "Adjust the delay value setting.",
         Flag = "AutoDodgeDelay",
         Default = 1,
         Min = 0,
@@ -7537,6 +7737,7 @@ end)();
 
     AutoDodge:Slider({
         Name = "Dodge Offset",
+        Description = "Adjust the dodge offset value setting.",
         Flag = "AutoDodgeDodgeOffset",
         Default = 50,
         Min = 0,
@@ -7694,6 +7895,7 @@ end)();
 
     TargetStrafe:Slider({
         Name = "Range",
+        Description = "Maximum detection and interaction distance in studs.",
         Flag = "TargetStrafeRange",
         Default = 10,
         Min = 5,
@@ -7705,6 +7907,7 @@ end)();
 
     TargetStrafe:Slider({
         Name = "Strafe Speed",
+        Description = "Configure the movement speed multiplier.",
         Flag = "TargetStrafeSpeed",
         Default = 1.2,
         Min = 0.1,
@@ -7716,6 +7919,7 @@ end)();
 
     TargetStrafe:Slider({
         Name = "Strafe Radius",
+        Description = "Adjust the strafe radius value setting.",
         Flag = "TargetStrafeRadius",
         Default = 8,
         Min = 3,
@@ -7727,6 +7931,7 @@ end)();
 
     TargetStrafe:Slider({
         Name = "Jump Delay",
+        Description = "Set the minimum cooldown time between consecutive jumps.",
         Flag = "TargetStrafeJumpDelay",
         Default = 0.6,
         Min = 0.1,
@@ -7738,6 +7943,7 @@ end)();
 
     TargetStrafe:Slider({
         Name = "Reverse Interval",
+        Description = "Adjust the reverse interval value setting.",
         Flag = "TargetStrafeReverseInterval",
         Default = 1.5,
         Min = 0.3,
@@ -7749,6 +7955,7 @@ end)();
 
     TargetStrafe:Slider({
         Name = "Sprint Multiplier",
+        Description = "Adjust the sprint multiplier value setting.",
         Flag = "TargetStrafeSprintMultiplier",
         Default = 1.0,
         Min = 0.5,
@@ -7760,6 +7967,7 @@ end)();
 
     TargetStrafe:MiniToggle({
         Name = "Auto Jump",
+        Description = "Automatically jump while moving to maintain momentum.",
         Flag = "TargetStrafeAutoJump",
         CallingFunction = function(self, value: boolean)
             TargetStrafeData.Settings.AutoJump = value
@@ -7768,6 +7976,7 @@ end)();
 
     TargetStrafe:MiniToggle({
         Name = "Smart Dodge",
+        Description = "Enable or disable smart dodge functionality.",
         Flag = "TargetStrafeDodge",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -7777,6 +7986,7 @@ end)();
 
     TargetStrafe:MiniToggle({
         Name = "Team Check",
+        Description = "Filter out friendly teammates and allies from targeting.",
         Flag = "TargetStrafeTeamCheck",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -7786,6 +7996,7 @@ end)();
 
     TargetStrafe:Dropdown({
         Name = "Mode",
+        Description = "Select visual layout and style for the Target HUD.",
         Flag = "TargetStrafeMode",
         Default = "Distance",
         Options = {"Distance", "Lowest Health", "Highest Health", "Angle"},
@@ -8096,6 +8307,7 @@ end)();
 
     Beekeeper:MiniToggle({
         Name = "Show Bees",
+        Description = "Enable or disable show bees functionality.",
         Flag = "BeeESPShowBees",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -8110,6 +8322,7 @@ end)();
 
     Beekeeper:MiniToggle({
         Name = "Show Hives",
+        Description = "Enable or disable show hives functionality.",
         Flag = "BeeESPShowHives",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -8124,6 +8337,7 @@ end)();
 
     Beekeeper:MiniToggle({
         Name = "Notifications",
+        Description = "Enable or disable notifications functionality.",
         Flag = "BeeESPNotify",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -8133,6 +8347,7 @@ end)();
 
     Beekeeper:MiniToggle({
         Name = "Max LVL Notify",
+        Description = "Enable or disable max lvl notify functionality.",
         Flag = "BeeESPNotifyMax",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -8185,6 +8400,7 @@ end)();
 
     Beekeeper:Slider({
         Name = "Transparency",
+        Description = "Adjust visual opacity of rendered overlays and effects.",
         Flag = "BeeESPTransparency",
         Default = 50,
         Min = 0,
@@ -8200,6 +8416,7 @@ end)();
 
     Beekeeper:Slider({
         Name = "Corner Radius",
+        Description = "Adjust the corner radius value setting.",
         Flag = "BeeESPCorner",
         Default = 6,
         Min = 0,
@@ -8215,6 +8432,7 @@ end)();
 
     Beekeeper:Slider({
         Name = "Bee Size",
+        Description = "Adjust dimensions and scale of the visual element.",
         Flag = "BeeESPBeeSize",
         Default = 36,
         Min = 16,
@@ -8578,6 +8796,7 @@ end)();
 
 	CannonReskin:Dropdown({
 		Name = "Skin",
+		Description = "Select preferred option for skin.",
 		Flag = "CannonReskinSkin",
 		Options = {"Nightmare", "Diamond", "Emerald"},
 		Default = {"Nightmare"},
@@ -8706,6 +8925,7 @@ end)();
     local SwordSize, PartsSize
     Hitboxes:MiniToggle({
         Name = "Sword",
+        Description = "Enable or disable sword functionality.",
         Flag = "HitboxesSword",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -8716,6 +8936,7 @@ end)();
 
     SwordSize = Hitboxes:Slider({
         Name = "Sword Size",
+        Description = "Expand opponent bounding box dimensions for easier hits.",
         Flag = "HitboxesSwordSize",
         Min = 3.8,
         Max = 6.8,
@@ -8728,6 +8949,7 @@ end)();
 
     Hitboxes:MiniToggle({
         Name = "Parts",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "HitboxesParts",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -8738,6 +8960,7 @@ end)();
 
     PartsSize = Hitboxes:Slider({
         Name = "Parts Size",
+        Description = "Target body part priority (Head, Torso, HumanoidRootPart).",
         Flag = "HitboxesPartsSize",
         Min = 2,
         Max = 15,
@@ -9274,6 +9497,7 @@ end)();
 
     GeneratorESP:MiniToggle({
         Name = "Diamonds",
+        Description = "Enable or disable diamonds functionality.",
         Flag = "GeneratorESPDiamonds",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -9284,6 +9508,7 @@ end)();
 
     GeneratorESP:MiniToggle({
         Name = "Emeralds",
+        Description = "Enable or disable emeralds functionality.",
         Flag = "GeneratorESPEmeralds",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -9294,6 +9519,7 @@ end)();
 
     GeneratorESP:MiniToggle({
         Name = "Team Generators",
+        Description = "Enable or disable team generators functionality.",
         Flag = "GeneratorESPTeamGens",
         Default = true,
         CallingFunction = function(self, value: boolean)
@@ -9304,6 +9530,7 @@ end)();
 
     GeneratorESP:MiniToggle({
         Name = "Own Team",
+        Description = "Enable or disable own team functionality.",
         Flag = "GeneratorESPOwnTeam",
         Default = false,
         CallingFunction = function(self, value: boolean)
@@ -9314,6 +9541,7 @@ end)();
 
     GeneratorESP:MiniToggle({
         Name = "Enemy Teams",
+        Description = "Enable or disable enemy teams functionality.",
         Flag = "GeneratorESPEnemyTeams",
         Default = true,
         CallingFunction = function(self, value: boolean)
