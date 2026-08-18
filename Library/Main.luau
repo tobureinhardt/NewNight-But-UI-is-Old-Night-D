@@ -877,6 +877,7 @@ function Assets.Functions:CreateTab(Data)
         function Module:Slider(SData)
             local Setting = SModule.Functions.Settings.Slider({
                 Name = SData.Name,
+                Description = SData.Description,
                 Flag = SData.Flag,
                 Min = SData.Min,
                 Max = SData.Max,
@@ -888,7 +889,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-                        function Wrapper:SetVisiblity(v)
+            function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -898,12 +899,18 @@ function Assets.Functions:CreateTab(Data)
                     Setting.Functions.SetValue(v)
                 end
             end
+            function Wrapper:SetDescription(v)
+                if Setting and Setting.Functions and Setting.Functions.SetDescription then
+                    Setting.Functions.SetDescription(v)
+                end
+            end
             return Wrapper
         end
         
         function Module:Dropdown(SData)
             local Setting = SModule.Functions.Settings.Dropdown({
                 Name = SData.Name,
+                Description = SData.Description,
                 Flag = SData.Flag,
                 Default = SData.Default,
                 Options = SData.Options,
@@ -914,7 +921,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-                        function Wrapper:SetVisiblity(v)
+            function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -924,12 +931,18 @@ function Assets.Functions:CreateTab(Data)
                     Setting.Functions.SetValue(v)
                 end
             end
+            function Wrapper:SetDescription(v)
+                if Setting and Setting.Functions and Setting.Functions.SetDescription then
+                    Setting.Functions.SetDescription(v)
+                end
+            end
             return Wrapper
         end
         
         function Module:MiniToggle(SData)
             local Setting = SModule.Functions.Settings.MiniToggle({
                 Name = SData.Name,
+                Description = SData.Description,
                 Flag = SData.Flag,
                 Default = SData.Default or false,
                 Callback = function(self, val)
@@ -939,7 +952,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-                        function Wrapper:SetVisiblity(v)
+            function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -947,6 +960,11 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
+                end
+            end
+            function Wrapper:SetDescription(v)
+                if Setting and Setting.Functions and Setting.Functions.SetDescription then
+                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
@@ -959,13 +977,14 @@ function Assets.Functions:CreateTab(Data)
         function Module:ColorSlider(SData)
             local Setting = SModule.Functions.Settings.TextBox({
                 Name = SData.Name,
+                Description = SData.Description,
                 Flag = SData.Flag,
                 Default = "255, 255, 255",
                 Callback = function(self, val)
                 end
             })
             local Wrapper = {}
-                        function Wrapper:SetVisiblity(v)
+            function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -975,12 +994,18 @@ function Assets.Functions:CreateTab(Data)
                     Setting.Functions.SetValue(v)
                 end
             end
+            function Wrapper:SetDescription(v)
+                if Setting and Setting.Functions and Setting.Functions.SetDescription then
+                    Setting.Functions.SetDescription(v)
+                end
+            end
             return Wrapper
         end
         
         function Module.Functions:KeyBind(SData)
             local Setting = SModule.Functions.Settings.Keybind({
                 Name = SData.Name,
+                Description = SData.Description,
                 Flag = SData.Flag,
                 Default = SData.Default and (typeof(SData.Default) == "EnumItem" and SData.Default.Name or tostring(SData.Default)) or "Unknown",
                 Callbacks = {
@@ -993,7 +1018,7 @@ function Assets.Functions:CreateTab(Data)
                 }
             })
             local Wrapper = {}
-                        function Wrapper:SetVisiblity(v)
+            function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -1001,6 +1026,11 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
+                end
+            end
+            function Wrapper:SetDescription(v)
+                if Setting and Setting.Functions and Setting.Functions.SetDescription then
+                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
@@ -1013,6 +1043,7 @@ function Assets.Functions:CreateTab(Data)
         function Module:TextBox(SData)
             local Setting = SModule.Functions.Settings.TextBox({
                 Name = SData.Name,
+                Description = SData.Description,
                 Flag = SData.Flag,
                 Default = SData.Default or "",
                 Placeholder = SData.Placeholder or SData.Name,
@@ -1023,7 +1054,7 @@ function Assets.Functions:CreateTab(Data)
                 end
             })
             local Wrapper = {}
-                        function Wrapper:SetVisiblity(v)
+            function Wrapper:SetVisiblity(v)
                 if Setting and Setting.Functions and Setting.Functions.SetVisiblity then
                     Setting.Functions.SetVisiblity(v)
                 end
@@ -1031,6 +1062,11 @@ function Assets.Functions:CreateTab(Data)
             function Wrapper:SetValue(v)
                 if Setting and Setting.Functions and Setting.Functions.SetValue then
                     Setting.Functions.SetValue(v)
+                end
+            end
+            function Wrapper:SetDescription(v)
+                if Setting and Setting.Functions and Setting.Functions.SetDescription then
+                    Setting.Functions.SetDescription(v)
                 end
             end
             return Wrapper
