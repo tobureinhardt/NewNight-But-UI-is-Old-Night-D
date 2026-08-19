@@ -708,9 +708,15 @@ do
             end
 
             if ConfigPath then
-                Assets.Functions:LoadConfig(ConfigPath, false)
+                Assets.Config:Load(ConfigPath)
+                local BaseConfigFolder = ConfigPath:split("/")[1]
+                if BaseConfigFolder then
+                    Assets.Functions:CreateConfigOptions(BaseConfigFolder)
+                end
             end
         end
+
+        return
     end
 end
 
@@ -869,7 +875,6 @@ function Assets.Functions:CreateTab(Data)
 
         
         function Module:Slider(SData)
-            print("[MAIN-DEBUG] Slider | Flag=", tostring(SData.Flag), "| Description=", tostring(SData.Description))
             local Setting = SModule.Functions.Settings.Slider({
                 Name = SData.Name,
                 Description = SData.Description,
@@ -898,7 +903,6 @@ function Assets.Functions:CreateTab(Data)
         end
         
         function Module:Dropdown(SData)
-            print("[MAIN-DEBUG] Dropdown | Flag=", tostring(SData.Flag), "| Description=", tostring(SData.Description))
             local Setting = SModule.Functions.Settings.Dropdown({
                 Name = SData.Name,
                 Description = SData.Description,
@@ -939,7 +943,6 @@ function Assets.Functions:CreateTab(Data)
         end
         
         function Module:MiniToggle(SData)
-            print("[MAIN-DEBUG] MiniToggle | Flag=", tostring(SData.Flag), "| Description=", tostring(SData.Description))
             local Setting = SModule.Functions.Settings.MiniToggle({
                 Name = SData.Name,
                 Description = SData.Description,
@@ -970,7 +973,6 @@ function Assets.Functions:CreateTab(Data)
         end
         
         function Module:ColorSlider(SData)
-            print("[MAIN-DEBUG] ColorSlider | Flag=", tostring(SData.Flag), "| Description=", tostring(SData.Description))
             local Setting = SModule.Functions.Settings.ColorPicker({
                 Name = SData.Name,
                 Description = SData.Description,
@@ -1027,12 +1029,10 @@ function Assets.Functions:CreateTab(Data)
         end
         
         function Module:KeyBind(SData)
-            print("[MAIN-DEBUG] KeyBind | Flag=", tostring(SData.Flag), "| Description=", tostring(SData.Description))
             return Module.Functions:KeyBind(SData)
         end
         
         function Module:TextBox(SData)
-            print("[MAIN-DEBUG] TextBox | Flag=", tostring(SData.Flag), "| Description=", tostring(SData.Description))
             local Setting = SModule.Functions.Settings.TextBox({
                 Name = SData.Name,
                 Description = SData.Description,
